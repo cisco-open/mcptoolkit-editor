@@ -1,3 +1,7 @@
+// Copyright 2026 Cisco Systems, Inc. and its affiliates
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { useState } from 'react';
 import type { ValidationResult } from '@core/types';
 

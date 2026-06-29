@@ -1,3 +1,7 @@
+// Copyright 2026 Cisco Systems, Inc. and its affiliates
+//
+// SPDX-License-Identifier: Apache-2.0
+
 /**
  * Central document state — owns the raw text, parsed document, and validation results.
  * Uses React Context + useReducer for lightweight global state.
