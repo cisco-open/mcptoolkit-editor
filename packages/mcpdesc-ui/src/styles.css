@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+/*
+ * Container scoping: all Tailwind utilities are scoped under .mcpdesc-ui-root
+ * via the @important directive below. This means `.mcpdesc-ui-root .bg-gray-50`
+ * instead of just `.bg-gray-50`, preventing style conflicts with the host page.
+ */
+@layer base {
+  .mcpdesc-ui-root {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.5;
+  }
+}

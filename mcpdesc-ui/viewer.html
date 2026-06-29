@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mcpdesc-ui Test Page</title>
+  <link rel="stylesheet" href="../packages/mcpdesc-ui/dist/mcpdesc-ui.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; transition: background 0.2s, color 0.2s; }
+    body.light { background: #f5f5f5; color: #333; }
+    body.dark  { background: #18181b; color: #e4e4e7; }
+
+    .toolbar {
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 16px; backdrop-filter: blur(8px);
+    }
+    body.light .toolbar { background: rgba(255,255,255,0.9); border-bottom: 1px solid #ddd; }
+    body.dark  .toolbar { background: rgba(24,24,27,0.9); border-bottom: 1px solid #3f3f46; }
+
+    .toolbar h1 { font-size: 16px; font-weight: 600; margin: 0; white-space: nowrap; }
+
+    .toolbar select, .toolbar input, .toolbar button {
+      font-size: 13px; border-radius: 6px; padding: 6px 10px; border: 1px solid; outline: none;
+    }
+    body.light .toolbar select, body.light .toolbar input { background: #fff; border-color: #d4d4d8; color: #333; }
+    body.dark  .toolbar select, body.dark  .toolbar input { background: #27272a; border-color: #3f3f46; color: #e4e4e7; }
+
+    .toolbar input[type="text"] { flex: 1; min-width: 200px; }
+
+    .toolbar button {
+      cursor: pointer; font-weight: 500; white-space: nowrap;
+    }
+    .load-btn { background: #2563eb; color: white; border-color: #2563eb; }
+    .load-btn:hover { background: #1d4ed8; }
+    .theme-btn { background: transparent; }
+    body.light .theme-btn { border-color: #d4d4d8; color: #333; }
+    body.dark  .theme-btn { border-color: #3f3f46; color: #e4e4e7; }
+
+    .separator { width: 1px; height: 24px; flex-shrink: 0; }
+    body.light .separator { background: #d4d4d8; }
+    body.dark  .separator { background: #3f3f46; }
+
+    #mcpdesc { min-height: calc(100vh - 60px); }
+    body.light #mcpdesc { background: white; }
+    body.dark  #mcpdesc { background: #18181b; }
+
+    .status { font-size: 12px; color: #a1a1aa; padding: 8px 16px; }
+  </style>
+</head>
+<body class="light">
+  <div class="toolbar">
+    <h1>mcpdesc-ui <span id="ui-version" style="font-weight:400;"></span></h1>
+    <div class="separator"></div>
+    <select id="examples">
+      <option value="">— Examples —</option>
+      <option value="../examples/full-featured.yaml">Full Featured</option>
+      <option value="../examples/http-server.yaml">HTTP Server</option>
+      <option value="../examples/minimal.yaml">Minimal</option>
+      <option value="../examples/multi-transport.yaml">Multi Transport</option>
+      <option value="../examples/stdio-server.yaml">Stdio Server</option>
+      <option value="../examples/inventory-2.9.0.yaml">API Inventory 2.9.0</option>
+      <option value="../examples/openapi_analyzer-0.11.0.yaml">OpenAPI Analyzer 0.11.0</option>
+      <option value="../examples/with-cisco-extension.yaml">Cisco Extension</option>
+    </select>
+    <div class="separator"></div>
+    <input type="text" id="url-input" placeholder="Enter URL to an mcpdesc YAML/JSON file…">
+    <button class="load-btn" id="load-btn">Load</button>
+    <div class="separator"></div>
+    <button class="theme-btn" id="theme-btn" title="Toggle light/dark theme">☀️ Light</button>
+  </div>
+
+  <div id="mcpdesc"></div>
+  <div class="status" id="status"></div>
+
+  <script src="../packages/mcpdesc-ui/dist/mcpdesc-ui.js"></script>
+  <script>
+    // --- State ---
+    let instance = null;
+    const params = new URLSearchParams(window.location.search);
+
+    // --- Theme ---
+    function setTheme(theme) {
+      document.body.className = theme;
+      document.getElementById('theme-btn').textContent = theme === 'dark' ? '🌙 Dark' : '☀️ Light';
+      // Re-render with new theme if instance exists
+      if (instance && instance._lastUrl) {
+        loadUrl(instance._lastUrl, theme);
+      } else if (instance && instance._lastSpec) {
+        loadSpec(instance._lastSpec, theme);
+      }
+    }
+
+    function currentTheme() {
+      return document.body.className;
+    }
+
+    // --- Loading ---
+    function status(msg) {
+      document.getElementById('status').textContent = msg;
+    }
+
+    function loadSpec(spec, theme) {
+      if (instance) { instance.destroy(); }
+      status('');
+      instance = McpDescUI.McpDescUI({
+        dom_id: '#mcpdesc',
+        spec: spec,
+        theme: theme || currentTheme(),
+        defaultOpen: true,
+        showValidation: true,
+      });
+      instance._lastSpec = spec;
+    }
+
+    function loadUrl(url, theme) {
+      if (instance) { instance.destroy(); }
+      status('Loading ' + url + '…');
+      instance = McpDescUI.McpDescUI({
+        dom_id: '#mcpdesc',
+        url: url,
+        theme: theme || currentTheme(),
+        defaultOpen: true,
+        showValidation: true,
+      });
+      instance._lastUrl = url;
+      // Clear status after a short delay (fetch is async inside the lib)
+      setTimeout(function() { status(''); }, 2000);
+    }
+
+    // --- URL input ---
+    document.getElementById('load-btn').addEventListener('click', function() {
+      var url = document.getElementById('url-input').value.trim();
+      if (!url) return;
+      // Update query string without reload
+      var qp = new URLSearchParams(window.location.search);
+      qp.set('url', url);
+      qp.set('style', currentTheme());
+      history.replaceState(null, '', '?' + qp.toString());
+      document.getElementById('examples').value = '';
+      loadUrl(url);
+    });
+
+    document.getElementById('url-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('load-btn').click();
+    });
+
+    // --- Examples dropdown ---
+    document.getElementById('examples').addEventListener('change', function() {
+      var url = this.value;
+      if (!url) return;
+      document.getElementById('url-input').value = '';
+      // Update query string
+      var qp = new URLSearchParams(window.location.search);
+      qp.delete('url');
+      qp.set('style', currentTheme());
+      history.replaceState(null, '', '?' + qp.toString());
+      loadUrl(url);
+    });
+
+    // --- Theme toggle ---
+    document.getElementById('theme-btn').addEventListener('click', function() {
+      var next = currentTheme() === 'dark' ? 'light' : 'dark';
+      var qp = new URLSearchParams(window.location.search);
+      qp.set('style', next);
+      history.replaceState(null, '', '?' + qp.toString());
+      setTheme(next);
+    });
+
+    // --- Init from query params or default example ---
+    // Display mcpdesc-ui version
+    if (McpDescUI.version) {
+      document.getElementById('ui-version').textContent = 'v' + McpDescUI.version;
+    }
+
+    var initTheme = params.get('style') || 'light';
+    setTheme(initTheme);
+
+    var initUrl = params.get('url');
+    if (initUrl) {
+      document.getElementById('url-input').value = initUrl;
+      loadUrl(initUrl, initTheme);
+    } else {
+      // Default: load full-featured example
+      document.getElementById('examples').value = '../examples/full-featured.yaml';
+      loadUrl('../examples/full-featured.yaml', initTheme);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "name": "mcpdesc-ui",
+  "version": "1.0.0-rc1",
+  "description": "Interactive MCP Description card view — drop-in web component for visualizing mcpdesc documents.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cisco-open/mcptoolkit-editor.git",
+    "directory": "packages/mcpdesc-ui"
+  },
+  "homepage": "https://github.com/cisco-open/mcptoolkit-editor#readme",
+  "bugs": "https://github.com/cisco-open/mcptoolkit-editor/issues",
+  "type": "module",
+  "main": "dist/mcpdesc-ui.js",
+  "module": "dist/mcpdesc-ui.mjs",
+  "types": "dist/packages/mcpdesc-ui/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/packages/mcpdesc-ui/src/index.d.ts",
+      "import": "./dist/mcpdesc-ui.mjs",
+      "require": "./dist/mcpdesc-ui.js"
+    },
+    "./react": {
+      "types": "./dist/packages/mcpdesc-ui/src/react.d.ts",
+      "import": "./dist/mcpdesc-ui.mjs"
+    },
+    "./dist/mcpdesc-ui.css": "./dist/mcpdesc-ui.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch"
+  },
+  "dependencies": {
+    "ajv": "^8.17.0",
+    "ajv-formats": "^3.0.0",
+    "marked": "^17.0.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "yaml": "^2.6.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tailwindcss": "^4.0.0",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.5",
+    "vite-plugin-dts": "^4.0.0"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "name": "mcpdesc-editor",
+  "private": true,
+  "version": "1.0.0-rc1",
+  "description": "A web-based editor for MCP Description documents — validate, visualize, and export.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cisco-open/mcptoolkit-editor.git"
+  },
+  "homepage": "https://github.com/cisco-open/mcptoolkit-editor#readme",
+  "bugs": "https://github.com/cisco-open/mcptoolkit-editor/issues",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "ui": "npm run build --workspace=packages/mcpdesc-ui && echo '\n🚀 MCP Description UI available at:\n   http://localhost:8888/mcpdesc-ui/viewer.html?style=light\n' && python3 -m http.server 8888 -b 127.0.0.1"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "handlebars": "^4.7.8",
+    "marked": "^17.0.4",
+    "monaco-editor": "^0.52.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.14.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "~5.6.2",
+    "typescript-eslint": "^8.18.2",
+    "vite": "^6.0.5"
+  }
+}

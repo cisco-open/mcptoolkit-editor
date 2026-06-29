@@ -1,0 +1,24 @@
+# Examples Menu Configuration
+#
+# This file defines the sections and entries shown in the editor's
+# "Examples…" dropdown.  Each section becomes an <optgroup> in the menu.
+#
+# To add a new example:
+#   1. Drop the .yaml file into the examples/ directory
+#   2. Add an entry below with `file` (filename) and `label` (display name)
+#
+# Sections with no entries are hidden from the menu.
+
+sections:
+  - label: "Features Demonstration"
+    entries:
+      - file: minimal.yaml
+        label: Minimal
+      - file: http-server.yaml
+        label: Streamable HTTP
+      - file: stdio-server.yaml
+        label: STDIO
+      - file: multi-transport.yaml
+        label: Multi-Transport
+      - file: full-featured.yaml
+        label: Full-Featured

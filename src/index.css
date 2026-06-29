@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+/* Monaco glyph-margin error markers */
+.error-glyph {
+  background: transparent;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+.error-glyph::after {
+  content: '✕';
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+.error-line-highlight {
+  background: rgba(239, 68, 68, 0.08);
+}
