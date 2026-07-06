@@ -5,7 +5,7 @@
 /**
  * Browser-compatible MCP Description validator.
  *
- * Adapted from mcp-contract's Validator class — stripped of Node.js fs/path
+ * Adapted from mcptoolkit-contract's Validator class — stripped of Node.js fs/path
  * dependencies. Accepts the JSON Schema object directly at construction time.
  */
 

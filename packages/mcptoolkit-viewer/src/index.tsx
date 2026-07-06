@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /**
- * mcpdesc-ui — Main entry point.
+ * mcptoolkit-viewer — Main entry point.
  *
  * Drop-in script that renders an interactive MCP Description card view.
  * Usage:
- *   McpDescUI({ dom_id: '#mcpdesc', url: '/api/spec.yaml' })
+ *   McpToolkitViewer({ dom_id: '#mcpdesc', url: '/api/spec.yaml' })
  */
 
 import React, { useState, useEffect } from 'react';
@@ -17,7 +17,7 @@ import { McpDescValidator } from '@core/validator';
 import mcpdescSchema from '@core/mcpdesc-schema.json';
 import { McpDescCardView } from './McpDescCardView';
 import { ValidationPanel } from './ValidationPanel';
-import type { McpDescUIOptions, McpDescUIInstance } from './types';
+import type { McpToolkitViewerOptions, McpToolkitViewerInstance } from './types';
 import type { McpDescDocument, ValidationResult } from '@core/types';
 import './styles.css';
 
@@ -49,7 +49,7 @@ async function fetchSpec(url: string): Promise<McpDescDocument> {
 interface AppProps {
   initialDoc: McpDescDocument | null;
   initialError: string | null;
-  options: McpDescUIOptions;
+  options: McpToolkitViewerOptions;
   /** Ref for external control — set by the app so the imperative API can call into React state */
   controlRef: React.MutableRefObject<{
     setDoc: (doc: McpDescDocument) => void;
@@ -123,14 +123,14 @@ function App({ initialDoc, initialError, options, controlRef }: AppProps) {
 // Public API
 // ============================================================================
 
-export function McpDescUI(options: McpDescUIOptions): McpDescUIInstance {
+export function McpToolkitViewer(options: McpToolkitViewerOptions): McpToolkitViewerInstance {
   const container = document.querySelector(options.dom_id);
   if (!container) {
-    throw new Error(`mcpdesc-ui: element not found: ${options.dom_id}`);
+    throw new Error(`mcptoolkit-viewer: element not found: ${options.dom_id}`);
   }
 
   // Add scoping root class
-  container.classList.add('mcpdesc-ui-root');
+  container.classList.add('mcptoolkit-viewer-root');
 
   const controlRef: React.MutableRefObject<{ setDoc: (doc: McpDescDocument) => void } | null> = { current: null };
   let root: Root | null = null;
@@ -159,7 +159,7 @@ export function McpDescUI(options: McpDescUIOptions): McpDescUIInstance {
       .then((doc) => render(doc, null))
       .catch((err) => render(null, String(err)));
   } else {
-    render(null, 'mcpdesc-ui: provide either "spec" or "url" option');
+    render(null, 'mcptoolkit-viewer: provide either "spec" or "url" option');
   }
 
   return {
@@ -173,7 +173,7 @@ export function McpDescUI(options: McpDescUIOptions): McpDescUIInstance {
 
     async reload() {
       if (!options.url) {
-        throw new Error('mcpdesc-ui: cannot reload — no "url" option configured');
+        throw new Error('mcptoolkit-viewer: cannot reload — no "url" option configured');
       }
       try {
         const doc = await fetchSpec(options.url);
@@ -192,20 +192,20 @@ export function McpDescUI(options: McpDescUIOptions): McpDescUIInstance {
         root.unmount();
         root = null;
       }
-      container.classList.remove('mcpdesc-ui-root');
+      container.classList.remove('mcptoolkit-viewer-root');
     },
   };
 }
 
 // Package version
-export const version = '1.0.0-rc1';
+export const version = '1.0.0-rc.2';
 
 // Re-export for consumers
 export { McpDescCardView } from './McpDescCardView';
 export type { McpDescCardViewProps, BadgeRenderer } from './McpDescCardView';
 export { ValidationPanel } from './ValidationPanel';
 export type { ValidationPanelProps } from './ValidationPanel';
-export type { McpDescUIOptions, McpDescUIInstance } from './types';
+export type { McpToolkitViewerOptions, McpToolkitViewerInstance } from './types';
 export type {
   McpDescDocument,
   ValidationResult,

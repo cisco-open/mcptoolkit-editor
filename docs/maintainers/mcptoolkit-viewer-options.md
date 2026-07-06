@@ -1,6 +1,14 @@
-# mcpdesc-ui: Standalone Card View Rendering — Options & Arbitration
+# mcptoolkit-viewer: Standalone Card View Rendering — Options & Arbitration
 
-> **Goal:** Provide both (a) a CLI-generated static HTML card view via `mcpcontract` and (b) a standalone `mcpdesc-ui` JS bundle for interactive browser embedding — analogous to what [Swagger UI](https://github.com/swagger-api/swagger-ui) is to the Swagger Editor.
+> **Historical note:** This is a design/arbitration record from planning. The
+> standalone JS bundle described below as "Option 2 / mcpdesc-ui" **shipped** as
+> the npm package [`@cisco_open/mcptoolkit-viewer`](../../packages/mcptoolkit-viewer/)
+> with the global API `McpToolkitViewer(...)`, artifacts `mcptoolkit-viewer.js` /
+> `mcptoolkit-viewer.css`, and the CSS scoping class `.mcptoolkit-viewer-root`.
+> Older code samples in this document retain the original `mcpdesc-ui` working
+> name for historical accuracy.
+
+> **Goal:** Provide both (a) a CLI-generated static HTML card view via `mcpcontract` and (b) a standalone `mcptoolkit-viewer` JS bundle for interactive browser embedding — analogous to what [Swagger UI](https://github.com/swagger-api/swagger-ui) is to the Swagger Editor.
 
 ---
 
@@ -200,12 +208,12 @@ Both options serve different use cases with minimal overlap:
 | 2 | CSS approach for HTML template | Inline `<style>` block — self-contained single HTML file |
 | 3 | Content scope for HTML template | Document content only. Invalid items omitted silently. CLI prints validation warnings/errors to stderr. HTML includes a `<script>` tag that logs validation issues to browser console. |
 | 4 | JSON Schema depth in HTML template | One level deep — top-level properties table with type/required/description columns. Nested schemas rendered as raw JSON `<pre>` blocks. |
-| 5 | mcpdesc-ui package location | In this repo: `packages/mcpdesc-ui/` (npm workspaces monorepo) |
-| 6 | mcpdesc-ui API options | `theme: 'light' \| 'dark'` (light first, dark after editor implements it), `defaultOpen: boolean` (default: true), `showValidation: boolean` (bottom panel with independent scrollbar, hideable) |
-| 7 | mcpdesc-ui URL fetching | Bundle handles fetching + YAML/JSON parsing internally from `url` option |
-| 8 | mcpdesc-ui versioning | Independent semver, starting at `0.1.0`, own CHANGELOG |
-| 9 | Package name | `mcpdesc-ui` (not publishing to npm registry yet) |
-| 10 | Tailwind CSS scoping | Container selector: `.mcpdesc-ui-root` — Tailwind `important: '.mcpdesc-ui-root'`. No class renaming needed; CardView code unchanged. |
+| 5 | mcptoolkit-viewer package location | In this repo: `packages/mcptoolkit-viewer/` (npm workspaces monorepo) |
+| 6 | mcptoolkit-viewer API options | `theme: 'light' \| 'dark'` (light first, dark after editor implements it), `defaultOpen: boolean` (default: true), `showValidation: boolean` (bottom panel with independent scrollbar, hideable) |
+| 7 | mcptoolkit-viewer URL fetching | Bundle handles fetching + YAML/JSON parsing internally from `url` option |
+| 8 | mcptoolkit-viewer versioning | Independent semver, own CHANGELOG |
+| 9 | Package name | `@cisco_open/mcptoolkit-viewer` (published to npm) |
+| 10 | Tailwind CSS scoping | Container selector: `.mcptoolkit-viewer-root` — Tailwind `important: '.mcptoolkit-viewer-root'`. No class renaming needed; CardView code unchanged. |
 
 ---
 

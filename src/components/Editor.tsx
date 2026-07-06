@@ -162,7 +162,7 @@ export default function Editor() {
         validate: true,
         schemas: [
           {
-            uri: 'https://developer.cisco.com/mcp-description/schema/0.6.0',
+            uri: 'https://developer.cisco.com/mcp-description/schema/0.7.0',
             fileMatch: ['*'],
             schema: mcpdescSchema as Record<string, unknown>,
           },

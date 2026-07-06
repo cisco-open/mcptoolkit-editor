@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /**
- * Public API types for mcpdesc-ui.
+ * Public API types for mcptoolkit-viewer.
  */
 
 // Re-export core types consumers need
@@ -25,7 +25,7 @@ export type {
   ValidationIssue,
 } from '@core/types';
 
-export interface McpDescUIOptions {
+export interface McpToolkitViewerOptions {
   /** CSS selector for the container element (required) */
   dom_id: string;
 
@@ -45,7 +45,7 @@ export interface McpDescUIOptions {
   showValidation?: boolean;
 }
 
-export interface McpDescUIInstance {
+export interface McpToolkitViewerInstance {
   /** Update the displayed document */
   updateSpec(spec: import('@core/types').McpDescDocument): void;
 

@@ -26,13 +26,13 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.tsx'),
-      name: 'McpDescUI',
+      name: 'McpToolkitViewer',
       formats: ['umd', 'es'],
-      fileName: (format) => format === 'umd' ? 'mcpdesc-ui.js' : 'mcpdesc-ui.mjs',
+      fileName: (format) => format === 'umd' ? 'mcptoolkit-viewer.js' : 'mcptoolkit-viewer.mjs',
     },
     rollupOptions: {
       output: {
-        // Expose the McpDescUI function as a global for UMD consumers
+        // Expose the McpToolkitViewer function as a global for UMD consumers
         exports: 'named',
       },
     },

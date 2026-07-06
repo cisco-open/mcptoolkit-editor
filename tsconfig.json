@@ -23,5 +23,5 @@
       "@core/*": ["./src/core/*"]
     }
   },
-  "include": ["src", "packages/mcpdesc-ui/src", "vite-env.d.ts"]
+  "include": ["src", "packages/mcptoolkit-viewer/src", "vite-env.d.ts"]
 }

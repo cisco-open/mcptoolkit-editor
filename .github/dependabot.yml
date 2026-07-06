@@ -1,0 +1,49 @@
+# Managed by oss-scaffold — edit upstream (github.com/ObjectIsAdvantag/oss-scaffold), not here.
+# Profile: node-npm-lib. Local edits will fail the drift-check job.
+#
+# Low-noise policy: batch minor/patch bumps monthly into grouped PRs; give each
+# major its own reviewable PR; add a cooldown so brand-new releases settle.
+# Critical fixes come through Dependabot *security* updates (repo Settings →
+# Code security), which ignore this schedule and open PRs immediately.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+    groups:
+      production-minor-patch:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      development-minor-patch:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "ci(deps)"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "ci"

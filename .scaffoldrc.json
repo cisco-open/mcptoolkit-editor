@@ -1,0 +1,13 @@
+{
+  "source": "github:ObjectIsAdvantag/oss-scaffold",
+  "version": "0.2.1",
+  "profile": "node-npm-lib",
+  "npmAuth": "token",
+  "overrides": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/publish.yml"
+  ],
+  "packageName": "@cisco_open/mcptoolkit-viewer",
+  "owner": "cisco-open",
+  "repoUrl": "https://github.com/cisco-open/mcptoolkit-editor"
+}

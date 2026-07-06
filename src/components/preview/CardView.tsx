@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useDoc } from '../../hooks/useDoc';
-import { McpDescCardView } from '../../../packages/mcpdesc-ui/src/McpDescCardView';
-import type { BadgeRenderer } from '../../../packages/mcpdesc-ui/src/McpDescCardView';
+import { McpDescCardView } from '../../../packages/mcptoolkit-viewer/src/McpDescCardView';
+import type { BadgeRenderer } from '../../../packages/mcptoolkit-viewer/src/McpDescCardView';
 import type { McpDescDocument, ValidationResult } from '../../core/types';
 
 /** Clickable type bubble that navigates the editor to the item definition */

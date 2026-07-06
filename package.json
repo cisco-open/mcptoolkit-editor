@@ -1,7 +1,7 @@
 {
-  "name": "mcpdesc-editor",
+  "name": "mcptoolkit-editor",
   "private": true,
-  "version": "1.0.0-rc1",
+  "version": "1.0.0-rc.2",
   "description": "A web-based editor for MCP Description documents — validate, visualize, and export.",
   "license": "Apache-2.0",
   "repository": {
@@ -17,9 +17,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:viewer": "npm run build --workspace=packages/mcptoolkit-viewer",
     "preview": "vite preview",
     "lint": "eslint .",
-    "ui": "npm run build --workspace=packages/mcpdesc-ui && echo '\n🚀 MCP Description UI available at:\n   http://localhost:8888/mcpdesc-ui/viewer.html?style=light\n' && python3 -m http.server 8888 -b 127.0.0.1"
+    "verify:lockfile": "npm ci --dry-run",
+    "prerelease": "npm run verify:lockfile && npm run build && npm run build:viewer",
+    "ui": "npm run build --workspace=packages/mcptoolkit-viewer && echo '\n🚀 MCP Toolkit Viewer available at:\n   http://localhost:8888/mcptoolkit-viewer/viewer.html?style=light\n' && python3 -m http.server 8888 -b 127.0.0.1"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

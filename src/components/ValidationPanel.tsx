@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useDoc } from '../hooks/useDoc';
-import { version as uiVersion } from '../../packages/mcpdesc-ui/src/index';
+import { version as uiVersion } from '../../packages/mcptoolkit-viewer/src/index';
 
 export default function ValidationPanel() {
   const { state } = useDoc();
@@ -33,7 +33,7 @@ export default function ValidationPanel() {
           </span>
         )}
         <span className="text-zinc-600 ml-auto">{state.format.toUpperCase()}</span>
-        <span className="text-zinc-500">mcpdesc-ui v{uiVersion}</span>
+        <span className="text-zinc-500">mcptoolkit-viewer v{uiVersion}</span>
       </div>
     </div>
   );
