@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /**
- * MCP Description types — browser-compatible subset adapted from mcp-contract.
+ * MCP Description types — browser-compatible subset adapted from mcptoolkit-contract.
  *
- * These types model the MCP Description specification v0.6.0 document structure.
+ * These types model the MCP Description specification v0.7.0 document structure.
  * They are intentionally decoupled from Node.js so they can be shared between
- * a future @mcpcontract/core package, the CLI, and this editor.
+ * a future core package, the CLI, and this editor.
  */
 
 // ============================================================================

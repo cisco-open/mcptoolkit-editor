@@ -35,8 +35,8 @@ This is a **pure client-side** web application for editing, validating, and visu
 - **No Node.js dependencies in `src/core/`** — everything must run in the browser. No `fs`, `path`, `child_process`, etc.
 - **Tailwind utility classes** — no CSS Modules or CSS-in-JS. Use Tailwind v4 with `@import "tailwindcss"`.
 - **Dark theme only** — all UI uses `bg-zinc-*` / `text-zinc-*` palette.
-- **JSON Schema source of truth** — `src/core/mcpdesc-schema.json` is the schema copied from `ref/mcp-description/schemas/`. When the spec updates, copy the new schema here.
-- **Handlebars template** — `src/core/template.ts` contains the markdown template as a TypeScript string. The renderer in `src/core/renderer.ts` registers helpers ported from mcp-contract.
+- **JSON Schema source of truth** — `src/core/mcpdesc-schema.json` is the schema vendored from the [mcptoolkit-contract](https://github.com/cisco-open/mcptoolkit-contract) repo (`schemas/mcp-description/`). When the spec updates, copy the new schema here.
+- **Handlebars template** — `src/core/template.ts` contains the markdown template as a TypeScript string. The renderer in `src/core/renderer.ts` registers helpers ported from mcptoolkit-contract.
 
 ### Spec Version
 
@@ -49,16 +49,16 @@ This project maintains **two changelogs**. Both must be kept in sync when making
 | Changelog | Scope | Version tracks |
 |-----------|-------|----------------|
 | `CHANGELOG.md` (root) | The editor application (UI, state, examples, schema, validator) | `package.json` version (root) |
-| `packages/mcpdesc-ui/CHANGELOG.md` | The standalone viewer library (McpDescCardView, TagFilterBar, McpDescUI, viewer.html) | `packages/mcpdesc-ui/package.json` version |
+| `packages/mcptoolkit-viewer/CHANGELOG.md` | The standalone viewer library `@cisco_open/mcptoolkit-viewer` (McpDescCardView, TagFilterBar, McpToolkitViewer, viewer.html) | `packages/mcptoolkit-viewer/package.json` version |
 
 ### Rules
 
-1. **Determine affected scope** — if a change modifies files under `packages/mcpdesc-ui/`, update the mcpdesc-ui changelog. If a change modifies files under `src/`, update the root changelog. Many changes (e.g. to `McpDescCardView.tsx`) affect both.
-2. **Update both changelogs** when a change touches shared code (the card view is imported by the editor from `packages/mcpdesc-ui/src/`).
+1. **Determine affected scope** — if a change modifies files under `packages/mcptoolkit-viewer/`, update the mcptoolkit-viewer changelog. If a change modifies files under `src/`, update the root changelog. Many changes (e.g. to `McpDescCardView.tsx`) affect both.
+2. **Update both changelogs** when a change touches shared code (the card view is imported by the editor from `packages/mcptoolkit-viewer/src/`).
 3. **Format** — follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Use `### Added`, `### Changed`, `### Removed`, `### Fixed`, `### Breaking` sections.
 4. **Version bumps** — when adding a changelog entry for a new version:
    - Bump `version` in the corresponding `package.json`
-   - For mcpdesc-ui, also update the `version` constant in `packages/mcpdesc-ui/src/index.tsx`
+   - For mcptoolkit-viewer, also update the `version` constant in `packages/mcptoolkit-viewer/src/index.tsx`
    - Root changelog has a TOC between `<!-- toc -->` / `<!-- tocstop -->` markers — add the new entry link there
 5. **Unreleased section** — both changelogs have an `## unreleased` section at the top for work-in-progress entries.
 
@@ -70,6 +70,27 @@ npm run dev      # Vite dev server on :5173
 npm run build    # Production build → dist/
 ```
 
+## Releasing
+
+The published artifact is the `@cisco_open/mcptoolkit-viewer` workspace; releases are tag-driven (`v*` tags trigger `.github/workflows/publish.yml`).
+
+Before proposing a release PR, run the prerelease gate:
+
+```bash
+npm run prerelease
+```
+
+This runs `npm ci --dry-run` (verifies `package-lock.json` is in sync with the manifests) and then builds both the editor and the viewer library. It mirrors the `npm ci` + build path that CI and the publish workflow use.
+
+Release checklist (see `.github/agents/release-manager.agent.md` and `.github/skills/release/SKILL.md` for the full procedure):
+
+1. Bump `version` in `packages/mcptoolkit-viewer/package.json` (and the root `package.json` for suite alignment).
+2. Update the `version` constant in `packages/mcptoolkit-viewer/src/index.tsx`.
+3. Roll up **both** changelogs (see the Changelogs section above).
+4. Run `npm install` so `package-lock.json` reflects the new versions, and commit it — otherwise `npm ci` fails in CI/publish.
+5. Run `npm run prerelease` and confirm it is green.
+6. Open a `release/X.Y.Z` PR; after merge, tag `vX.Y.Z` on `main` to publish. RC versions (`-rc.N`) publish under the `next` dist-tag; stable under `latest`.
+
 ## Testing
 
 No test framework is configured yet. When adding tests:
@@ -79,7 +100,7 @@ No test framework is configured yet. When adding tests:
 ## Common Tasks
 
 ### Update the MCP Description schema
-1. Copy the new schema from `ref/mcp-description/schemas/<version>/mcp-description.schema.json` to `src/core/mcpdesc-schema.json`
+1. Copy the new schema from the [mcptoolkit-contract](https://github.com/cisco-open/mcptoolkit-contract) repo (`schemas/mcp-description/<version>/mcp-description.schema.json`) to `src/core/mcpdesc-schema.json`
 2. Update types in `src/core/types.ts` to match
 3. Update the spec version reference in `src/core/template.ts` and `src/examples/index.ts`
 

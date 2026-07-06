@@ -1,4 +1,4 @@
-# mcpdesc-ui
+# @cisco_open/mcptoolkit-viewer
 
 Interactive card view for [MCP Description](https://github.com/anthropics/model-context-protocol) documents — analogous to what [Swagger UI](https://github.com/swagger-api/swagger-ui) is to the Swagger Editor.
 
@@ -7,11 +7,11 @@ Interactive card view for [MCP Description](https://github.com/anthropics/model-
 ## Quick Start — Script Tag
 
 ```html
-<link rel="stylesheet" href="dist/mcpdesc-ui.css">
+<link rel="stylesheet" href="dist/mcptoolkit-viewer.css">
 <div id="mcpdesc"></div>
-<script src="dist/mcpdesc-ui.js"></script>
+<script src="dist/mcptoolkit-viewer.js"></script>
 <script>
-  McpDescUI({
+  McpToolkitViewer({
     dom_id: '#mcpdesc',
     url: '/api/mcpdesc.yaml'
   });
@@ -21,12 +21,12 @@ Interactive card view for [MCP Description](https://github.com/anthropics/model-
 ## Quick Start — React Component
 
 ```tsx
-import { McpDescCardView } from 'mcpdesc-ui/react';
-import 'mcpdesc-ui/dist/mcpdesc-ui.css';
+import { McpDescCardView } from '@cisco_open/mcptoolkit-viewer/react';
+import '@cisco_open/mcptoolkit-viewer/dist/mcptoolkit-viewer.css';
 
 function MyPage({ doc, validation }) {
   return (
-    <div className="mcpdesc-ui-root">
+    <div className="mcptoolkit-viewer-root">
       <McpDescCardView doc={doc} validation={validation} />
     </div>
   );
@@ -35,7 +35,7 @@ function MyPage({ doc, validation }) {
 
 ## API
 
-### `McpDescUI(options)`
+### `McpToolkitViewer(options)`
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -46,7 +46,7 @@ function MyPage({ doc, validation }) {
 | `defaultOpen` | `boolean` | `true` | Whether `<details>` sections start expanded. |
 | `showValidation` | `boolean` | `true` | Show validation panel at the bottom. |
 
-Returns a `McpDescUIInstance` with:
+Returns a `McpToolkitViewerInstance` with:
 - `updateSpec(spec)` — Update the displayed document
 - `reload()` — Re-fetch from the configured URL
 - `destroy()` — Unmount and clean up

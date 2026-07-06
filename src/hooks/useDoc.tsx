@@ -62,7 +62,7 @@ function reducer(state: DocState, action: DocAction): DocState {
 
 const emptyValidation: ValidationResult = { valid: true, errors: [], warnings: [] };
 
-const LOCALSTORAGE_KEY = 'mcpdesc-editor-content';
+const LOCALSTORAGE_KEY = 'mcptoolkit-editor-content';
 
 function loadInitialText(): string {
   try {

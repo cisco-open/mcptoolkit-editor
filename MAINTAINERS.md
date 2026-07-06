@@ -1,6 +1,6 @@
 # Maintainers
 
-The following people maintain **mcpcontract**. They are responsible for
+The following people maintain the **MCP Description Editor** (`mcptoolkit-editor`). They are responsible for
 triaging issues, reviewing pull requests, and shipping releases.
 
 | Maintainer | GitHub | Area |
@@ -24,4 +24,4 @@ Existing maintainers will reach out when an invitation is appropriate.
 
 - For security issues: see [SECURITY.md](/SECURITY.md).
 - For code of conduct issues: [oss-conduct@cisco.com](mailto:oss-conduct@cisco.com).
-- For everything else: use [GitHub Issues](https://github.com/cisco-open/mcptoolkit-contract/issues).
+- For everything else: use [GitHub Issues](https://github.com/cisco-open/mcptoolkit-editor/issues).

@@ -5,7 +5,7 @@
 /**
  * Browser-compatible Handlebars renderer for MCP Description documents.
  *
- * Adapted from mcp-contract's Renderer class — templates are passed as strings
+ * Adapted from mcptoolkit-contract's Renderer class — templates are passed as strings
  * instead of loaded from the filesystem.
  */
 
@@ -27,7 +27,7 @@ export class McpDescRenderer {
   }
 
   // -----------------------------------------------------------------------
-  // Helpers — ported from mcp-contract renderer.ts
+  // Helpers — ported from mcptoolkit-contract renderer.ts
   // -----------------------------------------------------------------------
   private registerHelpers(): void {
     const hbs = this.hbs;

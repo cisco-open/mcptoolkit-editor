@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>mcpdesc-ui Test Page</title>
-  <link rel="stylesheet" href="../packages/mcpdesc-ui/dist/mcpdesc-ui.css">
+  <title>mcptoolkit-viewer Test Page</title>
+  <link rel="stylesheet" href="../packages/mcptoolkit-viewer/dist/mcptoolkit-viewer.css">
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; font-family: system-ui, -apple-system, sans-serif; transition: background 0.2s, color 0.2s; }
@@ -51,7 +51,7 @@
 </head>
 <body class="light">
   <div class="toolbar">
-    <h1>mcpdesc-ui <span id="ui-version" style="font-weight:400;"></span></h1>
+    <h1>mcptoolkit-viewer <span id="ui-version" style="font-weight:400;"></span></h1>
     <div class="separator"></div>
     <select id="examples">
       <option value="">— Examples —</option>
@@ -74,7 +74,7 @@
   <div id="mcpdesc"></div>
   <div class="status" id="status"></div>
 
-  <script src="../packages/mcpdesc-ui/dist/mcpdesc-ui.js"></script>
+  <script src="../packages/mcptoolkit-viewer/dist/mcptoolkit-viewer.js"></script>
   <script>
     // --- State ---
     let instance = null;
@@ -104,7 +104,7 @@
     function loadSpec(spec, theme) {
       if (instance) { instance.destroy(); }
       status('');
-      instance = McpDescUI.McpDescUI({
+      instance = McpToolkitViewer.McpToolkitViewer({
         dom_id: '#mcpdesc',
         spec: spec,
         theme: theme || currentTheme(),
@@ -117,7 +117,7 @@
     function loadUrl(url, theme) {
       if (instance) { instance.destroy(); }
       status('Loading ' + url + '…');
-      instance = McpDescUI.McpDescUI({
+      instance = McpToolkitViewer.McpToolkitViewer({
         dom_id: '#mcpdesc',
         url: url,
         theme: theme || currentTheme(),
@@ -169,9 +169,9 @@
     });
 
     // --- Init from query params or default example ---
-    // Display mcpdesc-ui version
-    if (McpDescUI.version) {
-      document.getElementById('ui-version').textContent = 'v' + McpDescUI.version;
+    // Display mcptoolkit-viewer version
+    if (McpToolkitViewer.version) {
+      document.getElementById('ui-version').textContent = 'v' + McpToolkitViewer.version;
     }
 
     var initTheme = params.get('style') || 'light';

@@ -3,16 +3,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /**
- * mcpdesc-ui/react — React component export.
+ * mcptoolkit-viewer/react — React component export.
  *
  * For consumers who are already in a React app and want to use
  * the card view as a component with their own React instance.
  *
  * Usage:
- *   import { McpDescCardView } from 'mcpdesc-ui/react';
- *   import 'mcpdesc-ui/dist/mcpdesc-ui.css';
+ *   import { McpDescCardView } from '@cisco_open/mcptoolkit-viewer/react';
+ *   import '@cisco_open/mcptoolkit-viewer/dist/mcptoolkit-viewer.css';
  *
- *   <div className="mcpdesc-ui-root">
+ *   <div className="mcptoolkit-viewer-root">
  *     <McpDescCardView doc={doc} validation={validation} />
  *   </div>
  */
