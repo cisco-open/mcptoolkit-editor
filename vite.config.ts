@@ -8,6 +8,9 @@ import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'path';
 
 export default defineConfig({
+  // Relative asset paths so the prebuilt dist/ (shipped as
+  // @cisco_open/mcptoolkit-editor-dist) can be served from any origin or subpath.
+  base: './',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

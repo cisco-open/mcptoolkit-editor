@@ -1,27 +1,32 @@
 # Distribution Model
 
 This repository is part of the **MCP Toolkit** suite. It is an npm workspaces
-monorepo that produces two separately distributed artifacts with different
+monorepo that produces three separately distributed artifacts with different
 delivery mechanisms.
 
 ## Overview
 
 | Artifact | Package | Distribution | Published to npm? |
 |----------|---------|--------------|-------------------|
-| MCP Description Editor | `mcptoolkit-editor` (root, `private: true`) | Hosted static site | No |
+| MCP Description Editor (source) | `mcptoolkit-editor` (root, `private: true`) | Hosted static site | No |
 | MCP Toolkit Viewer | `@cisco_open/mcptoolkit-viewer` (`packages/mcptoolkit-viewer/`) | npm package | Yes |
+| MCP Editor (prebuilt bundle) | `@cisco_open/mcptoolkit-editor-dist` (`packages/mcptoolkit-editor-dist/`) | npm package | Yes |
 
-### Why two delivery mechanisms?
+### Why these delivery mechanisms?
 
-- The **editor** is a full React + Monaco single-page application. It is a tool
-  for humans to author, validate, and preview MCP Description documents. It has
-  no meaningful programmatic API surface, so it is delivered as a **hosted web
-  app** rather than a library. The root `package.json` is marked
-  `"private": true` to prevent accidental npm publication.
+- The **editor source** (`mcptoolkit-editor`, root) is a full React + Monaco
+  single-page application. The root `package.json` stays `"private": true` so it
+  is never published to npm directly; it is deployed as a hosted web app or
+  consumed via the prebuilt `-dist` package below.
 - The **viewer** (`@cisco_open/mcptoolkit-viewer`) is a small, embeddable
   card-view component — analogous to what Swagger UI is to the Swagger Editor.
   Other MCP Toolkit projects consume it programmatically, so it is **published
   to npm** with both a UMD (`<script>` tag) and ESM/React entry point.
+- The **prebuilt editor bundle** (`@cisco_open/mcptoolkit-editor-dist`) ships the
+  compiled editor `dist/` — the analog of `swagger-editor-dist`. Hosts consume a
+  portable, host-neutral build (no CDN dependency, relative asset paths, works
+  under a strict CSP) without building from source. This keeps the editor a
+  portable tool while hosting lives in a separate repo.
 
 ## The viewer: npm package
 
@@ -81,6 +86,9 @@ Publishing is tag-driven via [`../../.github/workflows/publish.yml`](../../.gith
 
 The `NPM_TOKEN` repository secret authorizes the publish.
 
+> Note: the viewer publishes on `v*` tags; the editor-dist bundle publishes on
+> `editor-dist-v*` tags. The two flows are independent.
+
 ## The editor: hosted static site
 
 The editor is pure client-side — there is no backend.
@@ -91,11 +99,57 @@ npx serve dist    # or deploy dist/ to any static host
 ```
 
 Deploy the `dist/` output to any static host (GitHub Pages, Netlify, Vercel,
-S3/CloudFront, …). The deployed site should link back to this source
-repository. The specific hosting target is TBD.
+S3/CloudFront, Cloudflare Pages, …). The build is host-neutral: Monaco and its
+web workers are self-hosted (no CDN), asset paths are relative (Vite
+`base: './'`), and the app runs under a strict Content-Security-Policy. A
+default CSP (plus `X-Content-Type-Options` and `Referrer-Policy`) is shipped in
+[`../../public/_headers`](../../public/_headers) for hosts that honor it. The
+deployed site should link back to this source repository.
+
+## The prebuilt editor bundle: `@cisco_open/mcptoolkit-editor-dist`
+
+This package ships the compiled editor `dist/` so hosts can serve a portable
+build without building from source — the `swagger-editor-dist` analog.
+
+### Package identity
+
+- **Name:** `@cisco_open/mcptoolkit-editor-dist`
+- **Contents:** `dist/index.html`, hashed `dist/assets/*` (JS/CSS + Monaco
+  workers), and `dist/_headers`.
+- **Build:** `npm run build --workspace=packages/mcptoolkit-editor-dist` runs the
+  root app build and copies the resulting `dist/` into the package
+  (see `packages/mcptoolkit-editor-dist/scripts/build.mjs`).
+
+### Consuming the prebuilt bundle
+
+```bash
+npx serve node_modules/@cisco_open/mcptoolkit-editor-dist/dist
+# or copy dist/ into a web root / Cloudflare Pages output directory
+```
+
+Because asset paths are relative, the bundle can be served from any origin,
+subdomain, or subpath.
+
+### Release / publish flow
+
+Publishing is tag-driven via
+[`../../.github/workflows/publish-editor-dist.yml`](../../.github/workflows/publish-editor-dist.yml).
+It uses a **dedicated `editor-dist-v*` tag prefix** so it does not collide with
+the viewer's `v*`-triggered workflow.
+
+1. Bump `version` in
+   [`packages/mcptoolkit-editor-dist/package.json`](../../packages/mcptoolkit-editor-dist/package.json)
+   (track the editor app version) and roll up the package's `CHANGELOG.md`.
+2. Merge to `main`, then push an `editor-dist-v<version>` tag.
+3. The workflow verifies the tag matches the package version, builds the bundle,
+   and runs `npm publish --workspace=packages/mcptoolkit-editor-dist` with
+   provenance. Dist-tag selection matches the viewer: pre-release (`-rc.N`) →
+   `next`, stable → `latest`. The `NPM_TOKEN` secret authorizes the publish.
 
 ## Related design notes
 
 - [`mcptoolkit-viewer-options.md`](mcptoolkit-viewer-options.md) — the original
   arbitration between a CLI-generated static HTML card view and the standalone
   JS bundle that became `@cisco_open/mcptoolkit-viewer`.
+- [`analytics.md`](analytics.md) — options and considerations for install-time
+  and runtime analytics across the three artifacts (currently: none by default).
