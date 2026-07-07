@@ -36,6 +36,7 @@ This is a **pure client-side** web application for editing, validating, and visu
 - **Tailwind utility classes** — no CSS Modules or CSS-in-JS. Use Tailwind v4 with `@import "tailwindcss"`.
 - **Dark theme only** — all UI uses `bg-zinc-*` / `text-zinc-*` palette.
 - **JSON Schema source of truth** — `src/core/mcpdesc-schema.json` is the schema vendored from the [mcptoolkit-contract](https://github.com/cisco-open/mcptoolkit-contract) repo (`schemas/mcp-description/`). When the spec updates, copy the new schema here.
+- **Precompiled validator is committed (opinionated choice, reconsiderable)** — `src/core/validator.generated.js` is a build-time AJV standalone artifact generated from `mcpdesc-schema.json` by `scripts/build-validator.mjs`. We deliberately **commit** it (rather than gitignore it) so `tsc`, `npm run dev`, and the `packages/mcptoolkit-viewer` build all work without a mandatory codegen pre-step, and so the strict-CSP guarantee (no runtime `new Function()`) is visible in the tree. Trade-off: it can drift if the schema changes without regenerating — mitigated by `npm run build`/`dev` regenerating it via `build:validator`. If this proves noisy, the alternative is to gitignore the file and rely on a prebuild hook; revisit if needed.
 - **Handlebars template** — `src/core/template.ts` contains the markdown template as a TypeScript string. The renderer in `src/core/renderer.ts` registers helpers ported from mcptoolkit-contract.
 
 ### Spec Version

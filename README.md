@@ -89,7 +89,8 @@ The editor is pure client-side — deploy the `dist/` folder to any static host 
 src/
   core/                        # Reusable library (browser-compatible, no React)
     types.ts                   # MCP Description TypeScript types
-    validator.ts               # AJV-based schema validator
+    validator.ts               # AJV-based schema validator (uses the precompiled validator below)
+    validator.generated.js     # Precompiled AJV validator (generated + committed — see note)
     renderer.ts                # Handlebars markdown renderer
     template.ts                # Markdown Handlebars template
     mcpdesc-schema.json        # MCP Description JSON Schema
@@ -120,6 +121,16 @@ The core module has **no React or DOM dependencies**. It exports:
 - Full TypeScript type definitions for MCP Description
 
 This module is adapted from [mcptoolkit-contract](https://github.com/cisco-open/mcptoolkit-contract) and designed to be extractable as a standalone core package.
+
+> **Design note (opinionated, reconsiderable):** to run under a strict
+> Content-Security-Policy (`script-src 'self'`, no `'unsafe-eval'`), the AJV
+> validator is **precompiled at build time** — `scripts/build-validator.mjs`
+> generates `src/core/validator.generated.js` (AJV standalone), which avoids
+> AJV's runtime `new Function()`. That generated file is **committed** so `tsc`,
+> `npm run dev`, and the viewer build work without a codegen pre-step. It is
+> regenerated automatically by `npm run build`/`npm run dev` (via
+> `npm run build:validator`). If committing the artifact proves noisy, the
+> alternative is to gitignore it and rely on a prebuild hook — revisit if needed.
 
 ### Tech Stack
 
