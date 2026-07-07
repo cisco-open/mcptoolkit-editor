@@ -18,6 +18,7 @@ import {
 } from 'react';
 import { parse as yamlParse } from 'yaml';
 import { McpDescValidator, type McpDescDocument, type ValidationResult } from '../core';
+import minimalExample from '../../examples/minimal.yaml?raw';
 import mcpdescSchema from '../core/mcpdesc-schema.json';
 
 // ============================================================================
@@ -69,18 +70,7 @@ function loadInitialText(): string {
     const saved = localStorage.getItem(LOCALSTORAGE_KEY);
     if (saved) return saved;
   } catch { /* ignore */ }
-  // Default minimal example
-  return `{
-  "mcpdesc": "0.6.0",
-  "info": {
-    "name": "my-server",
-    "version": "0.1.0"
-  },
-  "transports": [
-    { "type": "stdio", "command": "my-server" }
-  ],
-  "tools": []
-}`;
+  return minimalExample;
 }
 
 const initialState: DocState = {

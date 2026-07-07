@@ -62,6 +62,25 @@ This project maintains **two changelogs**. Both must be kept in sync when making
    - Root changelog has a TOC between `<!-- toc -->` / `<!-- tocstop -->` markers — add the new entry link there
 5. **Unreleased section** — both changelogs have an `## unreleased` section at the top for work-in-progress entries.
 
+## Contributing workflow
+
+All changes — code, docs, config, or release prep — must go through a **branch and pull request**. Never commit directly to `main`.
+
+```bash
+git switch -c <type>/short-description   # e.g. fix/default-example, chore/ci-simplify
+# ... make changes, commit with -s (DCO sign-off) ...
+git push -u origin <branch>
+# open a PR against main; wait for CI and review before merging
+```
+
+Branch naming conventions:
+- `fix/` — bug fixes
+- `feat/` — new features
+- `chore/` — tooling, CI, docs, deps
+- `release/X.Y.Z` — release prep (required by the release workflow)
+
+For agents: batch logically related changes into a single branch and PR rather than one commit per tweak. Stop before pushing and confirm with the user.
+
 ## Build & Run
 
 ```bash
@@ -80,7 +99,7 @@ Before proposing a release PR, run the prerelease gate:
 npm run prerelease
 ```
 
-This runs `npm ci --dry-run` (verifies `package-lock.json` is in sync with the manifests), lints, and then builds both the editor and the viewer library. It mirrors the `npm ci` + lint + build path that CI and the publish workflow use.
+This runs `npm run sync:badge` (syncs the README status badge to the new version), `npm ci --dry-run` (verifies `package-lock.json` is in sync with the manifests), lints, and then builds both the editor and the viewer library. It mirrors the `npm ci` + lint + build path that CI and the publish workflow use.
 
 Release checklist (see `.github/agents/release-manager.agent.md` and `.github/skills/release/SKILL.md` for the full procedure):
 

@@ -68,7 +68,7 @@ When cutting a release:
 2. Also update the `version` constant in `packages/mcptoolkit-viewer/src/index.tsx`.
 3. Update **both** changelogs: root `CHANGELOG.md` and `packages/mcptoolkit-viewer/CHANGELOG.md` (see `AGENTS.md` for scope rules).
 4. Regenerate the lockfile so it reflects the new versions: run `npm install`, then commit `package-lock.json` alongside the manifest bumps. This is essential — `ci.yml` and `publish.yml` both run `npm ci`, which fails if the lockfile is out of sync.
-5. Run `npm run prerelease` and confirm it is green before proposing the PR. This gate runs `npm ci --dry-run` (verifies lockfile sync), lints, then builds the editor and the viewer library.
+5. Run `npm run prerelease` and confirm it is green before proposing the PR. This gate runs `npm run sync:badge` (syncs the README status badge to the new version), `npm ci --dry-run` (verifies lockfile sync), lints, then builds the editor and the viewer library.
 6. The publish workflow reads the version from `packages/mcptoolkit-viewer/package.json` and publishes that workspace package — the git tag must match that version.
 
 > Note: this repo's `npm run prerelease` does not run `npm test` (no test framework is configured). It mirrors the `npm ci` + lint + build path that CI and `publish.yml` use.
