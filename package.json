@@ -1,7 +1,7 @@
 {
   "name": "mcptoolkit-editor",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A web-based editor for MCP Description documents — validate, visualize, and export.",
   "license": "Apache-2.0",
   "repository": {
@@ -15,8 +15,9 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "npm run build:validator && vite",
+    "build": "npm run build:validator && tsc -b && vite build",
+    "build:validator": "node scripts/build-validator.mjs",
     "build:viewer": "npm run build --workspace=packages/mcptoolkit-viewer",
     "preview": "vite preview",
     "lint": "eslint .",

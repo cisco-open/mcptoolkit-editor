@@ -6,43 +6,30 @@
  * Browser-compatible MCP Description validator.
  *
  * Adapted from mcptoolkit-contract's Validator class — stripped of Node.js fs/path
- * dependencies. Accepts the JSON Schema object directly at construction time.
+ * dependencies. Uses a validator precompiled at build time from
+ * mcpdesc-schema.json (see scripts/build-validator.mjs) instead of compiling the
+ * schema at runtime, so it runs under a strict Content-Security-Policy
+ * (script-src 'self', no 'unsafe-eval').
  */
 
-import Ajv from 'ajv';
 import type { ValidateFunction, ErrorObject } from 'ajv';
-import addFormats from 'ajv-formats';
+import validateMcpDesc from './validator.generated.js';
 import type { ValidationResult, ValidationIssue } from './types';
 
 export class McpDescValidator {
-  private ajv: Ajv;
-  private validate: ValidateFunction | null = null;
+  private validate: ValidateFunction = validateMcpDesc;
 
-  constructor() {
-    this.ajv = new Ajv({
-      allErrors: true,
-      verbose: true,
-      strict: false,
-      validateFormats: false,
-    });
-    addFormats(this.ajv);
-  }
-
-  /** Compile a JSON schema. Call once at startup or when schema changes. */
-  loadSchema(schema: Record<string, unknown>): void {
-    this.validate = this.ajv.compile(schema);
+  /**
+   * Retained for API compatibility. The validator is precompiled from the
+   * bundled MCP Description schema at build time, so no runtime schema
+   * compilation happens and the passed schema (if any) is ignored.
+   */
+  loadSchema(schema?: Record<string, unknown>): void {
+    void schema; // no-op — see class doc comment
   }
 
   /** Validate a parsed MCP Description document. */
   validateDocument(data: unknown): ValidationResult {
-    if (!this.validate) {
-      return {
-        valid: false,
-        errors: [{ path: '/', message: 'No schema loaded — call loadSchema() first' }],
-        warnings: [],
-      };
-    }
-
     const valid = this.validate(data) as boolean;
 
     const errors: ValidationIssue[] = [];
