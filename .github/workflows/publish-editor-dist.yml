@@ -1,0 +1,61 @@
+# Publishes @cisco_open/mcptoolkit-editor-dist (the prebuilt editor bundle).
+#
+# Uses a dedicated tag prefix (editor-dist-v*) so it does not collide with the
+# viewer's publish workflow, which triggers on v* tags. This file is NOT managed
+# by oss-scaffold.
+name: Publish editor-dist to npm
+
+on:
+  push:
+    tags:
+      - 'editor-dist-v*'
+
+permissions:
+  contents: read
+  id-token: write   # required for npm provenance attestation
+
+jobs:
+  publish:
+    name: Publish editor-dist to npm
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build editor-dist
+        run: npm run build --workspace=packages/mcptoolkit-editor-dist
+
+      - name: Verify tag matches package.json and select dist-tag
+        id: release
+        run: |
+          PKG_VERSION="$(node -p "require('./packages/mcptoolkit-editor-dist/package.json').version")"
+          TAG_VERSION="${GITHUB_REF_NAME#editor-dist-v}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::Tag '${GITHUB_REF_NAME}' does not match packages/mcptoolkit-editor-dist/package.json version '${PKG_VERSION}'"
+            exit 1
+          fi
+          # Pre-release versions (e.g. 1.0.1-rc.1) publish under the 'next'
+          # dist-tag so `npm install` keeps serving the latest stable release.
+          if printf '%s' "$PKG_VERSION" | grep -q '-'; then
+            DIST_TAG=next
+          else
+            DIST_TAG=latest
+          fi
+          echo "dist_tag=${DIST_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Publishing ${PKG_VERSION} under dist-tag '${DIST_TAG}'"
+
+      - name: Publish
+        run: npm publish --workspace=packages/mcptoolkit-editor-dist --provenance --access public --tag "${{ steps.release.outputs.dist_tag }}"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

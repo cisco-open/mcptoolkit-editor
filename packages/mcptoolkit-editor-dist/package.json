@@ -1,0 +1,20 @@
+{
+  "name": "@cisco_open/mcptoolkit-editor-dist",
+  "version": "1.1.0-rc.1",
+  "description": "Prebuilt, host-neutral static build of the MCP Description Editor — serve from any origin or subpath.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cisco-open/mcptoolkit-editor.git",
+    "directory": "packages/mcptoolkit-editor-dist"
+  },
+  "homepage": "https://github.com/cisco-open/mcptoolkit-editor#readme",
+  "bugs": "https://github.com/cisco-open/mcptoolkit-editor/issues",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  }
+}

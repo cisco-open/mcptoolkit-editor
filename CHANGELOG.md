@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[1.1.0-rc.1] — 2026-07-07](#110-rc1--2026-07-07)
 - [[1.0.1] — 2026-07-07](#101--2026-07-07)
 - [[1.0.0] — 2026-07-07](#100--2026-07-07)
 - [[1.0.0-rc.3] — 2026-07-07](#100-rc3--2026-07-07)
@@ -18,6 +19,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+
+## [1.1.0-rc.1] — 2026-07-07
+
+### Changed
+
+- Build with relative asset paths (Vite `base: './'`) so the prebuilt `dist/` can
+  be served from any origin, subdomain, or subpath. Monaco's web workers still
+  resolve correctly (via `import.meta.url`).
+
+### Added
+
+- New workspace package **`@cisco_open/mcptoolkit-editor-dist`** — the prebuilt,
+  host-neutral editor bundle (the `swagger-editor-dist` analog). Ships the
+  compiled `dist/` so hosts can serve a portable editor without building from
+  source. Published via a tag-driven workflow on `editor-dist-v*` tags. See
+  [`docs/maintainers/distribution.md`](docs/maintainers/distribution.md).
+- [`docs/maintainers/analytics.md`](docs/maintainers/analytics.md) — options and
+  considerations for install-time and runtime analytics across the three
+  artifacts. Current policy: **no telemetry by default**; the `-dist` package
+  README documents this explicitly.
 
 
 ## [1.0.1] — 2026-07-07
