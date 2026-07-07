@@ -145,7 +145,8 @@ site, not published. Adjust the core procedure above as follows:
 4. Run `npm install` so [`package-lock.json`](../../../package-lock.json)
    reflects the new versions, and **commit it** — `ci.yml` and `publish.yml` run
    `npm ci`, which fails on a stale lockfile.
-5. `npm run prerelease` here runs `npm ci --dry-run` (lockfile-sync check), lints,
+5. `npm run prerelease` here runs `npm run sync:badge` (syncs the README status
+   badge to the new version), `npm ci --dry-run` (lockfile-sync check), lints,
    then builds the editor and the viewer library. It does **not** run `npm test`
    (no test framework configured).
 6. The pushed tag `vX.Y.Z` must equal

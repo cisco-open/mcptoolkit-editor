@@ -80,7 +80,7 @@ Before proposing a release PR, run the prerelease gate:
 npm run prerelease
 ```
 
-This runs `npm ci --dry-run` (verifies `package-lock.json` is in sync with the manifests), lints, and then builds both the editor and the viewer library. It mirrors the `npm ci` + lint + build path that CI and the publish workflow use.
+This runs `npm run sync:badge` (syncs the README status badge to the new version), `npm ci --dry-run` (verifies `package-lock.json` is in sync with the manifests), lints, and then builds both the editor and the viewer library. It mirrors the `npm ci` + lint + build path that CI and the publish workflow use.
 
 Release checklist (see `.github/agents/release-manager.agent.md` and `.github/skills/release/SKILL.md` for the full procedure):
 
