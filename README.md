@@ -1,12 +1,53 @@
-# MCP Toolkit: MCP Description Editor
+# MCP Description Editor
 
-A web-based editor for MCP Description documents — visualize, update, validate, and export documents.
+A web-based editor for [MCP Description](https://github.com/cisco-open/mcptoolkit-contract) documents — author, validate, preview, and export machine-readable MCP server contracts.
 
-[MCP Description](https://github.com/cisco-open/mcptoolkit-contract) is a portable, machine-readable contract format for MCP servers. Think "OpenAPI for MCP." 
+> MCP Description is a portable contract format for MCP servers, similar to what OpenAPI is for REST APIs. It declares tools, resources, prompts, transports, and security in a single document.
 
-This editor gives you a fast feedback loop while authoring or reviewing those contracts.
+![Editor screenshot](docs/img/screenshot.png)
 
-![alt text](docs/img/screenshot.png)
+## Quick Start
+
+### Run locally
+
+```bash
+git clone https://github.com/cisco-open/mcptoolkit-editor.git
+cd mcptoolkit-editor
+npm install
+npm run dev
+```
+
+Open **http://localhost:5173**. The editor loads with a blank document ready to edit.
+
+### Try the bundled examples
+
+Click **Examples** in the toolbar to load a pre-built MCP Description (minimal server, HTTP server, multi-transport). Each example demonstrates a different slice of the format and updates the preview instantly.
+
+### Load your own document
+
+Use **Open** in the toolbar to load any `.json` or `.yaml` file from disk, or paste content directly into the editor. The format is auto-detected.
+
+### Validate and preview
+
+- The **Validation panel** at the bottom shows schema errors and semantic warnings in real time.
+- The **Cards tab** renders a structured, interactive preview — click any type badge to jump to its definition in the editor.
+- The **Markdown tab** renders the document as human-readable documentation.
+
+### Export
+
+Click **Export** to download the document as `.mcpdesc.json`, `.mcpdesc.yaml`, or `.md`.
+
+## Features
+
+- **Monaco Editor** — JSON Schema-driven autocomplete, inline squiggles, folding, and syntax highlighting for JSON and YAML
+- **Real-time validation** — AJV schema validation against MCP Description, plus semantic warnings (semver format, empty capabilities, duplicate names)
+- **Cards preview** — collapsible sections for server info, transports, security, capabilities, tools (with schemas), resources, resource templates, prompts, and tags
+- **Click-to-navigate** — click any type bubble in the preview to jump to its source in the editor
+- **Markdown preview** — Handlebars-rendered documentation, ready to copy-paste or export
+- **JSON ↔ YAML** — edit in either format; convert with one click
+- **LocalStorage persistence** — edits survive page reloads
+- **Pure client-side** — no backend required
+
 
 ## The MCP Description (`mcpdesc`) format
 
@@ -30,72 +71,14 @@ mcpcontract dump \
 > repository (`spec/` and `schemas/mcp-description/`). This editor vendors schema
 > **v0.7.0** from that source.
 
-## Features
-
-- **Monaco Editor** — Full code editor with JSON Schema-driven autocomplete, inline validation squiggles, folding, and syntax highlighting for both JSON and YAML
-- **Real-time validation** — AJV-based schema validation against MCP Description, plus semantic warnings (semver format, empty capabilities, duplicate names)
-- **Structured preview** — Interactive "Cards" view with collapsible sections for server info, transports, security, capabilities, tools (with input/output schemas), resources, resource templates, prompts, and tags
-- **Click-to-navigate** — Click any type bubble in the preview to jump to its definition in the editor
-- **Markdown preview** — Handlebars-rendered markdown documentation, ready for copy-paste or export
-- **JSON ↔ YAML** — Edit in either format; auto-detected on load, convertible with one click
-- **Export** — Download as `.mcpdesc.json`, `.mcpdesc.yaml`, or `.md`
-- **File import** — Open any `.json` or `.yaml` file from disk
-- **Bundled examples** — Load examples of MCP Descriptions
-- **LocalStorage persistence** — Edits survive page reloads
-- **Pure client-side** — No backend required; host as static files or run locally
-
-## Quick Start
+## Build and deploy
 
 ```bash
-npm install
-npm run dev
+npm run build   # outputs to dist/
+npm run preview # local preview of the production build
 ```
 
-Open http://localhost:5173 in your browser.
-
-## Build
-
-```bash
-npm run build
-```
-
-Output goes to `dist/`. Serve it with any static file server:
-
-```bash
-npm run preview          # Vite preview server
-# or
-npx serve dist           # any static server
-```
-
-## Distribution
-
-This repository is part of the **MCP Toolkit** suite and produces two separately distributed artifacts:
-
-| Artifact | What it is | How it ships |
-|----------|-----------|--------------|
-| **MCP Description Editor** (this app, `mcptoolkit-editor`) | The full Monaco-based web editor. `package.json` is marked `"private": true`. | **Hosted** as a static site. Run `npm run build` and deploy the `dist/` folder to any static host (GitHub Pages, Netlify, Vercel, S3, …). It is not published to npm. |
-| **`@cisco_open/mcptoolkit-viewer`** ([`packages/mcptoolkit-viewer/`](packages/mcptoolkit-viewer/)) | A drop-in, embeddable card-view web component for visualizing MCP Description documents — analogous to Swagger UI. | **Published to npm** as `@cisco_open/mcptoolkit-viewer`. Consumed by other MCP Toolkit projects via `<script>` tag or as a React component. |
-
-### Publishing the viewer to npm
-
-Publishing is tag-driven via [`.github/workflows/publish.yml`](.github/workflows/publish.yml):
-
-1. Bump `version` in [`packages/mcptoolkit-viewer/package.json`](packages/mcptoolkit-viewer/package.json) and the `version` constant in `packages/mcptoolkit-viewer/src/index.tsx`.
-2. Update both changelogs (see [`AGENTS.md`](AGENTS.md)).
-3. Run `npm install` so [`package-lock.json`](package-lock.json) reflects the new versions, then run the prerelease gate and confirm it is green:
-
-   ```bash
-   npm run prerelease
-   ```
-
-   This runs `npm ci --dry-run` (verifies the lockfile is in sync — the publish workflow's `npm ci` fails otherwise) and builds both the editor and the viewer library.
-4. Merge to `main`, then push a `v<version>` tag. The workflow builds the `mcptoolkit-viewer` workspace and runs `npm publish` with provenance. Pre-release versions (e.g. `-rc.N`) publish under the `next` dist-tag; stable versions under `latest`.
-
-### Hosting the editor
-
-The editor is pure client-side with no backend. Build it and serve the static output, then link back to this source repository from the deployed site. Deployment target is TBD.
-
-See [`docs/maintainers/distribution.md`](docs/maintainers/distribution.md) for the full distribution model.
+The editor is pure client-side — deploy the `dist/` folder to any static host (GitHub Pages, Netlify, Vercel, S3, …). No backend required.
 
 ## Project Structure
 
@@ -125,13 +108,6 @@ src/
   main.tsx                     # Entry point
 ```
 
-## Documentation Layout
-
-- `docs/` — end-user guides and examples
-- `docs/maintainers/` — maintainer-focused design and implementation references
-- `docs/dust/` — archived planning and historical notes
-- `docs/img/` — repository documentation images
-
 ### Core Library (`src/core/`)
 
 The core module has **no React or DOM dependencies**. It exports:
@@ -142,7 +118,7 @@ The core module has **no React or DOM dependencies**. It exports:
 
 This module is adapted from [mcptoolkit-contract](https://github.com/cisco-open/mcptoolkit-contract) and designed to be extractable as a standalone core package.
 
-## Tech Stack
+### Tech Stack
 
 | Layer | Choice |
 |-------|--------|
@@ -153,6 +129,30 @@ This module is adapted from [mcptoolkit-contract](https://github.com/cisco-open/
 | Markdown | Handlebars 4 |
 | YAML | yaml 2 |
 | Styling | Tailwind CSS 4 |
+
+## Distribution
+
+The editor is hosted as a static site. This repository also ships
+[`@cisco_open/mcptoolkit-viewer`](packages/mcptoolkit-viewer/) — a lightweight,
+embeddable card-view component (think Swagger UI for MCP) published separately to
+npm for use in other projects via `<script>` tag or React. See
+[`docs/maintainers/distribution.md`](docs/maintainers/distribution.md) for the
+full distribution model.
+
+### Publishing the viewer to npm
+
+Publishing is tag-driven via [`.github/workflows/publish.yml`](.github/workflows/publish.yml):
+
+1. Bump `version` in [`packages/mcptoolkit-viewer/package.json`](packages/mcptoolkit-viewer/package.json) and the `version` constant in `packages/mcptoolkit-viewer/src/index.tsx`.
+2. Update both changelogs (see [`AGENTS.md`](AGENTS.md)).
+3. Run `npm install` so [`package-lock.json`](package-lock.json) reflects the new versions, then run the prerelease gate and confirm it is green:
+
+   ```bash
+   npm run prerelease
+   ```
+
+   This runs `npm ci --dry-run` (verifies the lockfile is in sync — the publish workflow's `npm ci` fails otherwise) and builds both the editor and the viewer library.
+4. Merge to `main`, then push a `v<version>` tag. The workflow builds the `mcptoolkit-viewer` workspace and runs `npm publish` with provenance. Pre-release versions (e.g. `-rc.N`) publish under the `next` dist-tag; stable versions under `latest`.
 
 ## License
 
