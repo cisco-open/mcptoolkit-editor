@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[1.0.1] — 2026-07-07](#101--2026-07-07)
 - [[1.0.0] — 2026-07-07](#100--2026-07-07)
 - [[1.0.0-rc.3] — 2026-07-07](#100-rc3--2026-07-07)
 - [[1.0.0-rc.2] — 2026-07-06](#100-rc2--2026-07-06)
@@ -17,6 +18,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+
+## [1.0.1] — 2026-07-07
+
+### Fixed
+
+- **Self-host Monaco Editor assets and workers.** The editor no longer loads Monaco from the jsdelivr CDN at runtime. `@monaco-editor/react`'s loader is now pointed at the bundled `monaco-editor` via `loader.config({ monaco })`, and Monaco's web workers (`editor.worker`, `json.worker`) are served from the app's own origin through `self.MonacoEnvironment`. This makes the editor work offline, behind a CDN block, and under a strict Content-Security-Policy. See `src/monaco-setup.ts`.
+
+### Added
+
+- `public/_headers` — a host-neutral default Content-Security-Policy (plus `X-Content-Type-Options` and `Referrer-Policy`) honored by static hosts such as Cloudflare Pages and Netlify. Confirms the self-hosted editor runs with `default-src 'self'` and `worker-src 'self' blob:`.
 
 
 ## [1.0.0] — 2026-07-07
