@@ -120,8 +120,9 @@ No test framework is configured yet. When adding tests:
 
 ### Update the MCP Description schema
 1. Copy the new schema from the [mcptoolkit-contract](https://github.com/cisco-open/mcptoolkit-contract) repo (`schemas/mcp-description/<version>/mcp-description.schema.json`) to `src/core/mcpdesc-schema.json`
-2. Update types in `src/core/types.ts` to match
-3. Update the spec version reference in `src/core/template.ts` and `src/examples/index.ts`
+2. Regenerate the precompiled validator: `npm run build:validator` (writes `src/core/validator.generated.js`). This runs automatically as part of `npm run build`/`npm run dev`, but regenerate and commit it when the schema changes. The validator is precompiled (AJV standalone) so it runs under a strict CSP without `new Function()`.
+3. Update types in `src/core/types.ts` to match
+4. Update the spec version reference in `src/core/template.ts` and `src/examples/index.ts`
 
 ### Add a new bundled example
 1. Add the JSON string to `src/examples/index.ts`

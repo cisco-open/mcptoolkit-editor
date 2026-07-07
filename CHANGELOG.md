@@ -25,6 +25,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 ### Fixed
 
 - **Self-host Monaco Editor assets and workers.** The editor no longer loads Monaco from the jsdelivr CDN at runtime. `@monaco-editor/react`'s loader is now pointed at the bundled `monaco-editor` via `loader.config({ monaco })`, and Monaco's web workers (`editor.worker`, `json.worker`) are served from the app's own origin through `self.MonacoEnvironment`. This makes the editor work offline, behind a CDN block, and under a strict Content-Security-Policy. See `src/monaco-setup.ts`.
+- **Precompile the AJV schema validator (strict-CSP safe).** `McpDescValidator` previously compiled `mcpdesc-schema.json` at runtime, which uses `new Function()` and threw `EvalError` under a strict CSP (crashing the app). The validator is now generated at build time into `src/core/validator.generated.js` by `scripts/build-validator.mjs` (AJV standalone codegen, wired into `npm run build`/`npm run dev` via `npm run build:validator`), so no runtime code evaluation occurs and validation works under `script-src 'self'`.
 
 ### Added
 
