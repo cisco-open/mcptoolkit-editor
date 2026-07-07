@@ -198,7 +198,7 @@ export function McpToolkitViewer(options: McpToolkitViewerOptions): McpToolkitVi
 }
 
 // Package version
-export const version = '1.0.0-rc.3';
+export const version = '1.0.0';
 
 // Re-export for consumers
 export { McpDescCardView } from './McpDescCardView';
