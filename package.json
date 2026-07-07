@@ -22,7 +22,7 @@
     "lint": "eslint .",
     "verify:lockfile": "npm ci --dry-run",
     "prerelease": "npm run verify:lockfile && npm run lint && npm run build && npm run build:viewer",
-    "ui": "npm run build --workspace=packages/mcptoolkit-viewer && echo '\n🚀 MCP Toolkit Viewer available at:\n   http://localhost:8888/mcptoolkit-viewer/viewer.html?style=light\n' && python3 -m http.server 8888 -b 127.0.0.1"
+    "ui": "npm run build --workspace=packages/mcptoolkit-viewer && echo '\n🚀 MCP Toolkit Viewer available at:\n   http://localhost:8888/demo/viewer.html?style=light\n' && python3 -m http.server 8888 -b 127.0.0.1"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
