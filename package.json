@@ -1,7 +1,7 @@
 {
   "name": "mcptoolkit-editor",
   "private": true,
-  "version": "1.0.0-rc.3",
+  "version": "1.0.0",
   "description": "A web-based editor for MCP Description documents — validate, visualize, and export.",
   "license": "Apache-2.0",
   "repository": {
