@@ -8,7 +8,6 @@ import { examples, exampleGroups } from '../examples';
 import { stringify as yamlStringify } from 'yaml';
 import { McpDescRenderer } from '../core/renderer';
 import { mcpdescMarkdownTemplate } from '../core/template';
-import { version as APP_VERSION } from '../../package.json';
 
 const renderer = new McpDescRenderer();
 
@@ -84,7 +83,7 @@ export default function Toolbar() {
   return (
     <header className="flex items-center gap-2 px-3 py-1.5 bg-zinc-950 border-b border-zinc-800 shrink-0">
       {/* Brand */}
-      <span className="text-sm font-semibold text-zinc-200 mr-2 select-none">MCP Description Editor <span className="text-zinc-500 font-normal">v{APP_VERSION}</span></span>
+      <span className="text-sm font-semibold text-zinc-200 mr-2 select-none">MCP Description Editor</span>
 
       <div className="w-px h-5 bg-zinc-800" />
 
