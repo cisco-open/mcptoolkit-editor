@@ -1,10 +1,20 @@
-# MCP Description Editor
+# MCP Toolkit: Editor
 
-A web-based editor for [MCP Description](https://github.com/cisco-open/mcptoolkit-contract) documents — author, validate, preview, and export machine-readable MCP server contracts.
-
-> MCP Description is a portable contract format for MCP servers, similar to what OpenAPI is for REST APIs. It declares tools, resources, prompts, transports, and security in a single document.
+A web-based editor for [MCP Description](#the-mcp-description-mcpdesc-format) documents.
 
 ![Editor screenshot](docs/img/screenshot.png)
+
+
+## Features
+
+- **Monaco Editor** — JSON Schema-driven autocomplete, inline squiggles, folding, and syntax highlighting for JSON and YAML
+- **Real-time validation** — AJV schema validation against MCP Description, plus semantic warnings (semver format, empty capabilities, duplicate names)
+- **Cards preview** — collapsible sections for server info, transports, security, capabilities, tools (with schemas), resources, resource templates, prompts, and tags
+- **Click-to-navigate** — click any type bubble in the preview to jump to its source in the editor
+- **Markdown preview** — Handlebars-rendered documentation, ready to copy-paste or export
+- **JSON ↔ YAML** — edit in either format; convert with one click
+- **LocalStorage persistence** — edits survive page reloads
+- **Pure client-side** — no backend required
 
 ## Quick Start
 
@@ -37,16 +47,6 @@ Use **Open** in the toolbar to load any `.json` or `.yaml` file from disk, or pa
 
 Click **Export** to download the document as `.mcpdesc.json`, `.mcpdesc.yaml`, or `.md`.
 
-## Features
-
-- **Monaco Editor** — JSON Schema-driven autocomplete, inline squiggles, folding, and syntax highlighting for JSON and YAML
-- **Real-time validation** — AJV schema validation against MCP Description, plus semantic warnings (semver format, empty capabilities, duplicate names)
-- **Cards preview** — collapsible sections for server info, transports, security, capabilities, tools (with schemas), resources, resource templates, prompts, and tags
-- **Click-to-navigate** — click any type bubble in the preview to jump to its source in the editor
-- **Markdown preview** — Handlebars-rendered documentation, ready to copy-paste or export
-- **JSON ↔ YAML** — edit in either format; convert with one click
-- **LocalStorage persistence** — edits survive page reloads
-- **Pure client-side** — no backend required
 
 
 ## The MCP Description (`mcpdesc`) format
@@ -130,14 +130,42 @@ This module is adapted from [mcptoolkit-contract](https://github.com/cisco-open/
 | YAML | yaml 2 |
 | Styling | Tailwind CSS 4 |
 
-## Distribution
+## Embeddable MCP Description Card View
 
-The editor is hosted as a static site. This repository also ships
-[`@cisco_open/mcptoolkit-viewer`](packages/mcptoolkit-viewer/) — a lightweight,
-embeddable card-view component (think Swagger UI for MCP) published separately to
-npm for use in other projects via `<script>` tag or React. See
-[`docs/maintainers/distribution.md`](docs/maintainers/distribution.md) for the
-full distribution model.
+[`@cisco_open/mcptoolkit-viewer`](packages/mcptoolkit-viewer/) is a lightweight,
+embeddable card-view component — think Swagger UI for MCP — published separately
+to npm. Use it to render MCP Description documents in any web page or React app.
+
+**Via `<script>` tag** (no build step required):
+
+```html
+<link rel="stylesheet" href="https://unpkg.com/@cisco_open/mcptoolkit-viewer/dist/mcptoolkit-viewer.css">
+<div id="mcpdesc"></div>
+<script src="https://unpkg.com/@cisco_open/mcptoolkit-viewer/dist/mcptoolkit-viewer.js"></script>
+<script>
+  McpToolkitViewer({
+    dom_id: '#mcpdesc',
+    url: '/path/to/server.mcpdesc.json'
+  });
+</script>
+```
+
+**Via React component:**
+
+```tsx
+import { McpDescCardView } from '@cisco_open/mcptoolkit-viewer/react';
+import '@cisco_open/mcptoolkit-viewer/dist/mcptoolkit-viewer.css';
+
+function MyPage({ doc, validation }) {
+  return (
+    <div className="mcptoolkit-viewer-root">
+      <McpDescCardView doc={doc} validation={validation} />
+    </div>
+  );
+}
+```
+
+For the full API reference, options, and theming details see [`packages/mcptoolkit-viewer/README.md`](packages/mcptoolkit-viewer/README.md).
 
 ### Publishing the viewer to npm
 
