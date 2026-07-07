@@ -3,7 +3,7 @@
 A web-based editor for [MCP Description](#the-mcp-description-mcpdesc-format) documents.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Status: pre-release](https://img.shields.io/badge/status-1.0.0--rc.2-orange.svg)](CHANGELOG.md)
+[![Status: pre-release](https://img.shields.io/badge/status-1.0.0--rc.3-orange.svg)](CHANGELOG.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 
 - **Monaco Editor** — JSON Schema-driven autocomplete, inline squiggles, folding, and syntax highlighting for JSON and YAML
@@ -15,7 +15,7 @@ A web-based editor for [MCP Description](#the-mcp-description-mcpdesc-format) do
 - **LocalStorage persistence** — edits survive page reloads
 - **Pure client-side** — no backend required
 
-![Editor screenshot](docs/img/screenshot.png)
+![Editor screenshot](docs/img/screenshot-minimal.png)
 
 
 

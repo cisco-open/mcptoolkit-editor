@@ -6,12 +6,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 <!-- toc -->
 
+- [[1.0.0-rc.3] — 2026-07-07](#100-rc3--2026-07-07)
 - [[1.0.0-rc.2] — 2026-07-06](#100-rc2--2026-07-06)
 - [[1.0.0-rc.1] — 2026-06-27](#100-rc1--2026-06-27)
 
 <!-- tocstop -->
 
 ## Unreleased
+
+
+## [1.0.0-rc.3] — 2026-07-07
+
+Version bump for suite alignment with `mcptoolkit-editor`. No changes to the viewer library source.
 
 
 ## [1.0.0-rc.2] — 2026-07-06

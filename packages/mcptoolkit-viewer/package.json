@@ -1,6 +1,6 @@
 {
   "name": "@cisco_open/mcptoolkit-viewer",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0-rc.3",
   "description": "Interactive MCP Description card view — drop-in web component for visualizing mcpdesc documents.",
   "license": "Apache-2.0",
   "repository": {
