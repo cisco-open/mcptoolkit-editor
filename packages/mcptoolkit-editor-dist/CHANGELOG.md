@@ -1,6 +1,10 @@
-# Changelog
+# Changelog — @cisco_open/mcptoolkit-editor-dist
 
-All notable changes to `@cisco_open/mcptoolkit-editor-dist` are documented here.
+Release notes for the prebuilt `@cisco_open/mcptoolkit-editor-dist` bundle. This
+package ships the built **MCP Description Editor** app and **shares its version**,
+so app-level changes are described in the [root `CHANGELOG.md`](../../CHANGELOG.md);
+this file records the bundle's releases. The viewer has its own
+[changelog](../mcptoolkit-viewer/CHANGELOG.md).
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This package uses [Semantic Versioning](https://semver.org/) and tracks the MCP Description Editor app version.
 

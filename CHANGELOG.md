@@ -1,6 +1,10 @@
-# Changelog
+# Changelog — MCP Description Editor
 
-All notable changes to the MCP Description Editor are documented here.
+Changes to the **editor app** (`mcptoolkit-editor`) and its prebuilt
+[`@cisco_open/mcptoolkit-editor-dist`](packages/mcptoolkit-editor-dist/CHANGELOG.md)
+bundle (same version). The **viewer** is separate:
+[`@cisco_open/mcptoolkit-viewer`](packages/mcptoolkit-viewer/CHANGELOG.md) has
+its own changelog and version.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This project uses [Semantic Versioning](https://semver.org/).
 
@@ -9,7 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
-- [[1.1.0-rc.1] — 2026-07-07](#110-rc1--2026-07-07)
+- [[1.1.0-rc.1] — 2026-07-08](#110-rc1--2026-07-07)
 - [[1.0.1] — 2026-07-07](#101--2026-07-07)
 - [[1.0.0] — 2026-07-07](#100--2026-07-07)
 - [[1.0.0-rc.3] — 2026-07-07](#100-rc3--2026-07-07)
@@ -21,7 +25,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 ## Unreleased
 
 
-## [1.1.0-rc.1] — 2026-07-07
+## [1.1.0-rc.1] — 2026-07-08
 
 ### Changed
 

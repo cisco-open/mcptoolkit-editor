@@ -45,17 +45,18 @@ The editor currently targets **MCP Description v0.7.0**. The schema lives at `sr
 
 ## Changelogs
 
-This project maintains **two changelogs**. Both must be kept in sync when making changes.
+This project maintains **three changelogs**. Update the one(s) matching the scope of your change.
 
 | Changelog | Scope | Version tracks |
 |-----------|-------|----------------|
-| `CHANGELOG.md` (root) | The editor application (UI, state, examples, schema, validator) | `package.json` version (root) |
-| `packages/mcptoolkit-viewer/CHANGELOG.md` | The standalone viewer library `@cisco_open/mcptoolkit-viewer` (McpDescCardView, TagFilterBar, McpToolkitViewer, viewer.html) | `packages/mcptoolkit-viewer/package.json` version |
+| `CHANGELOG.md` (root) | The editor application (UI, state, examples, schema, validator) — **not the viewer** | root `package.json` version |
+| `packages/mcptoolkit-editor-dist/CHANGELOG.md` | The prebuilt `@cisco_open/mcptoolkit-editor-dist` bundle (ships the built editor app) | `packages/mcptoolkit-editor-dist/package.json` version (**mirrors root**) |
+| `packages/mcptoolkit-viewer/CHANGELOG.md` | The standalone viewer library `@cisco_open/mcptoolkit-viewer` (McpDescCardView, TagFilterBar, McpToolkitViewer, viewer.html) — **versioned independently** | `packages/mcptoolkit-viewer/package.json` version |
 
 ### Rules
 
-1. **Determine affected scope** — if a change modifies files under `packages/mcptoolkit-viewer/`, update the mcptoolkit-viewer changelog. If a change modifies files under `src/`, update the root changelog. Many changes (e.g. to `McpDescCardView.tsx`) affect both.
-2. **Update both changelogs** when a change touches shared code (the card view is imported by the editor from `packages/mcptoolkit-viewer/src/`).
+1. **Determine affected scope** — changes under `src/` (editor app) update the root changelog; changes under `packages/mcptoolkit-viewer/` update the viewer changelog. The editor-dist changelog gets an entry when you cut an editor-dist release (it mirrors the app version). Many changes (e.g. to `McpDescCardView.tsx`) affect both the editor and the viewer.
+2. **Update both editor + viewer changelogs** when a change touches shared code (the card view is imported by the editor from `packages/mcptoolkit-viewer/src/`).
 3. **Format** — follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Use `### Added`, `### Changed`, `### Removed`, `### Fixed`, `### Breaking` sections.
 4. **Version bumps** — when adding a changelog entry for a new version:
    - Bump `version` in the corresponding `package.json`
