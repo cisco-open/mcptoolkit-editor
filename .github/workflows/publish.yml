@@ -1,11 +1,14 @@
-# Managed by oss-scaffold — edit upstream (github.com/ObjectIsAdvantag/oss-scaffold), not here.
-# Profile: node-npm-lib, npmAuth: token. Local edits will fail the drift-check job.
+# Managed by oss-scaffold (override) — see .scaffoldrc.json. This file is listed
+# under "overrides" so local edits do not fail the drift-check job. It is
+# intentionally retargeted from the scaffold default `v*` to the `viewer-v*` tag
+# prefix so the viewer versions independently of the other workspace packages.
+# Profile: node-npm-lib, npmAuth: token.
 name: Publish to npm
 
 on:
   push:
     tags:
-      - 'v*'
+      - 'viewer-v*'
 
 permissions:
   contents: read
@@ -37,7 +40,7 @@ jobs:
         id: release
         run: |
           PKG_VERSION="$(node -p "require('./packages/mcptoolkit-viewer/package.json').version")"
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          TAG_VERSION="${GITHUB_REF_NAME#viewer-v}"
           if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
             echo "::error::Tag '${GITHUB_REF_NAME}' does not match packages/mcptoolkit-viewer/package.json version '${PKG_VERSION}'"
             exit 1

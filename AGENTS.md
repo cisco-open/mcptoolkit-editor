@@ -92,7 +92,7 @@ npm run build    # Production build → dist/
 
 ## Releasing
 
-The published artifact is the `@cisco_open/mcptoolkit-viewer` workspace; releases are tag-driven (`v*` tags trigger `.github/workflows/publish.yml`).
+The published artifact is the `@cisco_open/mcptoolkit-viewer` workspace; releases are tag-driven (`viewer-v*` tags trigger `.github/workflows/publish.yml`). The prebuilt `@cisco_open/mcptoolkit-editor-dist` bundle publishes on `editor-dist-v*` tags via `.github/workflows/publish-editor-dist.yml`. Each package versions independently under its own tag prefix; there is no bare `v*` release tag.
 
 Before proposing a release PR, run the prerelease gate:
 
@@ -109,7 +109,7 @@ Release checklist (see `.github/agents/release-manager.agent.md` and `.github/sk
 3. Roll up **both** changelogs (see the Changelogs section above).
 4. Run `npm install` so `package-lock.json` reflects the new versions, and commit it — otherwise `npm ci` fails in CI/publish.
 5. Run `npm run prerelease` and confirm it is green.
-6. Open a `release/X.Y.Z` PR; after merge, tag `vX.Y.Z` on `main` to publish. RC versions (`-rc.N`) publish under the `next` dist-tag; stable under `latest`.
+6. Open a `release/X.Y.Z` PR; after merge, tag `viewer-vX.Y.Z` on `main` to publish. RC versions (`-rc.N`) publish under the `next` dist-tag; stable under `latest`.
 
 ## Testing
 

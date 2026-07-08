@@ -28,6 +28,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 - Build with relative asset paths (Vite `base: './'`) so the prebuilt `dist/` can
   be served from any origin, subdomain, or subpath. Monaco's web workers still
   resolve correctly (via `import.meta.url`).
+- **Release tags are now per-package.** The viewer publishes on `viewer-v*`
+  tags (retired from the ambiguous bare `v*`) and the editor-dist bundle on
+  `editor-dist-v*`, so the two packages version and publish independently. See
+  [`docs/maintainers/distribution.md`](docs/maintainers/distribution.md#tag--version-convention).
 
 ### Added
 
