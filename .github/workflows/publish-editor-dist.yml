@@ -1,8 +1,8 @@
 # Publishes @cisco_open/mcptoolkit-editor-dist (the prebuilt editor bundle).
 #
-# Uses a dedicated tag prefix (editor-dist-v*) so it does not collide with the
-# viewer's publish workflow, which triggers on v* tags. This file is NOT managed
-# by oss-scaffold.
+# Uses a dedicated tag prefix (editor-dist-v*) so each workspace package versions
+# and publishes independently. The viewer uses viewer-v*. This file is NOT
+# managed by oss-scaffold.
 name: Publish editor-dist to npm
 
 on:

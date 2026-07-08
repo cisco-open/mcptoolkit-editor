@@ -1,6 +1,10 @@
-# Changelog
+# Changelog — MCP Description Editor
 
-All notable changes to the MCP Description Editor are documented here.
+Changes to the **editor app** (`mcptoolkit-editor`) and its prebuilt
+[`@cisco_open/mcptoolkit-editor-dist`](packages/mcptoolkit-editor-dist/CHANGELOG.md)
+bundle (same version). The **viewer** is separate:
+[`@cisco_open/mcptoolkit-viewer`](packages/mcptoolkit-viewer/CHANGELOG.md) has
+its own changelog and version.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This project uses [Semantic Versioning](https://semver.org/).
 
@@ -9,7 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
-- [[1.1.0-rc.1] — 2026-07-07](#110-rc1--2026-07-07)
+- [[1.1.0-rc.2] — 2026-07-08](#110-rc2--2026-07-08)
 - [[1.0.1] — 2026-07-07](#101--2026-07-07)
 - [[1.0.0] — 2026-07-07](#100--2026-07-07)
 - [[1.0.0-rc.3] — 2026-07-07](#100-rc3--2026-07-07)
@@ -21,13 +25,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 ## Unreleased
 
 
-## [1.1.0-rc.1] — 2026-07-07
+## [1.1.0-rc.2] — 2026-07-08
+
+_Supersedes the `v1.1.0-rc.1` tag, which misfired and was never published to npm._
 
 ### Changed
 
 - Build with relative asset paths (Vite `base: './'`) so the prebuilt `dist/` can
   be served from any origin, subdomain, or subpath. Monaco's web workers still
   resolve correctly (via `import.meta.url`).
+- **Release tags are now per-package.** The viewer publishes on `viewer-v*`
+  tags (retired from the ambiguous bare `v*`) and the editor-dist bundle on
+  `editor-dist-v*`, so the two packages version and publish independently. See
+  [`docs/maintainers/distribution.md`](docs/maintainers/distribution.md#tag--version-convention).
+- **`prerelease` now enforces editor-dist/root version alignment.** Added
+  `npm run verify:versions` (fails if `@cisco_open/mcptoolkit-editor-dist` drifts
+  from the root app version) as the first `prerelease` step, plus
+  `npm run sync:version` to align them (`scripts/align-editor-dist-version.mjs`).
+  The viewer keeps its independent version line.
 
 ### Added
 

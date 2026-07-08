@@ -77,7 +77,7 @@ Publishing is tag-driven via [`../../.github/workflows/publish.yml`](../../.gith
 2. Update both changelogs (root `CHANGELOG.md` and the viewer's `CHANGELOG.md`)
    per the rules in [`../../AGENTS.md`](../../AGENTS.md).
 3. Verify the library builds: `npm run build --workspace=packages/mcptoolkit-viewer`.
-4. Merge to `main`, then push a `v<version>` tag.
+4. Merge to `main`, then push a `viewer-v<version>` tag.
 5. The workflow verifies the tag matches the viewer's `package.json` version,
    builds the workspace, and runs `npm publish --workspace=packages/mcptoolkit-viewer`
    with provenance. It selects the dist-tag automatically:
@@ -86,8 +86,36 @@ Publishing is tag-driven via [`../../.github/workflows/publish.yml`](../../.gith
 
 The `NPM_TOKEN` repository secret authorizes the publish.
 
-> Note: the viewer publishes on `v*` tags; the editor-dist bundle publishes on
-> `editor-dist-v*` tags. The two flows are independent.
+## Tag & version convention
+
+The two published packages **version independently** (they don't move in
+lockstep), so each has its **own tag prefix**. There is intentionally **no bare
+`v*` release tag** — it was ambiguous about which package it released.
+
+| Package | Tag prefix | Example | Workflow |
+|---------|-----------|---------|----------|
+| `@cisco_open/mcptoolkit-viewer` | `viewer-v` | `viewer-v1.0.0` | [`publish.yml`](../../.github/workflows/publish.yml) |
+| `@cisco_open/mcptoolkit-editor-dist` | `editor-dist-v` | `editor-dist-v1.1.0-rc.1` | [`publish-editor-dist.yml`](../../.github/workflows/publish-editor-dist.yml) |
+
+Each workflow verifies the pushed tag (minus its prefix) matches its package's
+`version`, so a mismatched or wrong-prefix tag fails fast instead of publishing
+the wrong thing. If the private root editor app is ever published, it would take
+the `editor-v` prefix. The `next`/`latest` dist-tag rule (pre-release `-rc.N` →
+`next`, stable → `latest`) applies to both.
+
+### Version alignment
+
+The two published packages track **different** version lines:
+
+- **`@cisco_open/mcptoolkit-editor-dist` mirrors the root editor app version.**
+  It is literally the built root app, so `packages/mcptoolkit-editor-dist/package.json`
+  must always equal the root `package.json` version (root is the source of
+  truth). `npm run verify:versions` — the first step of `npm run prerelease` —
+  fails on drift; `npm run sync:version` copies the root version into the
+  editor-dist manifest. So bump the **root** version and let the editor-dist
+  follow; do not bump the editor-dist manifest by hand.
+- **`@cisco_open/mcptoolkit-viewer` versions independently** of the editor and
+  is never touched by the alignment scripts.
 
 ## The editor: hosted static site
 
@@ -134,8 +162,8 @@ subdomain, or subpath.
 
 Publishing is tag-driven via
 [`../../.github/workflows/publish-editor-dist.yml`](../../.github/workflows/publish-editor-dist.yml).
-It uses a **dedicated `editor-dist-v*` tag prefix** so it does not collide with
-the viewer's `v*`-triggered workflow.
+It uses a **dedicated `editor-dist-v*` tag prefix** so each workspace package
+versions and publishes independently (see [Tag & version convention](#tag--version-convention)).
 
 1. Bump `version` in
    [`packages/mcptoolkit-editor-dist/package.json`](../../packages/mcptoolkit-editor-dist/package.json)

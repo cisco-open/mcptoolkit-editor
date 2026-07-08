@@ -149,5 +149,15 @@ site, not published. Adjust the core procedure above as follows:
    badge to the new version), `npm ci --dry-run` (lockfile-sync check), lints,
    then builds the editor and the viewer library. It does **not** run `npm test`
    (no test framework configured).
-6. The pushed tag `vX.Y.Z` must equal
-   `packages/mcptoolkit-viewer/package.json`'s `version`.
+6. The pushed tag must equal the target package's `version`, **prefixed by the
+   package**: `viewer-vX.Y.Z` for the viewer (matched against
+   `packages/mcptoolkit-viewer/package.json`) and `editor-dist-vX.Y.Z` for the
+   editor-dist bundle (matched against
+   `packages/mcptoolkit-editor-dist/package.json`). There is **no bare `v*`
+   tag** — the generic `v*` in the core section above is replaced by these
+   per-package prefixes. See
+   [`docs/maintainers/distribution.md`](../../../docs/maintainers/distribution.md#tag--version-convention).
+7. **`@cisco_open/mcptoolkit-editor-dist` mirrors the root app version.** Bump the
+   **root** `package.json` and run `npm run sync:version` (or let `npm install`
+   + `npm run prerelease` catch it — `verify:versions` fails on drift) so the
+   editor-dist manifest matches. Do not bump the editor-dist version by hand.

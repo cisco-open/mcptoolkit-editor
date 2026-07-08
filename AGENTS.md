@@ -45,17 +45,18 @@ The editor currently targets **MCP Description v0.7.0**. The schema lives at `sr
 
 ## Changelogs
 
-This project maintains **two changelogs**. Both must be kept in sync when making changes.
+This project maintains **three changelogs**. Update the one(s) matching the scope of your change.
 
 | Changelog | Scope | Version tracks |
 |-----------|-------|----------------|
-| `CHANGELOG.md` (root) | The editor application (UI, state, examples, schema, validator) | `package.json` version (root) |
-| `packages/mcptoolkit-viewer/CHANGELOG.md` | The standalone viewer library `@cisco_open/mcptoolkit-viewer` (McpDescCardView, TagFilterBar, McpToolkitViewer, viewer.html) | `packages/mcptoolkit-viewer/package.json` version |
+| `CHANGELOG.md` (root) | The editor application (UI, state, examples, schema, validator) — **not the viewer** | root `package.json` version |
+| `packages/mcptoolkit-editor-dist/CHANGELOG.md` | The prebuilt `@cisco_open/mcptoolkit-editor-dist` bundle (ships the built editor app) | `packages/mcptoolkit-editor-dist/package.json` version (**mirrors root**) |
+| `packages/mcptoolkit-viewer/CHANGELOG.md` | The standalone viewer library `@cisco_open/mcptoolkit-viewer` (McpDescCardView, TagFilterBar, McpToolkitViewer, viewer.html) — **versioned independently** | `packages/mcptoolkit-viewer/package.json` version |
 
 ### Rules
 
-1. **Determine affected scope** — if a change modifies files under `packages/mcptoolkit-viewer/`, update the mcptoolkit-viewer changelog. If a change modifies files under `src/`, update the root changelog. Many changes (e.g. to `McpDescCardView.tsx`) affect both.
-2. **Update both changelogs** when a change touches shared code (the card view is imported by the editor from `packages/mcptoolkit-viewer/src/`).
+1. **Determine affected scope** — changes under `src/` (editor app) update the root changelog; changes under `packages/mcptoolkit-viewer/` update the viewer changelog. The editor-dist changelog gets an entry when you cut an editor-dist release (it mirrors the app version). Many changes (e.g. to `McpDescCardView.tsx`) affect both the editor and the viewer.
+2. **Update both editor + viewer changelogs** when a change touches shared code (the card view is imported by the editor from `packages/mcptoolkit-viewer/src/`).
 3. **Format** — follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Use `### Added`, `### Changed`, `### Removed`, `### Fixed`, `### Breaking` sections.
 4. **Version bumps** — when adding a changelog entry for a new version:
    - Bump `version` in the corresponding `package.json`
@@ -92,7 +93,9 @@ npm run build    # Production build → dist/
 
 ## Releasing
 
-The published artifact is the `@cisco_open/mcptoolkit-viewer` workspace; releases are tag-driven (`v*` tags trigger `.github/workflows/publish.yml`).
+The published artifact is the `@cisco_open/mcptoolkit-viewer` workspace; releases are tag-driven (`viewer-v*` tags trigger `.github/workflows/publish.yml`). The prebuilt `@cisco_open/mcptoolkit-editor-dist` bundle publishes on `editor-dist-v*` tags via `.github/workflows/publish-editor-dist.yml`. Each package versions independently under its own tag prefix; there is no bare `v*` release tag.
+
+**Version alignment:** `@cisco_open/mcptoolkit-editor-dist` is literally the built root app, so its version **must equal the root `package.json` version** (root is the source of truth). `npm run verify:versions` (run first by `prerelease`) fails on drift; `npm run sync:version` copies the root version into the editor-dist manifest. The viewer versions independently and is not affected.
 
 Before proposing a release PR, run the prerelease gate:
 
@@ -100,7 +103,7 @@ Before proposing a release PR, run the prerelease gate:
 npm run prerelease
 ```
 
-This runs `npm run sync:badge` (syncs the README status badge to the new version), `npm ci --dry-run` (verifies `package-lock.json` is in sync with the manifests), lints, and then builds both the editor and the viewer library. It mirrors the `npm ci` + lint + build path that CI and the publish workflow use.
+This runs `npm run verify:versions` (asserts the editor-dist version matches the root app version), `npm run sync:badge` (syncs the README status badge to the new version), `npm ci --dry-run` (verifies `package-lock.json` is in sync with the manifests), lints, and then builds both the editor and the viewer library. It mirrors the `npm ci` + lint + build path that CI and the publish workflow use.
 
 Release checklist (see `.github/agents/release-manager.agent.md` and `.github/skills/release/SKILL.md` for the full procedure):
 
@@ -109,7 +112,7 @@ Release checklist (see `.github/agents/release-manager.agent.md` and `.github/sk
 3. Roll up **both** changelogs (see the Changelogs section above).
 4. Run `npm install` so `package-lock.json` reflects the new versions, and commit it — otherwise `npm ci` fails in CI/publish.
 5. Run `npm run prerelease` and confirm it is green.
-6. Open a `release/X.Y.Z` PR; after merge, tag `vX.Y.Z` on `main` to publish. RC versions (`-rc.N`) publish under the `next` dist-tag; stable under `latest`.
+6. Open a `release/X.Y.Z` PR; after merge, tag `viewer-vX.Y.Z` on `main` to publish. RC versions (`-rc.N`) publish under the `next` dist-tag; stable under `latest`.
 
 ## Testing
 
