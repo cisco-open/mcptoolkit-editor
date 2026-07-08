@@ -13,7 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
-- [[1.1.0-rc.1] — 2026-07-08](#110-rc1--2026-07-07)
+- [[1.1.0-rc.2] — 2026-07-08](#110-rc2--2026-07-08)
 - [[1.0.1] — 2026-07-07](#101--2026-07-07)
 - [[1.0.0] — 2026-07-07](#100--2026-07-07)
 - [[1.0.0-rc.3] — 2026-07-07](#100-rc3--2026-07-07)
@@ -25,7 +25,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 ## Unreleased
 
 
-## [1.1.0-rc.1] — 2026-07-08
+## [1.1.0-rc.2] — 2026-07-08
+
+_Supersedes the `v1.1.0-rc.1` tag, which misfired and was never published to npm._
 
 ### Changed
 

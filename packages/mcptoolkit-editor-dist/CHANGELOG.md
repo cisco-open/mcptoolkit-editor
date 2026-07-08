@@ -8,7 +8,7 @@ this file records the bundle's releases. The viewer has its own
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This package uses [Semantic Versioning](https://semver.org/) and tracks the MCP Description Editor app version.
 
-## [1.1.0-rc.1] — 2026-07-07
+## [1.1.0-rc.2] — 2026-07-08
 
 ### Added
 
