@@ -27,16 +27,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## [1.1.0-rc.2] — 2026-07-08
 
-_Supersedes the `v1.1.0-rc.1` tag, which misfired and was never published to npm._
+_Supersedes `v1.1.0-rc.1`, which misfired under the earlier tag scheme and was never published (tags are immutable, so we roll forward)._
 
 ### Changed
 
 - Build with relative asset paths (Vite `base: './'`) so the prebuilt `dist/` can
   be served from any origin, subdomain, or subpath. Monaco's web workers still
   resolve correctly (via `import.meta.url`).
-- **Release tags are now per-package.** The viewer publishes on `viewer-v*`
-  tags (retired from the ambiguous bare `v*`) and the editor-dist bundle on
-  `editor-dist-v*`, so the two packages version and publish independently. See
+- **Per-package release tags.** The primary `@cisco_open/mcptoolkit-editor-dist`
+  bundle publishes on the **default bare `v<version>`** tag (globbed `v[0-9]*` so
+  it never catches viewer tags); the viewer publishes on `viewer-v<version>`. See
   [`docs/maintainers/distribution.md`](docs/maintainers/distribution.md#tag--version-convention).
 - **`prerelease` now enforces editor-dist/root version alignment.** Added
   `npm run verify:versions` (fails if `@cisco_open/mcptoolkit-editor-dist` drifts
