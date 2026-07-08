@@ -88,20 +88,21 @@ The `NPM_TOKEN` repository secret authorizes the publish.
 
 ## Tag & version convention
 
-The two published packages **version independently** (they don't move in
-lockstep), so each has its **own tag prefix**. There is intentionally **no bare
-`v*` release tag** — it was ambiguous about which package it released.
+The editor-dist bundle is the **primary** artifact, so it releases on the
+**default bare `v<version>` tag**. The viewer is released less often and uses the
+explicit `viewer-v<version>` prefix.
 
-| Package | Tag prefix | Example | Workflow |
-|---------|-----------|---------|----------|
-| `@cisco_open/mcptoolkit-viewer` | `viewer-v` | `viewer-v1.0.0` | [`publish.yml`](../../.github/workflows/publish.yml) |
-| `@cisco_open/mcptoolkit-editor-dist` | `editor-dist-v` | `editor-dist-v1.1.0-rc.1` | [`publish-editor-dist.yml`](../../.github/workflows/publish-editor-dist.yml) |
+| Package | Release tag | Example | Workflow |
+|---------|-------------|---------|----------|
+| `@cisco_open/mcptoolkit-editor-dist` (primary) | `v<version>` (default) | `v1.1.0-rc.2` | [`publish-editor-dist.yml`](../../.github/workflows/publish-editor-dist.yml) |
+| `@cisco_open/mcptoolkit-viewer` | `viewer-v<version>` | `viewer-v1.0.0` | [`publish.yml`](../../.github/workflows/publish.yml) |
 
-Each workflow verifies the pushed tag (minus its prefix) matches its package's
-`version`, so a mismatched or wrong-prefix tag fails fast instead of publishing
-the wrong thing. If the private root editor app is ever published, it would take
-the `editor-v` prefix. The `next`/`latest` dist-tag rule (pre-release `-rc.N` →
-`next`, stable → `latest`) applies to both.
+Each workflow verifies the pushed tag (minus its `v` / `viewer-v` prefix) matches
+its package's `version`, so a mismatched tag fails fast instead of publishing the
+wrong thing. The editor-dist trigger is globbed as **`v[0-9]*`** (not plain `v*`)
+so it matches `v1.2.3` but never the viewer's `viewer-v*` tags — both start with
+`v`. The `next`/`latest` dist-tag rule (pre-release `-rc.N` → `next`, stable →
+`latest`) applies to both.
 
 ### Version alignment
 
@@ -162,13 +163,13 @@ subdomain, or subpath.
 
 Publishing is tag-driven via
 [`../../.github/workflows/publish-editor-dist.yml`](../../.github/workflows/publish-editor-dist.yml).
-It uses a **dedicated `editor-dist-v*` tag prefix** so each workspace package
-versions and publishes independently (see [Tag & version convention](#tag--version-convention)).
+It uses the **default bare `v<version>` tag** (the editor-dist bundle is the
+primary artifact; see [Tag & version convention](#tag--version-convention)).
 
-1. Bump `version` in
-   [`packages/mcptoolkit-editor-dist/package.json`](../../packages/mcptoolkit-editor-dist/package.json)
-   (track the editor app version) and roll up the package's `CHANGELOG.md`.
-2. Merge to `main`, then push an `editor-dist-v<version>` tag.
+1. Bump the **root** `package.json` version and run `npm run sync:version` so the
+   editor-dist manifest matches (root is the source of truth); roll up the
+   package's `CHANGELOG.md`.
+2. Merge to `main`, then push a `v<version>` tag.
 3. The workflow verifies the tag matches the package version, builds the bundle,
    and runs `npm publish --workspace=packages/mcptoolkit-editor-dist` with
    provenance. Dist-tag selection matches the viewer: pre-release (`-rc.N`) →

@@ -1,14 +1,15 @@
 # Publishes @cisco_open/mcptoolkit-editor-dist (the prebuilt editor bundle).
 #
-# Uses a dedicated tag prefix (editor-dist-v*) so each workspace package versions
-# and publishes independently. The viewer uses viewer-v*. This file is NOT
-# managed by oss-scaffold.
+# The editor-dist bundle is the primary artifact, so it uses the **default** bare
+# version tag `v<version>` (matched as `v[0-9]*` so it never catches the viewer's
+# `viewer-v*` tags — both start with "v"). The viewer publishes on `viewer-v*`
+# via publish.yml. This file is NOT managed by oss-scaffold.
 name: Publish editor-dist to npm
 
 on:
   push:
     tags:
-      - 'editor-dist-v*'
+      - 'v[0-9]*'
 
 permissions:
   contents: read
@@ -40,7 +41,7 @@ jobs:
         id: release
         run: |
           PKG_VERSION="$(node -p "require('./packages/mcptoolkit-editor-dist/package.json').version")"
-          TAG_VERSION="${GITHUB_REF_NAME#editor-dist-v}"
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
           if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
             echo "::error::Tag '${GITHUB_REF_NAME}' does not match packages/mcptoolkit-editor-dist/package.json version '${PKG_VERSION}'"
             exit 1
