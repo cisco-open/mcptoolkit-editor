@@ -22,8 +22,10 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "sync:badge": "node scripts/sync-badge.mjs",
+    "sync:version": "node scripts/align-editor-dist-version.mjs",
+    "verify:versions": "node scripts/align-editor-dist-version.mjs --check",
     "verify:lockfile": "npm ci --dry-run",
-    "prerelease": "npm run sync:badge && npm run verify:lockfile && npm run lint && npm run build && npm run build:viewer",
+    "prerelease": "npm run verify:versions && npm run sync:badge && npm run verify:lockfile && npm run lint && npm run build && npm run build:viewer",
     "ui": "npm run build --workspace=packages/mcptoolkit-viewer && echo '\n🚀 MCP Toolkit Viewer available at:\n   http://localhost:8888/demo/viewer.html?style=light\n' && python3 -m http.server 8888 -b 127.0.0.1"
   },
   "dependencies": {

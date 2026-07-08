@@ -32,6 +32,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   tags (retired from the ambiguous bare `v*`) and the editor-dist bundle on
   `editor-dist-v*`, so the two packages version and publish independently. See
   [`docs/maintainers/distribution.md`](docs/maintainers/distribution.md#tag--version-convention).
+- **`prerelease` now enforces editor-dist/root version alignment.** Added
+  `npm run verify:versions` (fails if `@cisco_open/mcptoolkit-editor-dist` drifts
+  from the root app version) as the first `prerelease` step, plus
+  `npm run sync:version` to align them (`scripts/align-editor-dist-version.mjs`).
+  The viewer keeps its independent version line.
 
 ### Added
 

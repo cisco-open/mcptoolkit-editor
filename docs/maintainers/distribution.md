@@ -103,6 +103,20 @@ the wrong thing. If the private root editor app is ever published, it would take
 the `editor-v` prefix. The `next`/`latest` dist-tag rule (pre-release `-rc.N` →
 `next`, stable → `latest`) applies to both.
 
+### Version alignment
+
+The two published packages track **different** version lines:
+
+- **`@cisco_open/mcptoolkit-editor-dist` mirrors the root editor app version.**
+  It is literally the built root app, so `packages/mcptoolkit-editor-dist/package.json`
+  must always equal the root `package.json` version (root is the source of
+  truth). `npm run verify:versions` — the first step of `npm run prerelease` —
+  fails on drift; `npm run sync:version` copies the root version into the
+  editor-dist manifest. So bump the **root** version and let the editor-dist
+  follow; do not bump the editor-dist manifest by hand.
+- **`@cisco_open/mcptoolkit-viewer` versions independently** of the editor and
+  is never touched by the alignment scripts.
+
 ## The editor: hosted static site
 
 The editor is pure client-side — there is no backend.

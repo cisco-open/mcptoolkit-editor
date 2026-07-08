@@ -94,13 +94,15 @@ npm run build    # Production build → dist/
 
 The published artifact is the `@cisco_open/mcptoolkit-viewer` workspace; releases are tag-driven (`viewer-v*` tags trigger `.github/workflows/publish.yml`). The prebuilt `@cisco_open/mcptoolkit-editor-dist` bundle publishes on `editor-dist-v*` tags via `.github/workflows/publish-editor-dist.yml`. Each package versions independently under its own tag prefix; there is no bare `v*` release tag.
 
+**Version alignment:** `@cisco_open/mcptoolkit-editor-dist` is literally the built root app, so its version **must equal the root `package.json` version** (root is the source of truth). `npm run verify:versions` (run first by `prerelease`) fails on drift; `npm run sync:version` copies the root version into the editor-dist manifest. The viewer versions independently and is not affected.
+
 Before proposing a release PR, run the prerelease gate:
 
 ```bash
 npm run prerelease
 ```
 
-This runs `npm run sync:badge` (syncs the README status badge to the new version), `npm ci --dry-run` (verifies `package-lock.json` is in sync with the manifests), lints, and then builds both the editor and the viewer library. It mirrors the `npm ci` + lint + build path that CI and the publish workflow use.
+This runs `npm run verify:versions` (asserts the editor-dist version matches the root app version), `npm run sync:badge` (syncs the README status badge to the new version), `npm ci --dry-run` (verifies `package-lock.json` is in sync with the manifests), lints, and then builds both the editor and the viewer library. It mirrors the `npm ci` + lint + build path that CI and the publish workflow use.
 
 Release checklist (see `.github/agents/release-manager.agent.md` and `.github/skills/release/SKILL.md` for the full procedure):
 

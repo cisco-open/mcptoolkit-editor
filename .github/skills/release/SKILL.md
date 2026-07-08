@@ -157,3 +157,7 @@ site, not published. Adjust the core procedure above as follows:
    tag** — the generic `v*` in the core section above is replaced by these
    per-package prefixes. See
    [`docs/maintainers/distribution.md`](../../../docs/maintainers/distribution.md#tag--version-convention).
+7. **`@cisco_open/mcptoolkit-editor-dist` mirrors the root app version.** Bump the
+   **root** `package.json` and run `npm run sync:version` (or let `npm install`
+   + `npm run prerelease` catch it — `verify:versions` fails on drift) so the
+   editor-dist manifest matches. Do not bump the editor-dist version by hand.

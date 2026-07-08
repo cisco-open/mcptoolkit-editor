@@ -193,7 +193,7 @@ Publishing is tag-driven via [`.github/workflows/publish.yml`](.github/workflows
    npm run prerelease
    ```
 
-   This runs `npm ci --dry-run` (verifies the lockfile is in sync — the publish workflow's `npm ci` fails otherwise) and builds both the editor and the viewer library.
+   This runs `npm ci --dry-run` (verifies the lockfile is in sync — the publish workflow's `npm ci` fails otherwise), `npm run verify:versions` (asserts the prebuilt `@cisco_open/mcptoolkit-editor-dist` version matches the root app version), and builds both the editor and the viewer library.
 4. Merge to `main`, then push a `viewer-v<version>` tag. The workflow builds the `mcptoolkit-viewer` workspace and runs `npm publish` with provenance. Pre-release versions (e.g. `-rc.N`) publish under the `next` dist-tag; stable versions under `latest`.
 
 > Each published package versions independently and has its own tag prefix: `viewer-v*` for the viewer and `editor-dist-v*` for `@cisco_open/mcptoolkit-editor-dist`. There is no bare `v*` release tag. See [`docs/maintainers/distribution.md`](docs/maintainers/distribution.md#tag--version-convention).
