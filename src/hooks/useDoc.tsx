@@ -17,11 +17,19 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  migrateMcpDescription07ToRc1,
   projectEffectiveProtocolView,
+  serializeMcpDescription,
+  type JsonValue,
 } from '@mcpdesc/core';
 import { parseMcpDescriptionSource } from '@mcpdesc/core/documents';
 import type { SupportedProtocolVersion } from '@mcpdesc/validator/standalone';
-import { McpDescValidator, type McpDescDocument, type ValidationResult } from '../core';
+import {
+  isValidMcpDesc07,
+  McpDescValidator,
+  type McpDescDocument,
+  type ValidationResult,
+} from '../core';
 import minimalExample from '../../examples/minimal.yaml?raw';
 
 // ============================================================================
@@ -48,6 +56,7 @@ interface DocState {
 type DocAction =
   | { type: 'SET_TEXT'; text: string }
   | { type: 'LOAD_EXAMPLE'; text: string }
+  | { type: 'MIGRATE_DOCUMENT'; text: string }
   | { type: 'SET_VALIDATION'; validation: ValidationResult }
   | { type: 'SET_SELECTED_PROTOCOL_VERSION'; protocolVersion: SupportedProtocolVersion | null }
   | { type: 'SET_PARSED'; doc: McpDescDocument | null; parseError: string | null; format: DocFormat };
@@ -57,6 +66,8 @@ function reducer(state: DocState, action: DocAction): DocState {
     case 'SET_TEXT':
       return { ...state, text: action.text };
     case 'LOAD_EXAMPLE':
+      return { ...state, text: action.text };
+    case 'MIGRATE_DOCUMENT':
       return { ...state, text: action.text };
     case 'SET_PARSED':
       return { ...state, doc: action.doc, parseError: action.parseError, format: action.format };
@@ -72,6 +83,9 @@ function reducer(state: DocState, action: DocAction): DocState {
 const emptyValidation: ValidationResult = { valid: true, errors: [], warnings: [] };
 
 const LOCALSTORAGE_KEY = 'mcptoolkit-editor-content';
+const LEGACY_MIGRATION_ERROR =
+  'mcpdesc v0.7 is not supported, migrate your document to v0.8 or above.';
+const PRE_07_ERROR = 'mcpdesc versions before v0.7 are not supported.';
 
 function loadInitialText(): string {
   try {
@@ -143,6 +157,31 @@ export function DocProvider({ children }: { children: ReactNode }) {
     if (parsed.ok) {
       doc = parsed.value as McpDescDocument;
       format = parsed.format;
+      const version = doc.mcpdesc;
+      if (version === '0.7.0') {
+        if (!isValidMcpDesc07(doc)) {
+          doc = null;
+          parseError = LEGACY_MIGRATION_ERROR;
+        } else {
+          const migrated = migrateMcpDescription07ToRc1(doc, {
+            specification: '0.8.0-rc.1',
+            sourceValidated: true,
+          });
+          if (!migrated.ok) {
+            doc = null;
+            parseError = LEGACY_MIGRATION_ERROR;
+          } else {
+            doc = migrated.value as McpDescDocument;
+            const migratedText = serializeMcpDescription(migrated.value as JsonValue, {
+              format: parsed.format,
+            });
+            dispatch({ type: 'MIGRATE_DOCUMENT', text: migratedText });
+          }
+        }
+      } else if (typeof version === 'string' && /^0\.[0-6](?:\.|$)/.test(version)) {
+        doc = null;
+        parseError = PRE_07_ERROR;
+      }
     } else {
       const diagnostic = parsed.diagnostics[0];
       const location = diagnostic.location

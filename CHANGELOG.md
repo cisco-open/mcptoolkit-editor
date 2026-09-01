@@ -24,6 +24,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
+### Changed
+
+- Target MCP Description `0.8.0-rc.1` using the CSP-safe
+  `@mcpdesc/validator/standalone` and `@mcpdesc/core` packages. The editor now
+  validates the full structural and semantic RC.1 contract.
+- Update the editor schema, bundled examples, types, Monaco diagnostics, and
+  preview for root protocol versions, protocol-scoped capabilities, and named
+  security schemes. Multi-version documents can be viewed as an Effective
+  Protocol View.
+
+### Added
+
+- Automatically migrate valid MCP Description 0.7.0 documents to RC.1 when they
+  are opened, pasted, or restored. Documents that cannot migrate show an
+  actionable v0.8 migration message; versions before 0.7 are unsupported.
+
 
 ## [1.1.0-rc.2] — 2026-07-08
 

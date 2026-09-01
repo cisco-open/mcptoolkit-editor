@@ -15,6 +15,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
+### Changed
+
+- Render MCP Description 0.8 RC.1 root protocol versions and named
+  `securitySchemes` in the shared card view.
+
 
 ## [1.0.0] — 2026-07-07
 
