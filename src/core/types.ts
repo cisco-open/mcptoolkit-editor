@@ -2,55 +2,54 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-/**
- * MCP Description types — browser-compatible subset adapted from mcptoolkit-contract.
- *
- * These types model the MCP Description specification v0.7.0 document structure.
- * They are intentionally decoupled from Node.js so they can be shared between
- * a future core package, the CLI, and this editor.
- */
+export type McpProtocolVersion =
+  | '2024-11-05'
+  | '2025-03-26'
+  | '2025-06-18'
+  | '2025-11-25'
+  | '2026-07-28';
 
-// ============================================================================
-// MCP Description Document (top-level)
-// ============================================================================
+export type McpDescSchema = Record<string, unknown>;
+export type McpDescSecurityRequirement = Record<string, string[]>;
+
+interface ProtocolScoped {
+  protocolVersions?: McpProtocolVersion[];
+  security?: McpDescSecurityRequirement[];
+  clientRequirements?: Record<string, unknown>;
+  _meta?: Record<string, unknown>;
+  [key: string]: unknown;
+}
 
 export interface McpDescDocument {
   $schema?: string;
-  mcpdesc: string;
+  mcpdesc: '0.8.0' | string;
   info: McpDescInfo;
-  transports: McpDescTransport[];
-  security?: McpDescSecurityScheme[];
-  capabilities?: McpDescCapabilities;
+  protocolVersions: McpProtocolVersion[];
+  instructions?: string;
+  transports?: McpDescTransport[];
+  securitySchemes?: Record<string, McpDescSecurityScheme>;
+  security?: McpDescSecurityRequirement[];
+  capabilities?: McpDescCapabilities[];
   tools?: McpDescTool[];
   resources?: McpDescResource[];
   resourceTemplates?: McpDescResourceTemplate[];
   prompts?: McpDescPrompt[];
   tags?: McpDescTag[];
-  [key: string]: unknown; // allow x-* extensions
+  components?: Record<string, unknown>;
+  [key: string]: unknown;
 }
-
-// ============================================================================
-// Info
-// ============================================================================
 
 export interface McpDescInfo {
   name: string;
   title?: string;
   version: string;
   description?: string;
-  protocolVersion?: string;
   id?: string;
   websiteUrl?: string;
-  contact?: {
-    name?: string;
-    url?: string;
-    email?: string;
-  };
-  license?: {
-    name: string;
-    url?: string;
-  };
+  contact?: { name?: string; url?: string; email?: string };
+  license?: { name: string; url?: string };
   icons?: McpDescIcon[];
+  [key: string]: unknown;
 }
 
 export interface McpDescIcon {
@@ -58,71 +57,47 @@ export interface McpDescIcon {
   mimeType?: string;
   sizes?: string[];
   theme?: 'light' | 'dark';
+  [key: string]: unknown;
 }
 
-// ============================================================================
-// Transports
-// ============================================================================
-
-export interface McpDescTransport {
+export interface McpDescTransport extends ProtocolScoped {
   type: 'streamable-http' | 'stdio' | 'sse';
   url?: string;
   command?: string;
   args?: string[];
   env?: Record<string, string>;
-  security?: McpDescSecurityScheme[];
 }
 
-// ============================================================================
-// Security
-// ============================================================================
-
-export interface McpDescSecurityScheme {
-  type: 'http' | 'apiKey' | 'oauth2' | 'openIdConnect';
-  scheme?: string;
-  bearerFormat?: string;
-  name?: string;
-  in?: 'header' | 'query' | 'cookie';
-  description?: string;
-  flows?: {
-    implicit?: McpDescOAuthFlow;
-    password?: McpDescOAuthFlow;
-    clientCredentials?: McpDescOAuthFlow;
-    authorizationCode?: McpDescOAuthFlow;
-  };
-  openIdConnectUrl?: string;
-}
+export type McpDescSecurityScheme =
+  | { type: 'http'; scheme: string; bearerFormat?: string; description?: string; [key: string]: unknown }
+  | { type: 'apiKey'; name: string; in: 'header' | 'query' | 'cookie'; description?: string; [key: string]: unknown }
+  | { type: 'oauth2'; flows: Record<string, McpDescOAuthFlow>; description?: string; [key: string]: unknown }
+  | { type: 'openIdConnect'; openIdConnectUrl: string; description?: string; [key: string]: unknown };
 
 export interface McpDescOAuthFlow {
   authorizationUrl?: string;
   tokenUrl?: string;
   refreshUrl?: string;
-  scopes?: Record<string, string>;
+  scopes: Record<string, string>;
+  [key: string]: unknown;
 }
 
-// ============================================================================
-// Capabilities
-// ============================================================================
-
-export interface McpDescCapabilities {
-  tools?: { listChanged?: boolean };
-  resources?: { subscribe?: boolean; listChanged?: boolean };
-  prompts?: { listChanged?: boolean };
+export interface McpDescCapabilities extends ProtocolScoped {
+  tools?: { listChanged?: boolean; [key: string]: unknown };
+  resources?: { subscribe?: boolean; listChanged?: boolean; [key: string]: unknown };
+  prompts?: { listChanged?: boolean; [key: string]: unknown };
   completions?: Record<string, unknown>;
   logging?: Record<string, unknown>;
   tasks?: Record<string, unknown>;
+  extensions?: Record<string, Record<string, unknown>>;
 }
 
-// ============================================================================
-// Tools
-// ============================================================================
-
-export interface McpDescTool {
+export interface McpDescTool extends ProtocolScoped {
   name: string;
   title?: string;
   description?: string;
-  inputSchema?: Record<string, unknown>;
-  outputSchema?: Record<string, unknown>;
+  inputSchema: McpDescSchema;
+  outputSchema?: McpDescSchema;
   annotations?: {
     title?: string;
     readOnlyHint?: boolean;
@@ -131,19 +106,16 @@ export interface McpDescTool {
     openWorldHint?: boolean;
     [key: string]: unknown;
   };
-  execution?: {
-    taskSupport?: 'forbidden' | 'optional' | 'required';
-  };
+  execution?: { taskSupport?: 'forbidden' | 'optional' | 'required'; [key: string]: unknown };
+  examples?: Record<string, unknown>;
+  interactionExamples?: Record<string, unknown>;
+  elicitations?: Record<string, unknown>[];
   icons?: McpDescIcon[];
   tags?: string[];
   deprecated?: boolean;
 }
 
-// ============================================================================
-// Resources & Resource Templates
-// ============================================================================
-
-export interface McpDescResource {
+export interface McpDescResource extends ProtocolScoped {
   uri: string;
   name: string;
   title?: string;
@@ -151,56 +123,54 @@ export interface McpDescResource {
   mimeType?: string;
   size?: number;
   annotations?: Record<string, unknown>;
+  examples?: Record<string, unknown>;
+  elicitations?: Record<string, unknown>[];
   icons?: McpDescIcon[];
   tags?: string[];
   deprecated?: boolean;
 }
 
-export interface McpDescResourceTemplate {
+export interface McpDescResourceTemplate extends ProtocolScoped {
   uriTemplate: string;
   name: string;
   title?: string;
   description?: string;
   mimeType?: string;
   annotations?: Record<string, unknown>;
+  examples?: Record<string, unknown>;
+  completionExamples?: Record<string, unknown>;
+  elicitations?: Record<string, unknown>[];
   icons?: McpDescIcon[];
   tags?: string[];
   deprecated?: boolean;
 }
-
-// ============================================================================
-// Prompts
-// ============================================================================
 
 export interface McpDescPromptArgument {
   name: string;
   title?: string;
   description?: string;
   required?: boolean;
+  [key: string]: unknown;
 }
 
-export interface McpDescPrompt {
+export interface McpDescPrompt extends ProtocolScoped {
   name: string;
   title?: string;
   description?: string;
   arguments?: McpDescPromptArgument[];
+  examples?: Record<string, unknown>;
+  completionExamples?: Record<string, unknown>;
+  elicitations?: Record<string, unknown>[];
   icons?: McpDescIcon[];
   tags?: string[];
   deprecated?: boolean;
 }
 
-// ============================================================================
-// Tags
-// ============================================================================
-
 export interface McpDescTag {
   name: string;
   description?: string;
+  [key: string]: unknown;
 }
-
-// ============================================================================
-// Validation types
-// ============================================================================
 
 export interface ValidationResult {
   valid: boolean;

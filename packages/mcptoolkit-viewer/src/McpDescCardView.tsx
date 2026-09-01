@@ -241,7 +241,7 @@ function InfoCard({ doc }: { doc: McpDescDocument }) {
 
       {info.description && <div className="mb-3"><Desc text={info.description} /></div>}
       <div className="space-y-0.5">
-        {info.protocolVersion && <InfoRow label="MCP Protocol" value={info.protocolVersion} />}
+        <InfoRow label="MCP Protocols" value={doc.protocolVersions.join(', ')} />
         {info.id && <InfoRow label="ID" value={<code className="text-xs bg-gray-100 text-gray-800 px-1 rounded">{info.id}</code>} />}
         {info.websiteUrl && <InfoRow label="Website" value={<a className="text-blue-600 underline" href={info.websiteUrl} target="_blank" rel="noopener noreferrer">{info.websiteUrl}</a>} />}
         {info.icons?.length ? (
@@ -291,17 +291,22 @@ function TransportsCard({ doc, badge }: { doc: McpDescDocument; badge: BadgeRend
 }
 
 function SecurityCard({ doc, defaultOpen, badge }: { doc: McpDescDocument; defaultOpen: boolean; badge: BadgeRenderer }) {
-  if (!doc.security?.length) return null;
+  const schemes = Object.entries(doc.securitySchemes ?? {});
+  if (!schemes.length && !doc.security?.length) return null;
   return (
-    <Section title="Security" count={doc.security.length} defaultOpen={defaultOpen}>
-      {doc.security.map((s, i) => (
-        <div key={i} className="mb-2 p-2 rounded bg-gray-50 border border-gray-200 text-sm">
-          {badge(s.type, 'security', s.type, 'bg-rose-100 text-rose-700')}
-          {s.scheme && <span className="text-gray-500 ml-1">{s.scheme}</span>}
-          {s.bearerFormat && <span className="text-gray-400 ml-1">({s.bearerFormat})</span>}
-          {s.description && <div className="mt-1"><Desc text={s.description} /></div>}
+    <Section title="Security" count={schemes.length} defaultOpen={defaultOpen}>
+      {schemes.map(([name, scheme]) => (
+        <div key={name} className="mb-2 p-2 rounded bg-gray-50 border border-gray-200 text-sm">
+          {badge(scheme.type, 'securitySchemes', name, 'bg-rose-100 text-rose-700')}
+          <code className="text-gray-700 ml-1">{name}</code>
+          {scheme.type === 'http' && <span className="text-gray-500 ml-1">{scheme.scheme}</span>}
+          {scheme.type === 'http' && scheme.bearerFormat && <span className="text-gray-400 ml-1">({scheme.bearerFormat})</span>}
+          {scheme.type === 'apiKey' && <span className="text-gray-500 ml-1">{scheme.in}: {scheme.name}</span>}
+          {scheme.type === 'openIdConnect' && <span className="text-gray-500 ml-1">{scheme.openIdConnectUrl}</span>}
+          {scheme.description && <div className="mt-1"><Desc text={scheme.description} /></div>}
         </div>
       ))}
+      {doc.security?.length ? <JsonBlock data={doc.security} /> : null}
     </Section>
   );
 }

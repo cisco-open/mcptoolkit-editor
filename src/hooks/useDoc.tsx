@@ -16,10 +16,13 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
-import { parse as yamlParse } from 'yaml';
+import {
+  projectEffectiveProtocolView,
+} from '@mcpdesc/core';
+import { parseMcpDescriptionSource } from '@mcpdesc/core/documents';
+import type { SupportedProtocolVersion } from '@mcpdesc/validator/standalone';
 import { McpDescValidator, type McpDescDocument, type ValidationResult } from '../core';
 import minimalExample from '../../examples/minimal.yaml?raw';
-import mcpdescSchema from '../core/mcpdesc-schema.json';
 
 // ============================================================================
 // State shape
@@ -38,12 +41,15 @@ interface DocState {
   parseError: string | null;
   /** Schema + semantic validation results */
   validation: ValidationResult;
+  /** Protocol revision selected for the Effective Protocol View. */
+  selectedProtocolVersion: SupportedProtocolVersion | null;
 }
 
 type DocAction =
   | { type: 'SET_TEXT'; text: string }
   | { type: 'LOAD_EXAMPLE'; text: string }
   | { type: 'SET_VALIDATION'; validation: ValidationResult }
+  | { type: 'SET_SELECTED_PROTOCOL_VERSION'; protocolVersion: SupportedProtocolVersion | null }
   | { type: 'SET_PARSED'; doc: McpDescDocument | null; parseError: string | null; format: DocFormat };
 
 function reducer(state: DocState, action: DocAction): DocState {
@@ -56,6 +62,8 @@ function reducer(state: DocState, action: DocAction): DocState {
       return { ...state, doc: action.doc, parseError: action.parseError, format: action.format };
     case 'SET_VALIDATION':
       return { ...state, validation: action.validation };
+    case 'SET_SELECTED_PROTOCOL_VERSION':
+      return { ...state, selectedProtocolVersion: action.protocolVersion };
     default:
       return state;
   }
@@ -79,6 +87,7 @@ const initialState: DocState = {
   doc: null,
   parseError: null,
   validation: emptyValidation,
+  selectedProtocolVersion: null,
 };
 
 // ============================================================================
@@ -89,6 +98,8 @@ interface DocContextValue {
   state: DocState;
   setText: (text: string) => void;
   loadExample: (text: string) => void;
+  setSelectedProtocolVersion: (protocolVersion: SupportedProtocolVersion | null) => void;
+  effectiveDoc: McpDescDocument | null;
   /** Ref that the Editor sets to allow preview→editor navigation */
   revealSectionItemRef: React.MutableRefObject<((section: string, value: string) => void) | null>;
 }
@@ -116,7 +127,6 @@ export function DocProvider({ children }: { children: ReactNode }) {
   // Initialise validator once
   useEffect(() => {
     const v = new McpDescValidator();
-    v.loadSchema(mcpdescSchema as Record<string, unknown>);
     validatorRef.current = v;
     // Validate the initial text immediately
     parseAndValidate(state.text);
@@ -129,23 +139,16 @@ export function DocProvider({ children }: { children: ReactNode }) {
     let parseError: string | null = null;
     let format: DocFormat = 'json';
 
-    const trimmed = raw.trimStart();
-    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-      // JSON
-      try {
-        doc = JSON.parse(raw);
-        format = 'json';
-      } catch (e) {
-        parseError = `JSON parse error: ${(e as Error).message}`;
-      }
+    const parsed = parseMcpDescriptionSource(raw);
+    if (parsed.ok) {
+      doc = parsed.value as McpDescDocument;
+      format = parsed.format;
     } else {
-      // YAML
-      try {
-        doc = yamlParse(raw) as McpDescDocument;
-        format = 'yaml';
-      } catch (e) {
-        parseError = `YAML parse error: ${(e as Error).message}`;
-      }
+      const diagnostic = parsed.diagnostics[0];
+      const location = diagnostic.location
+        ? ` at line ${diagnostic.location.line}, column ${diagnostic.location.column}`
+        : '';
+      parseError = `${diagnostic.message}${location}`;
     }
 
     dispatch({ type: 'SET_PARSED', doc, parseError, format });
@@ -180,9 +183,28 @@ export function DocProvider({ children }: { children: ReactNode }) {
 
   const setText = useCallback((text: string) => dispatch({ type: 'SET_TEXT', text }), []);
   const loadExample = useCallback((text: string) => dispatch({ type: 'LOAD_EXAMPLE', text }), []);
+  const setSelectedProtocolVersion = useCallback(
+    (protocolVersion: SupportedProtocolVersion | null) =>
+      dispatch({ type: 'SET_SELECTED_PROTOCOL_VERSION', protocolVersion }),
+    [],
+  );
+  const projection = state.doc && state.selectedProtocolVersion
+    ? projectEffectiveProtocolView(state.doc, {
+      specification: '0.8.0-rc.1',
+      protocolVersion: state.selectedProtocolVersion,
+    })
+    : null;
+  const effectiveDoc = projection?.ok ? projection.value as McpDescDocument : state.doc;
 
   return (
-    <DocContext.Provider value={{ state, setText, loadExample, revealSectionItemRef }}>
+    <DocContext.Provider value={{
+      state,
+      setText,
+      loadExample,
+      setSelectedProtocolVersion,
+      effectiveDoc,
+      revealSectionItemRef,
+    }}>
       {children}
     </DocContext.Provider>
   );

@@ -15,9 +15,8 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run build:validator && vite",
-    "build": "npm run build:validator && tsc -b && vite build",
-    "build:validator": "node scripts/build-validator.mjs",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
     "build:viewer": "npm run build --workspace=packages/mcptoolkit-viewer",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -29,6 +28,8 @@
     "ui": "npm run build --workspace=packages/mcptoolkit-viewer && echo '\n🚀 MCP Toolkit Viewer available at:\n   http://localhost:8888/demo/viewer.html?style=light\n' && python3 -m http.server 8888 -b 127.0.0.1"
   },
   "dependencies": {
+    "@mcpdesc/core": "^0.4.0",
+    "@mcpdesc/validator": "^0.5.0",
     "@monaco-editor/react": "^4.7.0",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
