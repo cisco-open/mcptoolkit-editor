@@ -327,7 +327,7 @@ function InfoCard({ doc }: { doc: McpDescDocument }) {
 
       {info.description && <div className="mb-3"><Desc text={info.description} /></div>}
       <div className="space-y-0.5">
-        <InfoRow label="MCP Protocols" value={doc.protocolVersions.join(', ')} />
+        <InfoRow label="Protocol Versions" value={<span className="font-semibold">{doc.protocolVersions.join(', ')}</span>} />
         {info.id && <InfoRow label="ID" value={<code className="text-xs bg-gray-100 text-gray-800 px-1 rounded">{info.id}</code>} />}
         {info.websiteUrl && <InfoRow label="Website" value={<a className="text-blue-600 underline" href={info.websiteUrl} target="_blank" rel="noopener noreferrer">{info.websiteUrl}</a>} />}
         {info.icons?.length ? (
@@ -472,7 +472,7 @@ function ToolsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleD
               </div>
               {hasInputProps && (
                 <details className="mt-1 ml-[8px]">
-                  <summary className="cursor-pointer select-none text-sm font-sans underline text-gray-900">
+                  <summary className="cursor-pointer select-none text-xs font-sans underline text-gray-900">
                     Input
                   </summary>
                   <div className="pt-1 ml-[18px]">
@@ -482,7 +482,7 @@ function ToolsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleD
               )}
               {tool.outputSchema && (
                 <details className="mt-1 ml-[8px]">
-                  <summary className="cursor-pointer select-none text-sm font-sans underline text-gray-900">
+                  <summary className="cursor-pointer select-none text-xs font-sans underline text-gray-900">
                     Output
                   </summary>
                   <div className="pt-1 ml-[18px]">
@@ -606,7 +606,7 @@ function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampl
             </div>
             {p.arguments?.length ? (
               <details className="mt-1 ml-[8px]">
-                <summary className="cursor-pointer select-none text-sm font-sans underline text-gray-900">
+                <summary className="cursor-pointer select-none text-xs font-sans underline text-gray-900">
                   Arguments
                 </summary>
                 <div className="pt-1 ml-[18px]">

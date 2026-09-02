@@ -37,6 +37,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   preview without inferring inherited security policy.
 - Refresh the README and V2 support plan for the implemented RC.1 integration,
   current migration behavior, and deferred release work.
+- Rename the card-view protocol field to Protocol Versions, emphasize its
+  values, and reduce the Input, Output, and Arguments summary labels.
 
 ### Added
 
@@ -48,6 +50,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   selecting a name navigates Monaco to its source definition.
 - Include up to ten allowed values in enum validation diagnostics and place
   parser diagnostics on their reported source line in Monaco.
+- Restore a STDIO transport and sample tool in the bundled Minimal example.
 
 
 ## [1.1.0-rc.2] — 2026-07-08
