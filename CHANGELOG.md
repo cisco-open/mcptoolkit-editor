@@ -33,6 +33,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   preview for root protocol versions, protocol-scoped capabilities, and named
   security schemes. Multi-version documents can be viewed as an Effective
   Protocol View.
+- Show explicit root and declaration-level security requirements in the card
+  preview without inferring inherited security policy.
 
 ### Added
 

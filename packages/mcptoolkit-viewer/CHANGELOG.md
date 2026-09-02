@@ -19,6 +19,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 - Render MCP Description 0.8 RC.1 root protocol versions and named
   `securitySchemes` in the shared card view.
+- Render explicitly declared security requirements for the root, transports,
+  tools, resources, resource templates, and prompts without inheritance.
 
 
 ## [1.0.0] — 2026-07-07

@@ -85,12 +85,14 @@ function Section({ title, count, children, defaultOpen = true }: {
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
+function InfoRow({ label, value, compact = false, alignCenter = false }: {
+  label: React.ReactNode; value: React.ReactNode; compact?: boolean; alignCenter?: boolean;
+}) {
   if (value === undefined || value === null || value === '') return null;
   return (
-    <div className="flex gap-2 text-sm py-0.5">
+    <div className={`flex gap-2 ${alignCenter ? 'items-center' : ''} ${compact ? 'text-xs' : 'text-sm'} py-0.5`}>
       <span className="text-gray-400 min-w-[110px] shrink-0">{label}</span>
-      <span className="text-gray-800 break-all">{typeof value === 'string' ? value : value}</span>
+      <div className="min-w-0 flex-1 text-gray-800 break-all">{value}</div>
     </div>
   );
 }
@@ -111,6 +113,32 @@ function JsonBlock({ data }: { data: unknown }) {
     <pre className="text-xs bg-gray-50 border border-gray-200 rounded p-2 overflow-auto max-h-48 text-gray-700 mt-1">
       {JSON.stringify(data, null, 2)}
     </pre>
+  );
+}
+
+function SecurityRequirements({ requirements }: { requirements: McpDescDocument['security'] }) {
+  if (requirements === undefined || requirements.length === 0) {
+    return <Badge color="bg-blue-50 text-blue-700">none</Badge>;
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1 text-xs text-gray-600">
+      {requirements.map((alternative, alternativeIndex) => {
+        const schemes = Object.entries(alternative);
+        return (
+          <div key={alternativeIndex} className="flex flex-wrap items-center gap-1">
+            {alternativeIndex > 0 && <span className="font-medium text-gray-400">OR</span>}
+            {schemes.length === 0 ? <Badge color="bg-gray-100 text-gray-600">anonymous</Badge> : schemes.map(([name, scopes], schemeIndex) => (
+              <span key={name} className="inline-flex items-center gap-1">
+                {schemeIndex > 0 && <span className="font-medium text-gray-400">AND</span>}
+                <Badge color="bg-blue-50 text-blue-700">{name}</Badge>
+                {scopes.length > 0 && <span className="font-mono text-gray-500">{scopes.join(', ')}</span>}
+              </span>
+            ))}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -265,48 +293,77 @@ function InfoCard({ doc }: { doc: McpDescDocument }) {
   );
 }
 
-function TransportsCard({ doc, badge }: { doc: McpDescDocument; badge: BadgeRenderer }) {
+function TransportsCard({ doc, defaultOpen, badge }: { doc: McpDescDocument; defaultOpen: boolean; badge: BadgeRenderer }) {
   return (
-    <div className="mb-4">
-      <div className="font-semibold text-sm text-gray-700 py-1">
-        Transports{doc.transports?.length ? <span className="ml-1 text-gray-400">({doc.transports.length})</span> : null}
-      </div>
-      <div className="pl-2 pt-1">
-        {doc.transports?.length ? doc.transports.map((t, i) => (
-          <div key={i} className="mb-2 p-2 rounded bg-gray-50 border border-gray-200 text-sm">
-            {badge(t.type, 'transports', t.type, 'bg-sky-100 text-sky-700')}
-            {t.url && <span className="ml-2 text-gray-700">{t.url}</span>}
+    <Section title="Transports" count={doc.transports?.length ?? 0} defaultOpen={defaultOpen}>
+      {doc.transports?.length ? doc.transports.map((t, i) => (
+        <div key={i} className="mb-2 p-2 rounded bg-gray-50 border border-gray-200 text-sm">
+            {badge(t.type, 'transports', t.type, 'bg-gray-200 text-gray-500')}
+            {t.url && <span className="ml-2 text-black">{t.url}</span>}
             {t.command && (
-              <code className="ml-2 text-xs text-amber-700 bg-gray-100 px-1 rounded">
+              <code className="ml-2 text-black">
                 {t.command}{t.args ? ` ${t.args.join(' ')}` : ''}
               </code>
             )}
-          </div>
-        )) : (
-          <p className="text-sm text-gray-400 italic">No transport defined</p>
-        )}
-      </div>
-    </div>
+            {t.security !== undefined && (
+              <div className="mt-2 border-t border-gray-200 pt-2">
+                <InfoRow
+                  compact
+                  alignCenter
+                  label="Default Security"
+                  value={<SecurityRequirements requirements={t.security} />}
+                />
+              </div>
+            )}
+        </div>
+      )) : (
+        <p className="text-sm text-gray-400 italic">No transport defined</p>
+      )}
+    </Section>
   );
 }
 
 function SecurityCard({ doc, defaultOpen, badge }: { doc: McpDescDocument; defaultOpen: boolean; badge: BadgeRenderer }) {
   const schemes = Object.entries(doc.securitySchemes ?? {});
-  if (!schemes.length && !doc.security?.length) return null;
   return (
-    <Section title="Security" count={schemes.length} defaultOpen={defaultOpen}>
-      {schemes.map(([name, scheme]) => (
-        <div key={name} className="mb-2 p-2 rounded bg-gray-50 border border-gray-200 text-sm">
-          {badge(scheme.type, 'securitySchemes', name, 'bg-rose-100 text-rose-700')}
-          <code className="text-gray-700 ml-1">{name}</code>
-          {scheme.type === 'http' && <span className="text-gray-500 ml-1">{scheme.scheme}</span>}
-          {scheme.type === 'http' && scheme.bearerFormat && <span className="text-gray-400 ml-1">({scheme.bearerFormat})</span>}
-          {scheme.type === 'apiKey' && <span className="text-gray-500 ml-1">{scheme.in}: {scheme.name}</span>}
-          {scheme.type === 'openIdConnect' && <span className="text-gray-500 ml-1">{scheme.openIdConnectUrl}</span>}
-          {scheme.description && <div className="mt-1"><Desc text={scheme.description} /></div>}
+    <Section title="Security" defaultOpen={defaultOpen}>
+      <InfoRow
+        compact
+        label={<span className="font-medium text-gray-600">Default</span>}
+        value={<SecurityRequirements requirements={doc.security} />}
+      />
+      {schemes.length > 0 && (
+        <div className="mt-2">
+          <div className="mb-2 text-xs font-medium text-gray-600">
+            Schemes <span className="text-gray-500">({schemes.length})</span>
+          </div>
+          <div className="space-y-2">{schemes.map(([name, scheme]) => (
+          <div key={name} className="mb-2 p-2 rounded bg-gray-50 border border-gray-200 text-sm">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+              {badge(scheme.type, 'securitySchemes', name, 'bg-gray-200 text-gray-500')}
+              <code className="font-medium text-blue-700">{name}</code>
+              {scheme.description && <span className="text-xs text-gray-500"><Desc text={scheme.description} /></span>}
+            </div>
+            <div className="mt-1.5 space-y-1 text-xs text-gray-500">
+              {scheme.type === 'http' && <InfoRow compact label="Scheme" value={scheme.scheme} />}
+              {scheme.type === 'http' && scheme.bearerFormat && <InfoRow compact label="Bearer format" value={scheme.bearerFormat} />}
+              {scheme.type === 'apiKey' && <InfoRow compact label="Parameter" value={scheme.name} />}
+              {scheme.type === 'apiKey' && <InfoRow compact label="Location" value={scheme.in} />}
+              {scheme.type === 'openIdConnect' && <InfoRow compact label="OpenID Connect" value={scheme.openIdConnectUrl} />}
+              {scheme.type === 'oauth2' && Object.entries(scheme.flows).map(([flowName, flow]) => (
+                <div key={flowName} className="border-l-2 border-gray-200 pl-2">
+                  <div className="font-medium text-gray-600">{flowName}</div>
+                  {flow.authorizationUrl && <InfoRow compact label="Authorization" value={flow.authorizationUrl} />}
+                  {flow.tokenUrl && <InfoRow compact label="Token" value={flow.tokenUrl} />}
+                  {flow.refreshUrl && <InfoRow compact label="Refresh" value={flow.refreshUrl} />}
+                  {Object.keys(flow.scopes).length > 0 && <InfoRow compact label="Scopes" value={Object.keys(flow.scopes).join(', ')} />}
+                </div>
+              ))}
+            </div>
+          </div>
+          ))}</div>
         </div>
-      ))}
-      {doc.security?.length ? <JsonBlock data={doc.security} /> : null}
+      )}
     </Section>
   );
 }
@@ -342,6 +399,12 @@ function ToolsCard({ doc, errorPaths, defaultOpen, badge, disabledTags }: { doc:
                     {tool.annotations.readOnlyHint && <Badge color="bg-green-100 text-green-700">read-only</Badge>}
                     {tool.annotations.destructiveHint && <Badge color="bg-red-100 text-red-700">destructive</Badge>}
                     {tool.annotations.idempotentHint && <Badge color="bg-blue-100 text-blue-700">idempotent</Badge>}
+                  </div>
+                )}
+                {tool.security !== undefined && (
+                  <div className="border-t border-gray-200 pt-2">
+                    <div className="mb-1 font-medium text-gray-500">Security requirements</div>
+                    <SecurityRequirements requirements={tool.security} />
                   </div>
                 )}
               </div>
@@ -399,6 +462,12 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags }: { 
           <div className="px-2 pb-2 pt-0 text-xs space-y-1 ml-[36px]">
             {r.description && <Desc text={r.description} />}
             {r.mimeType && <div className="flex items-center gap-2"><Badge>{r.mimeType}</Badge></div>}
+            {r.security !== undefined && (
+              <div className="border-t border-gray-200 pt-2">
+                <div className="mb-1 font-medium text-gray-500">Security requirements</div>
+                <SecurityRequirements requirements={r.security} />
+              </div>
+            )}
           </div>
         </details>
       ))}
@@ -413,6 +482,12 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags }: { 
           <div className="px-2 pb-2 pt-0 text-xs space-y-1 ml-[36px]">
             {rt.description && <Desc text={rt.description} />}
             {rt.mimeType && <div className="flex items-center gap-2"><Badge>{rt.mimeType}</Badge></div>}
+            {rt.security !== undefined && (
+              <div className="border-t border-gray-200 pt-2">
+                <div className="mb-1 font-medium text-gray-500">Security requirements</div>
+                <SecurityRequirements requirements={rt.security} />
+              </div>
+            )}
           </div>
         </details>
       ))}
@@ -441,6 +516,12 @@ function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags }: { do
           </summary>
           <div className="px-2 pb-2 pt-0 text-xs ml-[30px]">
             {p.description && <Desc text={p.description} />}
+            {p.security !== undefined && (
+              <div className="mt-2 border-t border-gray-200 pt-2">
+                <div className="mb-1 font-medium text-gray-500">Security requirements</div>
+                <SecurityRequirements requirements={p.security} />
+              </div>
+            )}
             {p.arguments?.length ? (
               <table className="w-full text-xs mt-2">
                 <thead>
@@ -570,7 +651,7 @@ export function McpDescCardView({ doc, validation, defaultOpen = true, renderBad
   return (
     <div className="space-y-1">
       <InfoCard doc={doc} />
-      <TransportsCard doc={doc} badge={badge} />
+      <TransportsCard doc={doc} defaultOpen={defaultOpen} badge={badge} />
       <SecurityCard doc={doc} defaultOpen={defaultOpen} badge={badge} />
       <TagFilterBar tags={doc.tags} disabledTags={disabledTags} onToggle={toggleTag} />
       <ToolsCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} />
