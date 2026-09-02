@@ -5,7 +5,7 @@
 import {
   validateMcpDescription,
   type McpDescriptionDiagnostic,
-} from '@mcpdesc/validator/standalone';
+} from '@mcpdesc/validator/browser';
 import validateMcpDesc07 from './validator.generated.js';
 import type { ValidationIssue, ValidationResult } from './types';
 import mcpdescSchema from './mcpdesc-schema.json';
@@ -16,6 +16,11 @@ export const MCPDESC_SCHEMA_URI =
 
 export function isValidMcpDesc07(data: unknown): boolean {
   return validateMcpDesc07(data) as boolean;
+}
+
+export function getMcpDesc07ValidationErrors(data: unknown) {
+  validateMcpDesc07(data);
+  return validateMcpDesc07.errors ?? [];
 }
 
 function toPointer(path: readonly (string | number)[]): string {

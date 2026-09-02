@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { isValidMcpDesc07, McpDescValidator } from './validator';
+export { getMcpDesc07ValidationErrors, isValidMcpDesc07, McpDescValidator } from './validator';
 export { McpDescRenderer } from './renderer';
 export type {
   McpDescDocument,

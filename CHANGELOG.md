@@ -39,12 +39,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   current migration behavior, and deferred release work.
 - Rename the card-view protocol field to Protocol Versions, emphasize its
   values, and reduce the Input, Output, and Arguments summary labels.
+- Prompt before migrating MCP Description 0.7 documents instead of converting
+  them automatically. Cancelled and failed migrations preserve the original
+  source and show an unsupported-version preview.
 
 ### Added
 
-- Automatically migrate valid MCP Description 0.7.0 documents to RC.1 when they
-  are opened, pasted, or restored. Documents that cannot migrate show an
-  actionable v0.8 migration message; versions before 0.7 are unsupported.
+- Report MCP Description 0.7 migration outcomes as success, success with
+  warnings, or failure, with a downloadable deterministic conversion report.
+  Missing legacy protocol versions default to `2025-11-25` through the core
+  converter and are reported as warnings.
 - Render a lightweight named index for tool, resource, resource template,
   prompt, interaction, and completion examples in the editor card preview;
   selecting a name navigates Monaco to its source definition.
