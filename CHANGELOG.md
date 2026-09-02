@@ -35,12 +35,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   Protocol View.
 - Show explicit root and declaration-level security requirements in the card
   preview without inferring inherited security policy.
+- Refresh the README and V2 support plan for the implemented RC.1 integration,
+  current migration behavior, and deferred release work.
 
 ### Added
 
 - Automatically migrate valid MCP Description 0.7.0 documents to RC.1 when they
   are opened, pasted, or restored. Documents that cannot migrate show an
   actionable v0.8 migration message; versions before 0.7 are unsupported.
+- Render a lightweight named index for tool, resource, resource template,
+  prompt, interaction, and completion examples in the editor card preview;
+  selecting a name navigates Monaco to its source definition.
+- Include up to ten allowed values in enum validation diagnostics and place
+  parser diagnostics on their reported source line in Monaco.
 
 
 ## [1.1.0-rc.2] — 2026-07-08

@@ -128,13 +128,14 @@ export default function Editor() {
   const decorationsRef = useRef<editor.IEditorDecorationsCollection | null>(null);
   const [fontSize, setFontSize] = useState(DEFAULT_FONT_SIZE);
   const [unmappedIssues, setUnmappedIssues] = useState<string[]>([]);
+  const [editorReady, setEditorReady] = useState(false);
 
   const applyFontSize = useCallback((size: number) => {
     setFontSize(size);
     editorRef.current?.updateOptions({ fontSize: size });
   }, []);
 
-  const { state, setText, revealSectionItemRef } = useDoc();
+  const { state, setText, revealSectionItemRef, revealPathRef } = useDoc();
 
   // Register reveal callback so the preview can jump to a section item in the editor
   useEffect(() => {
@@ -150,6 +151,20 @@ export default function Editor() {
     };
     return () => { revealSectionItemRef.current = null; };
   }, [revealSectionItemRef]);
+
+  useEffect(() => {
+    revealPathRef.current = (path: string) => {
+      const ed = editorRef.current;
+      if (!ed) return;
+      const line = pathToLine(ed.getValue(), path);
+      if (line > 0) {
+        ed.revealLineInCenter(line);
+        ed.setPosition({ lineNumber: line, column: 1 });
+        ed.focus();
+      }
+    };
+    return () => { revealPathRef.current = null; };
+  }, [revealPathRef]);
 
   const handleMount: OnMount = useCallback((ed, monaco) => {
     editorRef.current = ed;
@@ -173,6 +188,7 @@ export default function Editor() {
     }
 
     ed.focus();
+    setEditorReady(true);
   }, []);
 
   // Update glyph-margin decorations when validation changes
@@ -189,9 +205,20 @@ export default function Editor() {
     // Group by line, collect unmapped
     const lineMap = new Map<number, string[]>();
     const unmapped: string[] = [];
+    const parserMarkers: editor.IMarkerData[] = [];
     for (const issue of allIssues) {
-      const line = pathToLine(state.text, issue.path, issue.params);
+      const line = issue.line ?? pathToLine(state.text, issue.path, issue.params);
       const label = `${issue.severity === 'error' ? '✕' : '⚠'} ${issue.path}: ${issue.message}`;
+      if (issue.line && ed.getModel()) {
+        parserMarkers.push({
+          severity: issue.severity === 'error' ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning,
+          message: issue.message,
+          startLineNumber: line,
+          startColumn: issue.column ?? 1,
+          endLineNumber: line,
+          endColumn: (issue.column ?? 1) + 1,
+        });
+      }
       if (line === 0) {
         unmapped.push(label);
       } else {
@@ -219,7 +246,11 @@ export default function Editor() {
       decorationsRef.current.clear();
     }
     decorationsRef.current = ed.createDecorationsCollection(newDecorations);
-  }, [state.validation, state.text]);
+    const model = ed.getModel();
+    if (model) {
+      monaco.editor.setModelMarkers(model, 'mcpdesc-parser', parserMarkers);
+    }
+  }, [editorReady, state.validation, state.text]);
 
   const handleChange: OnChange = useCallback(
     (value) => {

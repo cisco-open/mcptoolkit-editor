@@ -183,4 +183,6 @@ export interface ValidationIssue {
   message: string;
   keyword?: string;
   params?: Record<string, unknown>;
+  line?: number;
+  column?: number;
 }

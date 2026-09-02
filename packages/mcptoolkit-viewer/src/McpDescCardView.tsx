@@ -17,6 +17,16 @@ export type BadgeRenderer = (
   color?: string,
 ) => React.ReactNode;
 
+export type ExampleDisplayMode = 'hidden' | 'names' | 'details';
+
+export interface ExampleSelection {
+  path: string;
+  section: string;
+  itemName: string;
+  exampleName: string;
+  kind: 'examples' | 'interactionExamples' | 'completionExamples';
+}
+
 // ============================================================================
 // Shared sub-components
 // ============================================================================
@@ -113,6 +123,54 @@ function JsonBlock({ data }: { data: unknown }) {
     <pre className="text-xs bg-gray-50 border border-gray-200 rounded p-2 overflow-auto max-h-48 text-gray-700 mt-1">
       {JSON.stringify(data, null, 2)}
     </pre>
+  );
+}
+
+function ExamplesView({ examples, title = 'Examples', className = 'mt-2', mode, selection }: {
+  examples?: Record<string, unknown>; title?: string; className?: string;
+  mode: ExampleDisplayMode;
+  selection: Omit<ExampleSelection, 'exampleName'> & { onSelect?: (selection: ExampleSelection) => void };
+}) {
+  const entries = Object.entries(examples ?? {});
+  if (!entries.length || mode === 'hidden') return null;
+  return (
+    mode === 'names' ? (
+      <div className={`${className} flex flex-wrap items-center gap-x-2 gap-y-1 text-xs`}>
+        <span className="font-sans text-gray-500">{title}</span>
+        {entries.map(([name]) => (
+          selection.onSelect ? (
+            <button
+              key={name}
+              className="cursor-pointer font-mono text-xs text-blue-700 underline"
+              title="Select example"
+              onClick={() => selection.onSelect?.({
+                path: `${selection.path}/${name}`,
+                section: selection.section,
+                itemName: selection.itemName,
+                exampleName: name,
+                kind: selection.kind,
+              })}
+            >
+              {name}
+            </button>
+          ) : <span key={name} className="font-mono text-xs text-blue-700">{name}</span>
+        ))}
+      </div>
+    ) : (
+      <details className={className}>
+        <summary className="cursor-pointer select-none text-sm font-sans underline text-gray-900">
+          {title} <span className="text-gray-400">({entries.length})</span>
+        </summary>
+        <div className="mt-1 ml-[18px] space-y-1">
+          {entries.map(([name, example]) => (
+            <details key={name}>
+              <summary className="cursor-pointer select-none font-mono text-xs text-blue-700">{name}</summary>
+              <JsonBlock data={example} />
+            </details>
+          ))}
+        </div>
+      </details>
+    )
   );
 }
 
@@ -368,7 +426,10 @@ function SecurityCard({ doc, defaultOpen, badge }: { doc: McpDescDocument; defau
   );
 }
 
-function ToolsCard({ doc, errorPaths, defaultOpen, badge, disabledTags }: { doc: McpDescDocument; errorPaths: Set<string>; defaultOpen: boolean; badge: BadgeRenderer; disabledTags: Set<string> }) {
+function ToolsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect }: {
+  doc: McpDescDocument; errorPaths: Set<string>; defaultOpen: boolean; badge: BadgeRenderer; disabledTags: Set<string>;
+  exampleDisplay: ExampleDisplayMode; onExampleSelect?: (selection: ExampleSelection) => void;
+}) {
   if (!doc.tools?.length) return null;
   const visible = doc.tools.filter((t, i) => {
     if (errorPaths.has(`/tools/${i}`)) return false;
@@ -379,6 +440,7 @@ function ToolsCard({ doc, errorPaths, defaultOpen, badge, disabledTags }: { doc:
   return (
     <Section title="Tools" count={visible.length} defaultOpen={defaultOpen}>
       {visible.map((tool) => {
+        const toolIndex = doc.tools?.indexOf(tool) ?? -1;
         const props = tool.inputSchema?.properties as Record<string, unknown> | undefined;
         const hasInputProps = props != null && Object.keys(props).length > 0;
         return (
@@ -428,6 +490,8 @@ function ToolsCard({ doc, errorPaths, defaultOpen, badge, disabledTags }: { doc:
                   </div>
                 </details>
               )}
+              <ExamplesView examples={tool.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/tools/${toolIndex}/examples`, section: 'tools', itemName: tool.name, kind: 'examples', onSelect: onExampleSelect }} />
+              <ExamplesView examples={tool.interactionExamples} title="Interaction examples" className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/tools/${toolIndex}/interactionExamples`, section: 'tools', itemName: tool.name, kind: 'interactionExamples', onSelect: onExampleSelect }} />
             </div>
           </details>
         );
@@ -436,7 +500,10 @@ function ToolsCard({ doc, errorPaths, defaultOpen, badge, disabledTags }: { doc:
   );
 }
 
-function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags }: { doc: McpDescDocument; errorPaths: Set<string>; defaultOpen: boolean; badge: BadgeRenderer; disabledTags: Set<string> }) {
+function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect }: {
+  doc: McpDescDocument; errorPaths: Set<string>; defaultOpen: boolean; badge: BadgeRenderer; disabledTags: Set<string>;
+  exampleDisplay: ExampleDisplayMode; onExampleSelect?: (selection: ExampleSelection) => void;
+}) {
   const resources = (doc.resources ?? []).filter((r, i) => {
     if (errorPaths.has(`/resources/${i}`)) return false;
     if (disabledTags.size > 0 && r.tags?.length && r.tags.every(tag => disabledTags.has(tag))) return false;
@@ -451,51 +518,63 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags }: { 
   if (!total) return null;
   return (
     <Section title="Resources" count={total} defaultOpen={defaultOpen}>
-      {resources.map((r) => (
-        <details key={r.uri} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
+      {resources.map((r) => {
+        const resourceIndex = doc.resources?.indexOf(r) ?? -1;
+        return <details key={r.uri} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
           <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
             {badge('resource', 'resources', r.uri)}
             <span className="font-mono text-teal-600">{r.uri}</span>
             <span className="flex-1" />
             {r.tags?.map((t) => <Tag key={t} value={t} />)}
           </summary>
-          <div className="px-2 pb-2 pt-0 text-xs space-y-1 ml-[36px]">
-            {r.description && <Desc text={r.description} />}
-            {r.mimeType && <div className="flex items-center gap-2"><Badge>{r.mimeType}</Badge></div>}
-            {r.security !== undefined && (
-              <div className="border-t border-gray-200 pt-2">
-                <div className="mb-1 font-medium text-gray-500">Security requirements</div>
-                <SecurityRequirements requirements={r.security} />
-              </div>
-            )}
+          <div className="px-2 pb-2 pt-0 space-y-2">
+            <div className="text-xs space-y-1 ml-[36px]">
+              {r.description && <Desc text={r.description} />}
+              {r.mimeType && <div className="flex items-center gap-2"><Badge>{r.mimeType}</Badge></div>}
+              {r.security !== undefined && (
+                <div className="border-t border-gray-200 pt-2">
+                  <div className="mb-1 font-medium text-gray-500">Security requirements</div>
+                  <SecurityRequirements requirements={r.security} />
+                </div>
+              )}
+            </div>
+            <ExamplesView examples={r.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/resources/${resourceIndex}/examples`, section: 'resources', itemName: r.name, kind: 'examples', onSelect: onExampleSelect }} />
           </div>
-        </details>
-      ))}
-      {templates.map((rt) => (
-        <details key={rt.uriTemplate} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
+        </details>;
+      })}
+      {templates.map((rt) => {
+        const templateIndex = doc.resourceTemplates?.indexOf(rt) ?? -1;
+        return <details key={rt.uriTemplate} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
           <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
             {badge('resource', 'resourceTemplates', rt.uriTemplate)}
             <span className="font-mono text-teal-600">{rt.uriTemplate}</span>
             <span className="flex-1" />
             {rt.tags?.map((t) => <Tag key={t} value={t} />)}
           </summary>
-          <div className="px-2 pb-2 pt-0 text-xs space-y-1 ml-[36px]">
-            {rt.description && <Desc text={rt.description} />}
-            {rt.mimeType && <div className="flex items-center gap-2"><Badge>{rt.mimeType}</Badge></div>}
-            {rt.security !== undefined && (
-              <div className="border-t border-gray-200 pt-2">
-                <div className="mb-1 font-medium text-gray-500">Security requirements</div>
-                <SecurityRequirements requirements={rt.security} />
-              </div>
-            )}
+          <div className="px-2 pb-2 pt-0 space-y-2">
+            <div className="text-xs space-y-1 ml-[36px]">
+              {rt.description && <Desc text={rt.description} />}
+              {rt.mimeType && <div className="flex items-center gap-2"><Badge>{rt.mimeType}</Badge></div>}
+              {rt.security !== undefined && (
+                <div className="border-t border-gray-200 pt-2">
+                  <div className="mb-1 font-medium text-gray-500">Security requirements</div>
+                  <SecurityRequirements requirements={rt.security} />
+                </div>
+              )}
+            </div>
+            <ExamplesView examples={rt.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/resourceTemplates/${templateIndex}/examples`, section: 'resourceTemplates', itemName: rt.name, kind: 'examples', onSelect: onExampleSelect }} />
+            <ExamplesView examples={rt.completionExamples} title="Completion examples" className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/resourceTemplates/${templateIndex}/completionExamples`, section: 'resourceTemplates', itemName: rt.name, kind: 'completionExamples', onSelect: onExampleSelect }} />
           </div>
-        </details>
-      ))}
+        </details>;
+      })}
     </Section>
   );
 }
 
-function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags }: { doc: McpDescDocument; errorPaths: Set<string>; defaultOpen: boolean; badge: BadgeRenderer; disabledTags: Set<string> }) {
+function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect }: {
+  doc: McpDescDocument; errorPaths: Set<string>; defaultOpen: boolean; badge: BadgeRenderer; disabledTags: Set<string>;
+  exampleDisplay: ExampleDisplayMode; onExampleSelect?: (selection: ExampleSelection) => void;
+}) {
   if (!doc.prompts?.length) return null;
   const visible = doc.prompts.filter((p, i) => {
     if (errorPaths.has(`/prompts/${i}`)) return false;
@@ -505,8 +584,9 @@ function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags }: { do
   if (!visible.length) return null;
   return (
     <Section title="Prompts" count={visible.length} defaultOpen={defaultOpen}>
-      {visible.map((p) => (
-        <details key={p.name} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
+      {visible.map((p) => {
+        const promptIndex = doc.prompts?.indexOf(p) ?? -1;
+        return <details key={p.name} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
           <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
             {badge('prompt', 'prompts', p.name)}
             <span className="font-mono text-fuchsia-600">{p.name}</span>
@@ -514,37 +594,48 @@ function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags }: { do
             <span className="flex-1" />
             {p.tags?.map((t) => <Tag key={t} value={t} />)}
           </summary>
-          <div className="px-2 pb-2 pt-0 text-xs ml-[30px]">
-            {p.description && <Desc text={p.description} />}
-            {p.security !== undefined && (
-              <div className="mt-2 border-t border-gray-200 pt-2">
-                <div className="mb-1 font-medium text-gray-500">Security requirements</div>
-                <SecurityRequirements requirements={p.security} />
-              </div>
-            )}
+          <div className="px-2 pb-2 pt-0 space-y-2">
+            <div className="text-xs ml-[30px]">
+              {p.description && <Desc text={p.description} />}
+              {p.security !== undefined && (
+                <div className="mt-2 border-t border-gray-200 pt-2">
+                  <div className="mb-1 font-medium text-gray-500">Security requirements</div>
+                  <SecurityRequirements requirements={p.security} />
+                </div>
+              )}
+            </div>
             {p.arguments?.length ? (
-              <table className="w-full text-xs mt-2">
-                <thead>
-                  <tr className="text-gray-400">
-                    <th className="text-left pr-2">Argument</th>
-                    <th className="text-left pr-2">Required</th>
-                    <th className="text-left">Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {p.arguments.map((a) => (
-                    <tr key={a.name} className="border-t border-gray-200">
-                      <td className="py-0.5 pr-2 font-mono text-gray-700">{a.name}</td>
-                      <td className="py-0.5 pr-2">{a.required ? '✓' : '—'}</td>
-                      <td className="py-0.5 text-gray-500">{a.description}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <details className="mt-1 ml-[8px]">
+                <summary className="cursor-pointer select-none text-sm font-sans underline text-gray-900">
+                  Arguments
+                </summary>
+                <div className="pt-1 ml-[18px]">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="text-xs text-gray-400 border-b border-gray-200">
+                        <th className="text-left py-1 pr-3 font-medium">Argument</th>
+                        <th className="text-left py-1 pr-3 font-medium">Required</th>
+                        <th className="text-left py-1 font-medium">Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {p.arguments.map((a) => (
+                        <tr key={a.name} className="border-b border-gray-100 align-top">
+                          <td className="py-1.5 pr-3"><code className="font-mono text-gray-800 text-xs">{a.name}</code></td>
+                          <td className="py-1.5 pr-3 text-xs text-gray-500">{a.required ? 'yes' : 'no'}</td>
+                          <td className="py-1.5 text-xs text-gray-500">{a.description}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
             ) : null}
+            <ExamplesView examples={p.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/prompts/${promptIndex}/examples`, section: 'prompts', itemName: p.name, kind: 'examples', onSelect: onExampleSelect }} />
+            <ExamplesView examples={p.completionExamples} title="Completion examples" className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/prompts/${promptIndex}/completionExamples`, section: 'prompts', itemName: p.name, kind: 'completionExamples', onSelect: onExampleSelect }} />
           </div>
-        </details>
-      ))}
+        </details>;
+      })}
     </Section>
   );
 }
@@ -618,9 +709,13 @@ export interface McpDescCardViewProps {
   defaultOpen?: boolean;
   /** Custom badge renderer — receives (children, section, value, color). Defaults to a static TypeBadge. */
   renderBadge?: BadgeRenderer;
+  /** How operation examples are rendered (default: hidden). */
+  exampleDisplay?: ExampleDisplayMode;
+  /** Receives the exact JSON pointer when a named example is selected. */
+  onExampleSelect?: (selection: ExampleSelection) => void;
 }
 
-export function McpDescCardView({ doc, validation, defaultOpen = true, renderBadge }: McpDescCardViewProps) {
+export function McpDescCardView({ doc, validation, defaultOpen = true, renderBadge, exampleDisplay = 'hidden', onExampleSelect }: McpDescCardViewProps) {
   const [disabledTags, setDisabledTags] = useState<Set<string>>(new Set());
 
   // Reset filter when the document changes
@@ -654,9 +749,9 @@ export function McpDescCardView({ doc, validation, defaultOpen = true, renderBad
       <TransportsCard doc={doc} defaultOpen={defaultOpen} badge={badge} />
       <SecurityCard doc={doc} defaultOpen={defaultOpen} badge={badge} />
       <TagFilterBar tags={doc.tags} disabledTags={disabledTags} onToggle={toggleTag} />
-      <ToolsCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} />
-      <ResourcesCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} />
-      <PromptsCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} />
+      <ToolsCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
+      <ResourcesCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
+      <PromptsCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
       <TagsCard doc={doc} defaultOpen={defaultOpen} />
     </div>
   );

@@ -116,6 +116,8 @@ interface DocContextValue {
   effectiveDoc: McpDescDocument | null;
   /** Ref that the Editor sets to allow preview→editor navigation */
   revealSectionItemRef: React.MutableRefObject<((section: string, value: string) => void) | null>;
+  /** Ref that the Editor sets to allow preview→editor navigation by JSON pointer. */
+  revealPathRef: React.MutableRefObject<((path: string) => void) | null>;
 }
 
 const DocContext = createContext<DocContextValue | null>(null);
@@ -137,6 +139,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
   const validatorRef = useRef<McpDescValidator | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const revealSectionItemRef = useRef<((section: string, value: string) => void) | null>(null);
+  const revealPathRef = useRef<((path: string) => void) | null>(null);
 
   // Initialise validator once
   useEffect(() => {
@@ -151,7 +154,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
     // 1. Parse
     let doc: McpDescDocument | null = null;
     let parseError: string | null = null;
-    let format: DocFormat = 'json';
+    let format: DocFormat = raw.trimStart().startsWith('{') ? 'json' : 'yaml';
 
     const parsed = parseMcpDescriptionSource(raw);
     if (parsed.ok) {
@@ -197,11 +200,21 @@ export function DocProvider({ children }: { children: ReactNode }) {
       const result = validatorRef.current.validateDocument(doc);
       dispatch({ type: 'SET_VALIDATION', validation: result });
     } else if (parseError) {
+      const diagnostic = parsed.ok ? undefined : parsed.diagnostics[0];
+      const lastContentLine = raw.trimEnd().split('\n').length;
+      const line = diagnostic?.location?.line && diagnostic.location.line > lastContentLine
+        ? lastContentLine
+        : diagnostic?.location?.line;
       dispatch({
         type: 'SET_VALIDATION',
         validation: {
           valid: false,
-          errors: [{ path: '/', message: parseError }],
+          errors: [{
+            path: '/',
+            message: parseError,
+            line,
+            column: diagnostic?.location?.column,
+          }],
           warnings: [],
         },
       });
@@ -243,6 +256,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
       setSelectedProtocolVersion,
       effectiveDoc,
       revealSectionItemRef,
+      revealPathRef,
     }}>
       {children}
     </DocContext.Provider>

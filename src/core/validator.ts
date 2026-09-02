@@ -8,6 +8,7 @@ import {
 } from '@mcpdesc/validator/standalone';
 import validateMcpDesc07 from './validator.generated.js';
 import type { ValidationIssue, ValidationResult } from './types';
+import mcpdescSchema from './mcpdesc-schema.json';
 
 export const MCPDESC_SPECIFICATION = '0.8.0-rc.1' as const;
 export const MCPDESC_SCHEMA_URI =
@@ -24,10 +25,43 @@ function toPointer(path: readonly (string | number)[]): string {
     .join('/')}`;
 }
 
+type SchemaNode = Record<string, unknown>;
+
+function dereference(schema: SchemaNode): SchemaNode {
+  const ref = schema.$ref;
+  if (typeof ref !== 'string' || !ref.startsWith('#/')) return schema;
+  let value: unknown = mcpdescSchema;
+  for (const segment of ref.slice(2).split('/')) {
+    if (typeof value !== 'object' || value === null) return schema;
+    value = (value as Record<string, unknown>)[segment.replace(/~1/g, '/').replace(/~0/g, '~')];
+  }
+  return typeof value === 'object' && value !== null ? value as SchemaNode : schema;
+}
+
+function enumValuesAtPath(path: readonly (string | number)[]): unknown[] | undefined {
+  let schema: SchemaNode = mcpdescSchema as SchemaNode;
+  for (const segment of path) {
+    schema = dereference(schema);
+    const next = typeof segment === 'number' || /^\d+$/.test(String(segment))
+      ? schema.items
+      : (schema.properties as Record<string, unknown> | undefined)?.[segment];
+    if (typeof next !== 'object' || next === null) return undefined;
+    schema = next as SchemaNode;
+  }
+  const values = dereference(schema).enum;
+  return Array.isArray(values) ? values : undefined;
+}
+
+function formatAllowedValues(values: unknown[]): string {
+  const displayed = values.slice(0, 10).map((value) => JSON.stringify(value)).join(', ');
+  return ` Allowed values: ${displayed}${values.length > 10 ? ', ...' : ''}.`;
+}
+
 function toIssue(diagnostic: McpDescriptionDiagnostic): ValidationIssue {
+  const values = enumValuesAtPath(diagnostic.path);
   return {
     path: toPointer(diagnostic.path),
-    message: diagnostic.message,
+    message: `${diagnostic.message}${values ? formatAllowedValues(values) : ''}`,
     keyword: diagnostic.code,
   };
 }
