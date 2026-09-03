@@ -15,17 +15,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
-### Added
-
-- Add `componentReferences` and `onComponentSelect` props. Content substituted
-  from a `components` registry is marked with an indicator that reports the
-  component's JSON pointer when selected.
-
 ### Changed
 
 - Accept reusable component references in tool `inputSchema` / `outputSchema`
-  and declaration examples. Unresolved `$componentRef` values render as a
-  compact reference indicator instead of raw JSON.
+  and declaration examples. Resolved references render identically to inline
+  content; unresolved `$componentRef` values render as a compact reference
+  indicator instead of raw JSON.
 - Render MCP Description 0.8 RC.1 root protocol versions and named
   `securitySchemes` in the shared card view.
 - Render explicitly declared security requirements for the root, transports,

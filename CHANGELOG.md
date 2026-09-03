@@ -29,8 +29,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 - Resolve local `$componentRef` references via
   `@mcpdesc/core@0.7.0`. The card preview and Markdown export render resolved
   schemas and examples while the editor source keeps the authored references.
-  Resolved content carries a component indicator that navigates to the
-  component definition.
+  Ctrl+clicking a reference in the editor navigates to its component definition.
 - Bundle the `Reusable Components` example (vendored from the specification
   repo) demonstrating root `components` registries and local `$componentRef`
   references.

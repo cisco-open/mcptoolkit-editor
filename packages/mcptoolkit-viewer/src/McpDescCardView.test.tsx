@@ -7,8 +7,8 @@
  * indicator must lead somewhere real.
  */
 
-import { describe, expect, it, vi } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { render, cleanup } from '@testing-library/react';
 import { parseMcpDescriptionSource } from '@mcpdesc/core/documents';
 import { resolveMcpDescriptionComponentReferences } from '@mcpdesc/core/components';
 import { McpDescCardView } from './McpDescCardView';
@@ -42,29 +42,4 @@ describe('McpDescCardView component references', () => {
     expect(referencedHtml.innerHTML).toBe(inlineMarkup);
   });
 
-  it('marks resolved content and reports the component pointer on selection', async () => {
-    const { doc, provenance } = resolved(referencedSource);
-    const onComponentSelect = vi.fn();
-    render(
-      <McpDescCardView
-        doc={doc}
-        exampleDisplay="names"
-        componentReferences={provenance}
-        onComponentSelect={onComponentSelect}
-      />,
-    );
-
-    const indicator = screen.getByRole('button', { name: 'component SearchInput' });
-    indicator.click();
-
-    expect(onComponentSelect).toHaveBeenCalledWith('/components/schemas/SearchInput');
-    expect(screen.getByRole('button', { name: 'component basic-search' })).toBeTruthy();
-  });
-
-  it('shows no indicators when the document has no references', () => {
-    const { doc } = resolved(inlineSource);
-    render(<McpDescCardView doc={doc} exampleDisplay="names" componentReferences={[]} />);
-
-    expect(screen.queryByText(/^component /)).toBeNull();
-  });
 });

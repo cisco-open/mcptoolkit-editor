@@ -25,10 +25,7 @@ import {
   type McpDescriptionMigrationReport,
 } from '@mcpdesc/core';
 import { parseMcpDescriptionSource } from '@mcpdesc/core/documents';
-import {
-  resolveMcpDescriptionComponentReferences,
-  type McpDescriptionComponentReferenceProvenance,
-} from '@mcpdesc/core/components';
+import { resolveMcpDescriptionComponentReferences } from '@mcpdesc/core/components';
 import type { SupportedProtocolVersion } from '@mcpdesc/validator/browser';
 import {
   getMcpDesc07ValidationErrors,
@@ -156,8 +153,6 @@ interface DocContextValue {
   effectiveDoc: McpDescDocument | null;
   /** Effective document with local `$componentRef` values substituted; null when resolution fails. */
   resolvedDoc: McpDescDocument | null;
-  /** Maps each substituted reference back to its authored location and component target. */
-  componentProvenance: readonly McpDescriptionComponentReferenceProvenance[];
   /** Ref that the Editor sets to allow preview→editor navigation */
   revealSectionItemRef: React.MutableRefObject<((section: string, value: string) => void) | null>;
   /** Ref that the Editor sets to allow preview→editor navigation by JSON pointer. */
@@ -349,7 +344,6 @@ export function DocProvider({ children }: { children: ReactNode }) {
     [effectiveDoc],
   );
   const resolvedDoc = resolution?.ok ? resolution.value as McpDescDocument : null;
-  const componentProvenance = resolution?.ok ? resolution.provenance : [];
 
   return (
     <DocContext.Provider value={{
@@ -361,7 +355,6 @@ export function DocProvider({ children }: { children: ReactNode }) {
       setSelectedProtocolVersion,
       effectiveDoc,
       resolvedDoc,
-      componentProvenance,
       revealSectionItemRef,
       revealPathRef,
     }}>
