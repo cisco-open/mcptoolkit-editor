@@ -1,0 +1,15 @@
+$schema: https://mcpdesc.org/schema/mcp-description/0.8.0-rc.1.json
+mcpdesc: 0.8.0
+info:
+  name: direct-cycle
+  version: 1.0.0
+protocolVersions:
+  - '2026-07-28'
+components:
+  schemas:
+    SelfReference:
+      $componentRef: '#/components/schemas/SelfReference'
+tools:
+  - name: search
+    inputSchema:
+      $componentRef: '#/components/schemas/SelfReference'

@@ -22,5 +22,7 @@ sections:
         label: Multi-Transport
       - file: multi-version.yaml
         label: Multi-Version
+      - file: reusable-components.yaml
+        label: Reusable Components
       - file: full-featured.yaml
         label: Full-Featured

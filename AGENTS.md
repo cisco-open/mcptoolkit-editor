@@ -116,9 +116,16 @@ Release checklist (see `.github/agents/release-manager.agent.md` and `.github/sk
 
 ## Testing
 
-No test framework is configured yet. When adding tests:
-- Unit tests for `src/core/` (validator, renderer) — these are pure functions, easy to test with Vitest.
-- Component tests for preview rendering — use React Testing Library.
+Tests run under **Vitest** (jsdom): `npm run test` (or `npm run test:watch`).
+`npm run prerelease` runs them.
+
+- Unit tests for `src/core/` live beside the source (`*.test.ts`). Shared
+  document fixtures live in `src/core/__fixtures__/` and are imported with
+  Vite's `?raw` suffix.
+- Component tests use React Testing Library and live next to the component
+  (`packages/mcptoolkit-viewer/src/*.test.tsx`).
+- Anything that must run under the strict CSP needs a codegen-trap test — see
+  `src/core/components.csp.test.ts`.
 
 ## Common Tasks
 

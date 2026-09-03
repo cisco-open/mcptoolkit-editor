@@ -32,11 +32,14 @@ const navBadgeRenderer: BadgeRenderer = (children, section, value, color) => (
 );
 
 export default function CardView({ doc, validation }: { doc: McpDescDocument; validation?: ValidationResult }) {
+  const { revealPathRef } = useDoc();
   return (
     <McpDescCardView
       doc={doc}
       validation={validation}
       renderBadge={navBadgeRenderer}
+      exampleDisplay="names"
+      onExampleSelect={({ path }) => revealPathRef.current?.(path)}
     />
   );
 }

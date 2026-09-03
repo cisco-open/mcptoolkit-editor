@@ -12,6 +12,7 @@ import {
   useContext,
   useReducer,
   useEffect,
+  useMemo,
   useRef,
   useCallback,
   type ReactNode,
@@ -21,10 +22,13 @@ import {
   projectEffectiveProtocolView,
   serializeMcpDescription,
   type JsonValue,
+  type McpDescriptionMigrationReport,
 } from '@mcpdesc/core';
 import { parseMcpDescriptionSource } from '@mcpdesc/core/documents';
-import type { SupportedProtocolVersion } from '@mcpdesc/validator/standalone';
+import { resolveMcpDescriptionComponentReferences } from '@mcpdesc/core/components';
+import type { SupportedProtocolVersion } from '@mcpdesc/validator/browser';
 import {
+  getMcpDesc07ValidationErrors,
   isValidMcpDesc07,
   McpDescValidator,
   type McpDescDocument,
@@ -37,6 +41,13 @@ import minimalExample from '../../examples/minimal.yaml?raw';
 // ============================================================================
 
 export type DocFormat = 'json' | 'yaml';
+
+export type MigrationState =
+  | { status: 'idle' }
+  | { status: 'confirmation-required'; source: JsonValue; sourceText: string; format: DocFormat }
+  | { status: 'cancelled'; sourceText: string }
+  | { status: 'succeeded'; report: McpDescriptionMigrationReport }
+  | { status: 'failed'; sourceText: string; report: McpDescriptionMigrationReport };
 
 interface DocState {
   /** Raw text in the editor */
@@ -51,24 +62,47 @@ interface DocState {
   validation: ValidationResult;
   /** Protocol revision selected for the Effective Protocol View. */
   selectedProtocolVersion: SupportedProtocolVersion | null;
+  /** State and downloadable report for an explicit 0.7 to 0.8 migration. */
+  migration: MigrationState;
 }
 
 type DocAction =
   | { type: 'SET_TEXT'; text: string }
   | { type: 'LOAD_EXAMPLE'; text: string }
-  | { type: 'MIGRATE_DOCUMENT'; text: string }
+  | { type: 'REQUEST_MIGRATION'; source: JsonValue; sourceText: string; format: DocFormat }
+  | { type: 'CANCEL_MIGRATION'; sourceText: string }
+  | { type: 'MIGRATION_SUCCEEDED'; text: string; report: McpDescriptionMigrationReport }
+  | { type: 'MIGRATION_FAILED'; sourceText: string; report: McpDescriptionMigrationReport }
   | { type: 'SET_VALIDATION'; validation: ValidationResult }
   | { type: 'SET_SELECTED_PROTOCOL_VERSION'; protocolVersion: SupportedProtocolVersion | null }
   | { type: 'SET_PARSED'; doc: McpDescDocument | null; parseError: string | null; format: DocFormat };
 
 function reducer(state: DocState, action: DocAction): DocState {
   switch (action.type) {
-    case 'SET_TEXT':
-      return { ...state, text: action.text };
+    case 'SET_TEXT': {
+      const migration = 'sourceText' in state.migration && state.migration.sourceText !== action.text
+        ? { status: 'idle' as const }
+        : state.migration;
+      return { ...state, text: action.text, migration };
+    }
     case 'LOAD_EXAMPLE':
-      return { ...state, text: action.text };
-    case 'MIGRATE_DOCUMENT':
-      return { ...state, text: action.text };
+      return { ...state, text: action.text, migration: { status: 'idle' } };
+    case 'REQUEST_MIGRATION':
+      return {
+        ...state,
+        migration: {
+          status: 'confirmation-required',
+          source: action.source,
+          sourceText: action.sourceText,
+          format: action.format,
+        },
+      };
+    case 'CANCEL_MIGRATION':
+      return { ...state, migration: { status: 'cancelled', sourceText: action.sourceText } };
+    case 'MIGRATION_SUCCEEDED':
+      return { ...state, text: action.text, migration: { status: 'succeeded', report: action.report } };
+    case 'MIGRATION_FAILED':
+      return { ...state, migration: { status: 'failed', sourceText: action.sourceText, report: action.report } };
     case 'SET_PARSED':
       return { ...state, doc: action.doc, parseError: action.parseError, format: action.format };
     case 'SET_VALIDATION':
@@ -102,6 +136,7 @@ const initialState: DocState = {
   parseError: null,
   validation: emptyValidation,
   selectedProtocolVersion: null,
+  migration: { status: 'idle' },
 };
 
 // ============================================================================
@@ -113,9 +148,15 @@ interface DocContextValue {
   setText: (text: string) => void;
   loadExample: (text: string) => void;
   setSelectedProtocolVersion: (protocolVersion: SupportedProtocolVersion | null) => void;
+  confirmMigration: () => void;
+  cancelMigration: () => void;
   effectiveDoc: McpDescDocument | null;
+  /** Effective document with local `$componentRef` values substituted; null when resolution fails. */
+  resolvedDoc: McpDescDocument | null;
   /** Ref that the Editor sets to allow preview→editor navigation */
   revealSectionItemRef: React.MutableRefObject<((section: string, value: string) => void) | null>;
+  /** Ref that the Editor sets to allow preview→editor navigation by JSON pointer. */
+  revealPathRef: React.MutableRefObject<((path: string) => void) | null>;
 }
 
 const DocContext = createContext<DocContextValue | null>(null);
@@ -136,7 +177,13 @@ export function DocProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const validatorRef = useRef<McpDescValidator | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const migrationRef = useRef<MigrationState>(state.migration);
   const revealSectionItemRef = useRef<((section: string, value: string) => void) | null>(null);
+  const revealPathRef = useRef<((path: string) => void) | null>(null);
+
+  useEffect(() => {
+    migrationRef.current = state.migration;
+  }, [state.migration]);
 
   // Initialise validator once
   useEffect(() => {
@@ -151,7 +198,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
     // 1. Parse
     let doc: McpDescDocument | null = null;
     let parseError: string | null = null;
-    let format: DocFormat = 'json';
+    let format: DocFormat = raw.trimStart().startsWith('{') ? 'json' : 'yaml';
 
     const parsed = parseMcpDescriptionSource(raw);
     if (parsed.ok) {
@@ -159,24 +206,17 @@ export function DocProvider({ children }: { children: ReactNode }) {
       format = parsed.format;
       const version = doc.mcpdesc;
       if (version === '0.7.0') {
-        if (!isValidMcpDesc07(doc)) {
-          doc = null;
-          parseError = LEGACY_MIGRATION_ERROR;
-        } else {
-          const migrated = migrateMcpDescription07ToRc1(doc, {
-            specification: '0.8.0-rc.1',
-            sourceValidated: true,
+        doc = null;
+        parseError = LEGACY_MIGRATION_ERROR;
+        const migration = migrationRef.current;
+        const alreadyHandled = 'sourceText' in migration && migration.sourceText === raw;
+        if (!alreadyHandled) {
+          dispatch({
+            type: 'REQUEST_MIGRATION',
+            source: parsed.value,
+            sourceText: raw,
+            format: parsed.format,
           });
-          if (!migrated.ok) {
-            doc = null;
-            parseError = LEGACY_MIGRATION_ERROR;
-          } else {
-            doc = migrated.value as McpDescDocument;
-            const migratedText = serializeMcpDescription(migrated.value as JsonValue, {
-              format: parsed.format,
-            });
-            dispatch({ type: 'MIGRATE_DOCUMENT', text: migratedText });
-          }
         }
       } else if (typeof version === 'string' && /^0\.[0-6](?:\.|$)/.test(version)) {
         doc = null;
@@ -197,11 +237,21 @@ export function DocProvider({ children }: { children: ReactNode }) {
       const result = validatorRef.current.validateDocument(doc);
       dispatch({ type: 'SET_VALIDATION', validation: result });
     } else if (parseError) {
+      const diagnostic = parsed.ok ? undefined : parsed.diagnostics[0];
+      const lastContentLine = raw.trimEnd().split('\n').length;
+      const line = diagnostic?.location?.line && diagnostic.location.line > lastContentLine
+        ? lastContentLine
+        : diagnostic?.location?.line;
       dispatch({
         type: 'SET_VALIDATION',
         validation: {
           valid: false,
-          errors: [{ path: '/', message: parseError }],
+          errors: [{
+            path: '/',
+            message: parseError,
+            line,
+            column: diagnostic?.location?.column,
+          }],
           warnings: [],
         },
       });
@@ -222,27 +272,91 @@ export function DocProvider({ children }: { children: ReactNode }) {
 
   const setText = useCallback((text: string) => dispatch({ type: 'SET_TEXT', text }), []);
   const loadExample = useCallback((text: string) => dispatch({ type: 'LOAD_EXAMPLE', text }), []);
+  const cancelMigration = useCallback(() => {
+    const migration = migrationRef.current;
+    if (migration.status === 'confirmation-required') {
+      dispatch({ type: 'CANCEL_MIGRATION', sourceText: migration.sourceText });
+    }
+  }, []);
+  const confirmMigration = useCallback(() => {
+    const migration = migrationRef.current;
+    if (migration.status !== 'confirmation-required') return;
+
+    if (!isValidMcpDesc07(migration.source)) {
+      const diagnostics = getMcpDesc07ValidationErrors(migration.source).map((error) => ({
+        code: `source-${error.keyword}`,
+        severity: 'error' as const,
+        message: error.message ?? 'The source does not conform to MCP Description 0.7.0.',
+        path: error.instancePath.split('/').slice(1),
+        phase: 'source' as const,
+      }));
+      dispatch({
+        type: 'MIGRATION_FAILED',
+        sourceText: migration.sourceText,
+        report: {
+          status: 'failed',
+          sourceSpecification: '0.7.0',
+          targetSpecification: '0.8.0-rc.1',
+          diagnostics,
+          defaultsApplied: [],
+          changes: [],
+        },
+      });
+      return;
+    }
+
+    const result = migrateMcpDescription07ToRc1(migration.source, {
+      specification: '0.8.0-rc.1',
+      sourceValidated: true,
+      defaultProtocolVersion: '2025-11-25',
+    });
+    if (!result.ok) {
+      dispatch({
+        type: 'MIGRATION_FAILED',
+        sourceText: migration.sourceText,
+        report: result.report,
+      });
+      return;
+    }
+
+    const text = serializeMcpDescription(result.value as JsonValue, { format: migration.format });
+    dispatch({ type: 'MIGRATION_SUCCEEDED', text, report: result.report });
+  }, []);
   const setSelectedProtocolVersion = useCallback(
     (protocolVersion: SupportedProtocolVersion | null) =>
       dispatch({ type: 'SET_SELECTED_PROTOCOL_VERSION', protocolVersion }),
     [],
   );
-  const projection = state.doc && state.selectedProtocolVersion
-    ? projectEffectiveProtocolView(state.doc, {
+  const effectiveDoc = useMemo(() => {
+    if (!state.doc || !state.selectedProtocolVersion) return state.doc;
+    const projection = projectEffectiveProtocolView(state.doc, {
       specification: '0.8.0-rc.1',
       protocolVersion: state.selectedProtocolVersion,
-    })
-    : null;
-  const effectiveDoc = projection?.ok ? projection.value as McpDescDocument : state.doc;
+    });
+    return projection.ok ? projection.value as McpDescDocument : state.doc;
+  }, [state.doc, state.selectedProtocolVersion]);
+
+  // Resolution runs after projection so references on filtered-out declarations are ignored.
+  const resolution = useMemo(
+    () => (effectiveDoc
+      ? resolveMcpDescriptionComponentReferences(effectiveDoc, { specification: '0.8.0-rc.1' })
+      : null),
+    [effectiveDoc],
+  );
+  const resolvedDoc = resolution?.ok ? resolution.value as McpDescDocument : null;
 
   return (
     <DocContext.Provider value={{
       state,
       setText,
       loadExample,
+      confirmMigration,
+      cancelMigration,
       setSelectedProtocolVersion,
       effectiveDoc,
+      resolvedDoc,
       revealSectionItemRef,
+      revealPathRef,
     }}>
       {children}
     </DocContext.Provider>
