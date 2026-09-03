@@ -12,6 +12,38 @@ export type McpProtocolVersion =
 export type McpDescSchema = Record<string, unknown>;
 export type McpDescSecurityRequirement = Record<string, string[]>;
 
+export type McpDescComponentNamespace =
+  | 'schemas'
+  | 'toolExamples'
+  | 'resourceExamples'
+  | 'resourceTemplateExamples'
+  | 'promptExamples';
+
+export interface McpDescComponentReference {
+  $componentRef: `#/components/${McpDescComponentNamespace}/${string}`;
+}
+
+/** An authored value that may be inlined or replaced by a local component reference. */
+export type InlineOrRef<T> = T | McpDescComponentReference;
+
+export type McpDescExample = Record<string, unknown>;
+
+export interface McpDescComponents {
+  schemas?: Record<string, InlineOrRef<McpDescSchema>>;
+  toolExamples?: Record<string, InlineOrRef<McpDescExample>>;
+  resourceExamples?: Record<string, InlineOrRef<McpDescExample>>;
+  resourceTemplateExamples?: Record<string, InlineOrRef<McpDescExample>>;
+  promptExamples?: Record<string, InlineOrRef<McpDescExample>>;
+  [key: string]: unknown;
+}
+
+export function isComponentReference(value: unknown): value is McpDescComponentReference {
+  return typeof value === 'object'
+    && value !== null
+    && !Array.isArray(value)
+    && typeof (value as { $componentRef?: unknown }).$componentRef === 'string';
+}
+
 interface ProtocolScoped {
   protocolVersions?: McpProtocolVersion[];
   security?: McpDescSecurityRequirement[];
@@ -35,7 +67,7 @@ export interface McpDescDocument {
   resourceTemplates?: McpDescResourceTemplate[];
   prompts?: McpDescPrompt[];
   tags?: McpDescTag[];
-  components?: Record<string, unknown>;
+  components?: McpDescComponents;
   [key: string]: unknown;
 }
 
@@ -96,8 +128,8 @@ export interface McpDescTool extends ProtocolScoped {
   name: string;
   title?: string;
   description?: string;
-  inputSchema: McpDescSchema;
-  outputSchema?: McpDescSchema;
+  inputSchema: InlineOrRef<McpDescSchema>;
+  outputSchema?: InlineOrRef<McpDescSchema>;
   annotations?: {
     title?: string;
     readOnlyHint?: boolean;
@@ -107,7 +139,7 @@ export interface McpDescTool extends ProtocolScoped {
     [key: string]: unknown;
   };
   execution?: { taskSupport?: 'forbidden' | 'optional' | 'required'; [key: string]: unknown };
-  examples?: Record<string, unknown>;
+  examples?: Record<string, InlineOrRef<McpDescExample>>;
   interactionExamples?: Record<string, unknown>;
   elicitations?: Record<string, unknown>[];
   icons?: McpDescIcon[];
@@ -123,7 +155,7 @@ export interface McpDescResource extends ProtocolScoped {
   mimeType?: string;
   size?: number;
   annotations?: Record<string, unknown>;
-  examples?: Record<string, unknown>;
+  examples?: Record<string, InlineOrRef<McpDescExample>>;
   elicitations?: Record<string, unknown>[];
   icons?: McpDescIcon[];
   tags?: string[];
@@ -137,7 +169,7 @@ export interface McpDescResourceTemplate extends ProtocolScoped {
   description?: string;
   mimeType?: string;
   annotations?: Record<string, unknown>;
-  examples?: Record<string, unknown>;
+  examples?: Record<string, InlineOrRef<McpDescExample>>;
   completionExamples?: Record<string, unknown>;
   elicitations?: Record<string, unknown>[];
   icons?: McpDescIcon[];
@@ -158,7 +190,7 @@ export interface McpDescPrompt extends ProtocolScoped {
   title?: string;
   description?: string;
   arguments?: McpDescPromptArgument[];
-  examples?: Record<string, unknown>;
+  examples?: Record<string, InlineOrRef<McpDescExample>>;
   completionExamples?: Record<string, unknown>;
   elicitations?: Record<string, unknown>[];
   icons?: McpDescIcon[];

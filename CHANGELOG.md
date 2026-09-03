@@ -24,8 +24,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
+### Added
+
+- Resolve local `$componentRef` references via
+  `@mcpdesc/core@0.7.0`. The card preview and Markdown export render resolved
+  schemas and examples while the editor source keeps the authored references.
+  Resolved content carries a component indicator that navigates to the
+  component definition.
+- Bundle the `Reusable Components` example (vendored from the specification
+  repo) demonstrating root `components` registries and local `$componentRef`
+  references.
+- Add a Vitest setup (`npm run test`) with valid and invalid component-reference
+  fixtures covering every registry, chains, shared targets, missing targets,
+  namespace errors, cycles, and strict-CSP resolution. `npm run prerelease` now
+  runs the suite.
+
 ### Changed
 
+- Upgrade to `@mcpdesc/core@^0.7.0` and `@mcpdesc/validator@^0.8.0`.
+- Replace the untyped `components` placeholder with typed component registries
+  and inline-or-reference unions for tool schemas and declaration examples.
 - Target MCP Description `0.8.0-rc.1` using the CSP-safe
   `@mcpdesc/validator/standalone` and `@mcpdesc/core` packages. The editor now
   validates the full structural and semantic RC.1 contract.
@@ -37,7 +55,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   preview without inferring inherited security policy.
 - Refresh the README and V2 support plan for the implemented RC.1 integration,
   current migration behavior, and deferred release work.
-- Rename the card-view protocol field to Protocol Versions, emphasize its
+- Rename the card-view protocol field to MCP Version(s), emphasize its
   values, and reduce the Input, Output, and Arguments summary labels.
 - Prompt before migrating MCP Description 0.7 documents instead of converting
   them automatically. Cancelled and failed migrations preserve the original

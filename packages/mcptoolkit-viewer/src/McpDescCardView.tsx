@@ -2,12 +2,52 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import { marked } from 'marked';
-import type { McpDescDocument, ValidationResult } from '@core/types';
+import { isComponentReference } from '@core/types';
+import type { McpDescComponentReference, McpDescDocument, McpDescSchema, ValidationResult } from '@core/types';
 
 // Configure marked for inline rendering
 marked.setOptions({ breaks: true });
+
+/** Where a resolved `$componentRef` was authored, and which component it came from. */
+export interface ComponentReferenceProvenance {
+  referencePath: readonly (number | string)[];
+  targetPath: readonly (number | string)[];
+}
+
+function toPointer(path: readonly (number | string)[]): string {
+  return `/${path.map((segment) => String(segment).replace(/~/g, '~0').replace(/\//g, '~1')).join('/')}`;
+}
+
+interface ComponentReferenceContextValue {
+  /** Authored reference pointer -> component target pointer. */
+  targets: ReadonlyMap<string, string>;
+  onSelect?: (pointer: string) => void;
+}
+
+const ComponentReferenceContext = createContext<ComponentReferenceContextValue>({ targets: new Map() });
+
+/** Marks content substituted from `components`, linking back to the component definition. */
+function ComponentLink({ referencePath }: { referencePath: readonly (number | string)[] }) {
+  const { targets, onSelect } = useContext(ComponentReferenceContext);
+  const target = targets.get(toPointer(referencePath));
+  if (!target) return null;
+
+  const name = target.slice(target.lastIndexOf('/') + 1);
+  const label = `component ${name}`;
+  return onSelect ? (
+    <button
+      className="cursor-pointer rounded bg-violet-100 px-1.5 py-0.5 text-xs text-violet-700"
+      title={`Jump to ${target}`}
+      onClick={(event) => { event.preventDefault(); event.stopPropagation(); onSelect(target); }}
+    >
+      {label}
+    </button>
+  ) : (
+    <span className="rounded bg-violet-100 px-1.5 py-0.5 text-xs text-violet-700" title={target}>{label}</span>
+  );
+}
 
 /** Render function for type badges. Receives children, section key, item identifier, and optional color. */
 export type BadgeRenderer = (
@@ -126,10 +166,22 @@ function JsonBlock({ data }: { data: unknown }) {
   );
 }
 
-function ExamplesView({ examples, title = 'Examples', className = 'mt-2', mode, selection }: {
+/** Shown when a `$componentRef` reaches the view unresolved (e.g. the target is missing). */
+function UnresolvedComponentRef({ reference }: { reference: McpDescComponentReference }) {
+  return (
+    <div className="text-xs text-gray-500">
+      unresolved component reference{' '}
+      <span className="font-mono text-blue-700">{reference.$componentRef}</span>
+    </div>
+  );
+}
+
+function ExamplesView({ examples, title = 'Examples', className = 'mt-2', mode, selection, basePath }: {
   examples?: Record<string, unknown>; title?: string; className?: string;
   mode: ExampleDisplayMode;
   selection: Omit<ExampleSelection, 'exampleName'> & { onSelect?: (selection: ExampleSelection) => void };
+  /** Document path of the examples map, used to look up component provenance. */
+  basePath?: readonly (number | string)[];
 }) {
   const entries = Object.entries(examples ?? {});
   if (!entries.length || mode === 'hidden') return null;
@@ -138,22 +190,24 @@ function ExamplesView({ examples, title = 'Examples', className = 'mt-2', mode, 
       <div className={`${className} flex flex-wrap items-center gap-x-2 gap-y-1 text-xs`}>
         <span className="font-sans text-gray-500">{title}</span>
         {entries.map(([name]) => (
-          selection.onSelect ? (
-            <button
-              key={name}
-              className="cursor-pointer font-mono text-xs text-blue-700 underline"
-              title="Select example"
-              onClick={() => selection.onSelect?.({
-                path: `${selection.path}/${name}`,
-                section: selection.section,
-                itemName: selection.itemName,
-                exampleName: name,
-                kind: selection.kind,
-              })}
-            >
-              {name}
-            </button>
-          ) : <span key={name} className="font-mono text-xs text-blue-700">{name}</span>
+          <span key={name} className="inline-flex items-center gap-1">
+            {selection.onSelect ? (
+              <button
+                className="cursor-pointer font-mono text-xs text-blue-700 underline"
+                title="Select example"
+                onClick={() => selection.onSelect?.({
+                  path: `${selection.path}/${name}`,
+                  section: selection.section,
+                  itemName: selection.itemName,
+                  exampleName: name,
+                  kind: selection.kind,
+                })}
+              >
+                {name}
+              </button>
+            ) : <span className="font-mono text-xs text-blue-700">{name}</span>}
+            {basePath && <ComponentLink referencePath={[...basePath, name]} />}
+          </span>
         ))}
       </div>
     ) : (
@@ -164,7 +218,10 @@ function ExamplesView({ examples, title = 'Examples', className = 'mt-2', mode, 
         <div className="mt-1 ml-[18px] space-y-1">
           {entries.map(([name, example]) => (
             <details key={name}>
-              <summary className="cursor-pointer select-none font-mono text-xs text-blue-700">{name}</summary>
+              <summary className="cursor-pointer select-none font-mono text-xs text-blue-700">
+                {name}
+                {basePath && <> <ComponentLink referencePath={[...basePath, name]} /></>}
+              </summary>
               <JsonBlock data={example} />
             </details>
           ))}
@@ -327,7 +384,7 @@ function InfoCard({ doc }: { doc: McpDescDocument }) {
 
       {info.description && <div className="mb-3"><Desc text={info.description} /></div>}
       <div className="space-y-0.5">
-        <InfoRow label="Protocol Versions" value={<span className="font-semibold">{doc.protocolVersions.join(', ')}</span>} />
+        <InfoRow label="MCP Version(s)" value={<span className="font-semibold">{doc.protocolVersions.join(', ')}</span>} />
         {info.id && <InfoRow label="ID" value={<code className="text-xs bg-gray-100 text-gray-800 px-1 rounded">{info.id}</code>} />}
         {info.websiteUrl && <InfoRow label="Website" value={<a className="text-blue-600 underline" href={info.websiteUrl} target="_blank" rel="noopener noreferrer">{info.websiteUrl}</a>} />}
         {info.icons?.length ? (
@@ -441,8 +498,10 @@ function ToolsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleD
     <Section title="Tools" count={visible.length} defaultOpen={defaultOpen}>
       {visible.map((tool) => {
         const toolIndex = doc.tools?.indexOf(tool) ?? -1;
-        const props = tool.inputSchema?.properties as Record<string, unknown> | undefined;
-        const hasInputProps = props != null && Object.keys(props).length > 0;
+        const inputRef = isComponentReference(tool.inputSchema) ? tool.inputSchema : null;
+        const outputRef = isComponentReference(tool.outputSchema) ? tool.outputSchema : null;
+        const props = inputRef ? undefined : (tool.inputSchema as McpDescSchema | undefined)?.properties as Record<string, unknown> | undefined;
+        const hasInputProps = inputRef != null || (props != null && Object.keys(props).length > 0);
         return (
           <details key={tool.name} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
             <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
@@ -474,9 +533,12 @@ function ToolsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleD
                 <details className="mt-1 ml-[8px]">
                   <summary className="cursor-pointer select-none text-xs font-sans underline text-gray-900">
                     Input
+                    <> <ComponentLink referencePath={['tools', toolIndex, 'inputSchema']} /></>
                   </summary>
                   <div className="pt-1 ml-[18px]">
-                    <SchemaView schema={tool.inputSchema!} />
+                    {inputRef
+                      ? <UnresolvedComponentRef reference={inputRef} />
+                      : <SchemaView schema={tool.inputSchema as McpDescSchema} />}
                   </div>
                 </details>
               )}
@@ -484,13 +546,16 @@ function ToolsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleD
                 <details className="mt-1 ml-[8px]">
                   <summary className="cursor-pointer select-none text-xs font-sans underline text-gray-900">
                     Output
+                    <> <ComponentLink referencePath={['tools', toolIndex, 'outputSchema']} /></>
                   </summary>
                   <div className="pt-1 ml-[18px]">
-                    <SchemaView schema={tool.outputSchema} />
+                    {outputRef
+                      ? <UnresolvedComponentRef reference={outputRef} />
+                      : <SchemaView schema={tool.outputSchema as McpDescSchema} />}
                   </div>
                 </details>
               )}
-              <ExamplesView examples={tool.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/tools/${toolIndex}/examples`, section: 'tools', itemName: tool.name, kind: 'examples', onSelect: onExampleSelect }} />
+              <ExamplesView examples={tool.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} basePath={['tools', toolIndex, 'examples']} selection={{ path: `/tools/${toolIndex}/examples`, section: 'tools', itemName: tool.name, kind: 'examples', onSelect: onExampleSelect }} />
               <ExamplesView examples={tool.interactionExamples} title="Interaction examples" className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/tools/${toolIndex}/interactionExamples`, section: 'tools', itemName: tool.name, kind: 'interactionExamples', onSelect: onExampleSelect }} />
             </div>
           </details>
@@ -538,7 +603,7 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exam
                 </div>
               )}
             </div>
-            <ExamplesView examples={r.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/resources/${resourceIndex}/examples`, section: 'resources', itemName: r.name, kind: 'examples', onSelect: onExampleSelect }} />
+            <ExamplesView examples={r.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} basePath={['resources', resourceIndex, 'examples']} selection={{ path: `/resources/${resourceIndex}/examples`, section: 'resources', itemName: r.name, kind: 'examples', onSelect: onExampleSelect }} />
           </div>
         </details>;
       })}
@@ -562,7 +627,7 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exam
                 </div>
               )}
             </div>
-            <ExamplesView examples={rt.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/resourceTemplates/${templateIndex}/examples`, section: 'resourceTemplates', itemName: rt.name, kind: 'examples', onSelect: onExampleSelect }} />
+            <ExamplesView examples={rt.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} basePath={['resourceTemplates', templateIndex, 'examples']} selection={{ path: `/resourceTemplates/${templateIndex}/examples`, section: 'resourceTemplates', itemName: rt.name, kind: 'examples', onSelect: onExampleSelect }} />
             <ExamplesView examples={rt.completionExamples} title="Completion examples" className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/resourceTemplates/${templateIndex}/completionExamples`, section: 'resourceTemplates', itemName: rt.name, kind: 'completionExamples', onSelect: onExampleSelect }} />
           </div>
         </details>;
@@ -631,7 +696,7 @@ function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampl
                 </div>
               </details>
             ) : null}
-            <ExamplesView examples={p.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/prompts/${promptIndex}/examples`, section: 'prompts', itemName: p.name, kind: 'examples', onSelect: onExampleSelect }} />
+            <ExamplesView examples={p.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} basePath={['prompts', promptIndex, 'examples']} selection={{ path: `/prompts/${promptIndex}/examples`, section: 'prompts', itemName: p.name, kind: 'examples', onSelect: onExampleSelect }} />
             <ExamplesView examples={p.completionExamples} title="Completion examples" className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/prompts/${promptIndex}/completionExamples`, section: 'prompts', itemName: p.name, kind: 'completionExamples', onSelect: onExampleSelect }} />
           </div>
         </details>;
@@ -713,9 +778,13 @@ export interface McpDescCardViewProps {
   exampleDisplay?: ExampleDisplayMode;
   /** Receives the exact JSON pointer when a named example is selected. */
   onExampleSelect?: (selection: ExampleSelection) => void;
+  /** Provenance for `$componentRef` values already substituted in `doc`. */
+  componentReferences?: readonly ComponentReferenceProvenance[];
+  /** Receives the component's JSON pointer when its indicator is selected. */
+  onComponentSelect?: (pointer: string) => void;
 }
 
-export function McpDescCardView({ doc, validation, defaultOpen = true, renderBadge, exampleDisplay = 'hidden', onExampleSelect }: McpDescCardViewProps) {
+export function McpDescCardView({ doc, validation, defaultOpen = true, renderBadge, exampleDisplay = 'hidden', onExampleSelect, componentReferences, onComponentSelect }: McpDescCardViewProps) {
   const [disabledTags, setDisabledTags] = useState<Set<string>>(new Set());
 
   // Reset filter when the document changes
@@ -743,16 +812,22 @@ export function McpDescCardView({ doc, validation, defaultOpen = true, renderBad
     return set;
   }, [validation]);
 
+  const componentTargets = useMemo(() => new Map(
+    (componentReferences ?? []).map((entry) => [toPointer(entry.referencePath), toPointer(entry.targetPath)]),
+  ), [componentReferences]);
+
   return (
-    <div className="space-y-1">
-      <InfoCard doc={doc} />
-      <TransportsCard doc={doc} defaultOpen={defaultOpen} badge={badge} />
-      <SecurityCard doc={doc} defaultOpen={defaultOpen} badge={badge} />
-      <TagFilterBar tags={doc.tags} disabledTags={disabledTags} onToggle={toggleTag} />
-      <ToolsCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
-      <ResourcesCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
-      <PromptsCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
-      <TagsCard doc={doc} defaultOpen={defaultOpen} />
-    </div>
+    <ComponentReferenceContext.Provider value={{ targets: componentTargets, onSelect: onComponentSelect }}>
+      <div className="space-y-1">
+        <InfoCard doc={doc} />
+        <TransportsCard doc={doc} defaultOpen={defaultOpen} badge={badge} />
+        <SecurityCard doc={doc} defaultOpen={defaultOpen} badge={badge} />
+        <TagFilterBar tags={doc.tags} disabledTags={disabledTags} onToggle={toggleTag} />
+        <ToolsCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
+        <ResourcesCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
+        <PromptsCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
+        <TagsCard doc={doc} defaultOpen={defaultOpen} />
+      </div>
+    </ComponentReferenceContext.Provider>
   );
 }

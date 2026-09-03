@@ -32,7 +32,7 @@ const navBadgeRenderer: BadgeRenderer = (children, section, value, color) => (
 );
 
 export default function CardView({ doc, validation }: { doc: McpDescDocument; validation?: ValidationResult }) {
-  const { revealPathRef } = useDoc();
+  const { revealPathRef, componentProvenance } = useDoc();
   return (
     <McpDescCardView
       doc={doc}
@@ -40,6 +40,8 @@ export default function CardView({ doc, validation }: { doc: McpDescDocument; va
       renderBadge={navBadgeRenderer}
       exampleDisplay="names"
       onExampleSelect={({ path }) => revealPathRef.current?.(path)}
+      componentReferences={componentProvenance}
+      onComponentSelect={(pointer) => revealPathRef.current?.(pointer)}
     />
   );
 }

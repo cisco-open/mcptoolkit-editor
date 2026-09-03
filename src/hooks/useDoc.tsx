@@ -12,6 +12,7 @@ import {
   useContext,
   useReducer,
   useEffect,
+  useMemo,
   useRef,
   useCallback,
   type ReactNode,
@@ -24,6 +25,10 @@ import {
   type McpDescriptionMigrationReport,
 } from '@mcpdesc/core';
 import { parseMcpDescriptionSource } from '@mcpdesc/core/documents';
+import {
+  resolveMcpDescriptionComponentReferences,
+  type McpDescriptionComponentReferenceProvenance,
+} from '@mcpdesc/core/components';
 import type { SupportedProtocolVersion } from '@mcpdesc/validator/browser';
 import {
   getMcpDesc07ValidationErrors,
@@ -149,6 +154,10 @@ interface DocContextValue {
   confirmMigration: () => void;
   cancelMigration: () => void;
   effectiveDoc: McpDescDocument | null;
+  /** Effective document with local `$componentRef` values substituted; null when resolution fails. */
+  resolvedDoc: McpDescDocument | null;
+  /** Maps each substituted reference back to its authored location and component target. */
+  componentProvenance: readonly McpDescriptionComponentReferenceProvenance[];
   /** Ref that the Editor sets to allow preview→editor navigation */
   revealSectionItemRef: React.MutableRefObject<((section: string, value: string) => void) | null>;
   /** Ref that the Editor sets to allow preview→editor navigation by JSON pointer. */
@@ -323,13 +332,24 @@ export function DocProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_SELECTED_PROTOCOL_VERSION', protocolVersion }),
     [],
   );
-  const projection = state.doc && state.selectedProtocolVersion
-    ? projectEffectiveProtocolView(state.doc, {
+  const effectiveDoc = useMemo(() => {
+    if (!state.doc || !state.selectedProtocolVersion) return state.doc;
+    const projection = projectEffectiveProtocolView(state.doc, {
       specification: '0.8.0-rc.1',
       protocolVersion: state.selectedProtocolVersion,
-    })
-    : null;
-  const effectiveDoc = projection?.ok ? projection.value as McpDescDocument : state.doc;
+    });
+    return projection.ok ? projection.value as McpDescDocument : state.doc;
+  }, [state.doc, state.selectedProtocolVersion]);
+
+  // Resolution runs after projection so references on filtered-out declarations are ignored.
+  const resolution = useMemo(
+    () => (effectiveDoc
+      ? resolveMcpDescriptionComponentReferences(effectiveDoc, { specification: '0.8.0-rc.1' })
+      : null),
+    [effectiveDoc],
+  );
+  const resolvedDoc = resolution?.ok ? resolution.value as McpDescDocument : null;
+  const componentProvenance = resolution?.ok ? resolution.provenance : [];
 
   return (
     <DocContext.Provider value={{
@@ -340,6 +360,8 @@ export function DocProvider({ children }: { children: ReactNode }) {
       cancelMigration,
       setSelectedProtocolVersion,
       effectiveDoc,
+      resolvedDoc,
+      componentProvenance,
       revealSectionItemRef,
       revealPathRef,
     }}>

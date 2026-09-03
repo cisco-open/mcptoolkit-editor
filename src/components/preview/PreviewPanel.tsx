@@ -12,7 +12,7 @@ const MAX_ZOOM = 2.0;
 const ZOOM_STEP = 0.1;
 
 export default function PreviewPanel() {
-  const { state, effectiveDoc, setSelectedProtocolVersion } = useDoc();
+  const { state, effectiveDoc, resolvedDoc, setSelectedProtocolVersion } = useDoc();
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
   const fontBtnClass =
@@ -100,7 +100,7 @@ export default function PreviewPanel() {
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-4" style={{ zoom }}>
-        <CardView doc={effectiveDoc ?? state.doc} validation={state.validation} />
+        <CardView doc={resolvedDoc ?? effectiveDoc ?? state.doc} validation={state.validation} />
       </div>
     </div>
   );
