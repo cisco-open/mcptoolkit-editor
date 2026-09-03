@@ -20,8 +20,23 @@ const baseDoc = {
     inputSchema: {},
     execution: { taskSupport: 'required' },
     clientRequirements: {
+      elicitation: { form: {} },
+      tasks: { requests: { tools: { call: {} } } },
       extensions: { 'io.modelcontextprotocol/tasks': {} },
+      experimental: { chessClock: {} },
+      customCapability: {},
     },
+    elicitations: [
+      { name: 'choose_section', mode: 'form', message: 'Choose a section', requestedSchema: { type: 'object', properties: {} } },
+      { name: 'authorize_registration', mode: 'url', message: 'Authorize registration', url: 'https://example.com/authorize' },
+    ],
+  }],
+  resources: [{
+    uri: 'chess://tournaments/current',
+    name: 'current_tournament',
+    elicitations: [
+      { name: 'confirm_access', mode: 'form', message: 'Confirm access', requestedSchema: { type: 'object', properties: {} } },
+    ],
   }],
 } satisfies McpDescDocument;
 
@@ -47,7 +62,20 @@ describe('McpDescCardView protocol projections', () => {
     expect(markup).toContain('bg-amber-100 text-amber-800');
     expect(markup).toContain('io.modelcontextprotocol/tasks');
     expect(markup).toContain('Client requirements');
+    expect(markup).toContain('elicitation/form');
+    expect(markup).toContain('tasks/requests/tools/call');
+    expect(markup).toContain('extensions/io.modelcontextprotocol/tasks');
+    expect(markup).toContain('experimental/chessClock');
+    expect(markup).toContain('customCapability');
+    expect(markup).not.toContain('&quot;elicitation&quot;');
+    expect(markup).toContain('Elicitations');
+    expect(markup).toContain('choose_section');
+    expect(markup).toContain('authorize_registration');
+    expect(markup).toContain('confirm_access');
+    expect(markup).toContain('form');
+    expect(markup).toContain('url');
     expect(markup).toContain('MCP Version');
+    expect(markup).toContain('border border-black bg-white text-black');
     expect(markup).toContain('Execution');
     expect(markup).toContain('task support: required');
   });

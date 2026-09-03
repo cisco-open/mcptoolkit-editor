@@ -18,9 +18,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 ### Added
 
 - Show compact, protocol-labelled capability summaries and per-tool execution and client requirements in card views, with extensions rendered as yellow badges.
+- Show compact elicitation name and mode summaries on tools, resources,
+  resource templates, and prompts.
 
 ### Changed
 
+- Render all client capability requirements as compact path badges instead of
+  JSON, and show protocol-version values as compact black-outlined bubbles.
 - Provide an optional displayed-item index to custom badge renderers so hosts can identify duplicate protocol-scoped declarations.
 - Render MCP Description 0.8 RC.1 root protocol versions and named
   `securitySchemes` in the shared card view.

@@ -218,23 +218,36 @@ function ClientRequirements({ requirements, inline = false }: {
   inline?: boolean;
 }) {
   if (!requirements) return null;
-  const extensions = requirements.extensions && typeof requirements.extensions === 'object'
-    ? Object.keys(requirements.extensions)
-    : [];
-  const remainingRequirements = Object.fromEntries(
-    Object.entries(requirements).filter(([name]) => name !== 'extensions'),
-  );
+  const requirementPaths = capabilityPaths(requirements);
   return (
     <div className={`${inline ? 'flex flex-wrap items-center gap-2' : 'border-t border-gray-200 pt-2'}`}>
       <div className={`${inline ? '' : 'mb-1'} font-medium text-gray-500`}>Client requirements</div>
-      {extensions.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1">
-          {extensions.map(extension => (
-            <InlineBadge key={extension} color="bg-amber-100 text-amber-800">{extension}</InlineBadge>
-          ))}
-        </div>
-      )}
-      {Object.keys(remainingRequirements).length > 0 && <JsonBlock data={remainingRequirements} />}
+      <div className="flex flex-wrap items-center gap-1">
+        {requirementPaths.map(path => (
+          <InlineBadge key={path} color="bg-amber-100 text-amber-800">{path}</InlineBadge>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ElicitationsSummary({ elicitations }: {
+  elicitations?: Record<string, unknown>[];
+}) {
+  if (!elicitations?.length) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      <span className="mr-1 font-medium text-gray-500">Elicitations</span>
+      {elicitations.map((elicitation, index) => (
+        <span key={`${String(elicitation.name)}-${index}`} className="inline-flex items-center gap-1">
+          <InlineBadge>{String(elicitation.name)}</InlineBadge>
+          <InlineBadge color={elicitation.mode === 'url'
+            ? 'bg-blue-100 text-blue-800'
+            : 'bg-amber-100 text-amber-800'}>
+            {String(elicitation.mode)}
+          </InlineBadge>
+        </span>
+      ))}
     </div>
   );
 }
@@ -381,7 +394,7 @@ function InfoCard({ doc, protocolVersionProjectionMode, protocolVersionOptions, 
           <fieldset className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <legend className="sr-only">Effective protocol version</legend>
             {protocolVersionOptions.map((version) => (
-              <label key={version} className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold cursor-pointer">
+              <label key={version} className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-semibold cursor-pointer rounded-full border border-black bg-white text-black px-2 py-0.5">
                 <input
                   type="radio"
                   name={protocolVersionGroupName}
@@ -392,7 +405,7 @@ function InfoCard({ doc, protocolVersionProjectionMode, protocolVersionOptions, 
                 {version}
               </label>
             ))}
-            <label className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold cursor-pointer">
+            <label className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-semibold cursor-pointer rounded-full border border-black bg-white text-black px-2 py-0.5">
               <input
                 type="radio"
                 name={protocolVersionGroupName}
@@ -403,7 +416,7 @@ function InfoCard({ doc, protocolVersionProjectionMode, protocolVersionOptions, 
               All versions
             </label>
           </fieldset>
-        ) : <span className="font-semibold">{doc.protocolVersions.join(', ')}</span>} />
+        ) : <InlineBadge color="border border-black bg-white text-black font-semibold">{doc.protocolVersions.join(', ')}</InlineBadge>} />
         {info.id && <InfoRow label="ID" value={<code className="text-xs bg-gray-100 text-gray-800 px-1 rounded">{info.id}</code>} />}
         {info.websiteUrl && <InfoRow label="Website" value={<a className="text-blue-600 underline" href={info.websiteUrl} target="_blank" rel="noopener noreferrer">{info.websiteUrl}</a>} />}
         {info.icons?.length ? (
@@ -606,7 +619,7 @@ function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaul
                 {toolProtocolVersions?.length && (
                   <div className="flex flex-wrap items-center gap-2 text-gray-500">
                     <span className="font-medium">MCP Version</span>
-                    <InlineBadge color="bg-gray-200 text-gray-700">{toolProtocolVersions.join(', ')}</InlineBadge>
+                    <InlineBadge color="border border-black bg-white text-black">{toolProtocolVersions.join(', ')}</InlineBadge>
                   </div>
                 )}
                 {tool.annotations && (
@@ -631,6 +644,7 @@ function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaul
                   </div>
                 )}
                 <ClientRequirements requirements={tool.clientRequirements} inline />
+                <ElicitationsSummary elicitations={tool.elicitations} />
               </div>
               {hasInputProps && (
                 <details className="mt-1 ml-[8px]">
@@ -700,6 +714,7 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exam
                 </div>
               )}
               <ClientRequirements requirements={r.clientRequirements} />
+              <ElicitationsSummary elicitations={r.elicitations} />
             </div>
             <ExamplesView examples={r.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/resources/${resourceIndex}/examples`, section: 'resources', itemName: r.name, kind: 'examples', onSelect: onExampleSelect }} />
           </div>
@@ -725,6 +740,7 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exam
                 </div>
               )}
               <ClientRequirements requirements={rt.clientRequirements} />
+              <ElicitationsSummary elicitations={rt.elicitations} />
             </div>
             <ExamplesView examples={rt.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/resourceTemplates/${templateIndex}/examples`, section: 'resourceTemplates', itemName: rt.name, kind: 'examples', onSelect: onExampleSelect }} />
             <ExamplesView examples={rt.completionExamples} title="Completion examples" className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/resourceTemplates/${templateIndex}/completionExamples`, section: 'resourceTemplates', itemName: rt.name, kind: 'completionExamples', onSelect: onExampleSelect }} />
@@ -768,6 +784,7 @@ function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampl
                 </div>
               )}
               <ClientRequirements requirements={p.clientRequirements} />
+              <ElicitationsSummary elicitations={p.elicitations} />
             </div>
             {p.arguments?.length ? (
               <details className="mt-1 ml-[8px]">

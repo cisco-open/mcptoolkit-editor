@@ -27,6 +27,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 ### Added
 
 - Show protocol-labelled capability summaries, tool execution behavior, and client requirements in the card preview, with extensions rendered as yellow badges so protocol projections expose contract differences.
+- Show compact elicitation name and mode summaries on tools, resources,
+  resource templates, and prompts.
+- Add single- and multi-version MRTR elicitation examples.
 - Add an advanced multi-version Tasks example demonstrating the migration from core Tasks execution to the Tasks extension.
 
 ### Fixed
@@ -35,6 +38,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ### Changed
 
+- Render all client capability requirements as compact path badges instead of
+  JSON, and show protocol-version values as compact black-outlined bubbles.
 - Target MCP Description `0.8.0-rc.1` using the CSP-safe
   `@mcpdesc/validator/standalone` and `@mcpdesc/core` packages. The editor now
   validates the full structural and semantic RC.1 contract.

@@ -24,3 +24,5 @@ sections:
         label: Full-Featured
       - file: multi-version-tasks.yaml
         label: Multi-Version (tasks)
+      - file: elicitation-MRTR.yaml
+        label: Elicitation (MRTR)
