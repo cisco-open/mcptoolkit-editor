@@ -66,7 +66,7 @@ function reducer(state: DocState, action: DocAction): DocState {
     case 'SET_TEXT':
       return { ...state, text: action.text };
     case 'LOAD_EXAMPLE':
-      return { ...state, text: action.text };
+      return { ...state, text: action.text, selectedProtocolVersion: null };
     case 'MIGRATE_DOCUMENT':
       return { ...state, text: action.text };
     case 'SET_PARSED':

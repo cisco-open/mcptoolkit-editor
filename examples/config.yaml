@@ -20,7 +20,7 @@ sections:
         label: STDIO
       - file: multi-transport.yaml
         label: Multi-Transport
-      - file: multi-version.yaml
-        label: Multi-Version
       - file: full-featured.yaml
         label: Full-Featured
+      - file: multi-version-tasks.yaml
+        label: Multi-Version (tasks)

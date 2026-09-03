@@ -15,17 +15,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
+### Added
+
+- Show compact, protocol-labelled capability summaries and per-tool execution and client requirements in card views, with extensions rendered as yellow badges.
+
 ### Changed
 
+- Provide an optional displayed-item index to custom badge renderers so hosts can identify duplicate protocol-scoped declarations.
 - Render MCP Description 0.8 RC.1 root protocol versions and named
   `securitySchemes` in the shared card view.
 - Render explicitly declared security requirements for the root, transports,
   tools, resources, resource templates, and prompts without inheritance.
 - Align resource and prompt example sections with tool Input/Output sections and
   render prompt arguments as a collapsed table.
-
-### Added
-
+- Support opt-in, host-controlled protocol-version selection in the MCP
+  Version(s) row for effective-view projections; the mode defaults to disabled.
 - Add configurable named-example rendering: hidden by default, compact names,
   or expandable JSON details for embedding hosts, with optional selection
   callbacks for host-controlled navigation.

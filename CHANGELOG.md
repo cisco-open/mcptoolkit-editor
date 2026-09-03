@@ -24,6 +24,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
+### Added
+
+- Show protocol-labelled capability summaries, tool execution behavior, and client requirements in the card preview, with extensions rendered as yellow badges so protocol projections expose contract differences.
+- Add an advanced multi-version Tasks example demonstrating the migration from core Tasks execution to the Tasks extension.
+
+### Fixed
+
+- Navigate from projected operations to the exact parsed source node when names are duplicated across protocol versions.
+
 ### Changed
 
 - Target MCP Description `0.8.0-rc.1` using the CSP-safe
@@ -37,10 +46,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   preview without inferring inherited security policy.
 - Refresh the README and V2 support plan for the implemented RC.1 integration,
   current migration behavior, and deferred release work.
-- Rename the card-view protocol field to Protocol Versions, emphasize its
-  values, and reduce the Input, Output, and Arguments summary labels.
-
-### Added
+- Emphasize card-view MCP Version(s) values and reduce the Input, Output, and
+  Arguments summary labels.
+- Move opt-in multi-version effective-view selection into the MCP Version(s)
+  row, default it to All versions, and demonstrate it with protocol-scoped
+  tools in the bundled multi-version example.
 
 - Automatically migrate valid MCP Description 0.7.0 documents to RC.1 when they
   are opened, pasted, or restored. Documents that cannot migrate show an

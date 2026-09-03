@@ -18,7 +18,7 @@
  */
 
 export { McpDescCardView } from './McpDescCardView';
-export type { McpDescCardViewProps, BadgeRenderer } from './McpDescCardView';
+export type { McpDescCardViewProps, BadgeRenderer, ProtocolVersionProjectionMode } from './McpDescCardView';
 export { ValidationPanel } from './ValidationPanel';
 export type { ValidationPanelProps } from './ValidationPanel';
 export type {

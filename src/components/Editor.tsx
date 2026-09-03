@@ -8,6 +8,7 @@ import { type editor } from 'monaco-editor';
 import { useDoc } from '../hooks/useDoc';
 import type { ValidationIssue } from '../core';
 import mcpdescSchema from '../core/mcpdesc-schema.json';
+import { sourcePathToLine } from './preview/navigation';
 
 const DEFAULT_FONT_SIZE = 15;
 const MIN_FONT_SIZE = 10;
@@ -20,6 +21,9 @@ const FONT_STEP = 1;
  * Returns 0 when no matching line can be found.
  */
 function pathToLine(text: string, path: string, params?: Record<string, unknown>): number {
+  const exactLine = sourcePathToLine(text, path);
+  if (exactLine > 0) return exactLine;
+
   const segments = (path || '/').split('/').filter(Boolean);
   const lines = text.split('\n');
   let lineIdx = 0;

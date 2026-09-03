@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useId, useMemo, useState, useCallback } from 'react';
 import { marked } from 'marked';
 import type { McpDescDocument, ValidationResult } from '@core/types';
 
@@ -15,9 +15,11 @@ export type BadgeRenderer = (
   section: string,
   value: string,
   color?: string,
+  context?: { index: number },
 ) => React.ReactNode;
 
 export type ExampleDisplayMode = 'hidden' | 'names' | 'details';
+export type ProtocolVersionProjectionMode = 'enabled' | 'disabled';
 
 export interface ExampleSelection {
   path: string;
@@ -78,6 +80,17 @@ function Badge({ children, color = 'bg-gray-200 text-gray-700' }: { children: Re
   );
 }
 
+function InlineBadge({ children, color = 'bg-gray-200 text-gray-700' }: {
+  children: React.ReactNode;
+  color?: string;
+}) {
+  return (
+    <span className={`inline-flex items-center text-xs leading-4 px-2 py-0.5 rounded-full ${color}`}>
+      {children}
+    </span>
+  );
+}
+
 function Tag({ value }: { value: string }) {
   return <Badge color="bg-indigo-100 text-indigo-700">{value}</Badge>;
 }
@@ -95,14 +108,14 @@ function Section({ title, count, children, defaultOpen = true }: {
   );
 }
 
-function InfoRow({ label, value, compact = false, alignCenter = false }: {
-  label: React.ReactNode; value: React.ReactNode; compact?: boolean; alignCenter?: boolean;
+function InfoRow({ label, value, compact = false, alignCenter = false, responsiveWrap = false }: {
+  label: React.ReactNode; value: React.ReactNode; compact?: boolean; alignCenter?: boolean; responsiveWrap?: boolean;
 }) {
   if (value === undefined || value === null || value === '') return null;
   return (
-    <div className={`flex gap-2 ${alignCenter ? 'items-center' : ''} ${compact ? 'text-xs' : 'text-sm'} py-0.5`}>
+    <div className={`flex gap-2 ${responsiveWrap ? 'flex-wrap' : ''} ${alignCenter ? 'items-center' : ''} ${compact ? 'text-xs' : 'text-sm'} py-0.5`}>
       <span className="text-gray-400 min-w-[110px] shrink-0">{label}</span>
-      <div className="min-w-0 flex-1 text-gray-800 break-all">{value}</div>
+      <div className={`min-w-0 flex-1 text-gray-800 break-all ${responsiveWrap ? 'basis-[260px]' : ''}`}>{value}</div>
     </div>
   );
 }
@@ -196,6 +209,32 @@ function SecurityRequirements({ requirements }: { requirements: McpDescDocument[
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function ClientRequirements({ requirements, inline = false }: {
+  requirements?: Record<string, unknown>;
+  inline?: boolean;
+}) {
+  if (!requirements) return null;
+  const extensions = requirements.extensions && typeof requirements.extensions === 'object'
+    ? Object.keys(requirements.extensions)
+    : [];
+  const remainingRequirements = Object.fromEntries(
+    Object.entries(requirements).filter(([name]) => name !== 'extensions'),
+  );
+  return (
+    <div className={`${inline ? 'flex flex-wrap items-center gap-2' : 'border-t border-gray-200 pt-2'}`}>
+      <div className={`${inline ? '' : 'mb-1'} font-medium text-gray-500`}>Client requirements</div>
+      {extensions.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1">
+          {extensions.map(extension => (
+            <InlineBadge key={extension} color="bg-amber-100 text-amber-800">{extension}</InlineBadge>
+          ))}
+        </div>
+      )}
+      {Object.keys(remainingRequirements).length > 0 && <JsonBlock data={remainingRequirements} />}
     </div>
   );
 }
@@ -314,8 +353,19 @@ function SchemaView({ schema, level = 0 }: { schema: Record<string, unknown>; le
 // Section cards
 // ============================================================================
 
-function InfoCard({ doc }: { doc: McpDescDocument }) {
+function InfoCard({ doc, protocolVersionProjectionMode, protocolVersionOptions, selectedProtocolVersion, onProtocolVersionSelect, protocolVersionGroupName }: {
+  doc: McpDescDocument;
+  protocolVersionProjectionMode: ProtocolVersionProjectionMode;
+  protocolVersionOptions?: McpDescDocument['protocolVersions'];
+  selectedProtocolVersion?: McpDescDocument['protocolVersions'][number] | null;
+  onProtocolVersionSelect?: (protocolVersion: McpDescDocument['protocolVersions'][number] | null) => void;
+  protocolVersionGroupName: string;
+}) {
   const { info } = doc;
+  const showProtocolVersionSelector = protocolVersionProjectionMode === 'enabled'
+    && protocolVersionOptions
+    && protocolVersionOptions.length > 1
+    && onProtocolVersionSelect;
   return (
     <div className="mb-6">
       <div className="flex items-center gap-3 mb-2">
@@ -327,7 +377,33 @@ function InfoCard({ doc }: { doc: McpDescDocument }) {
 
       {info.description && <div className="mb-3"><Desc text={info.description} /></div>}
       <div className="space-y-0.5">
-        <InfoRow label="Protocol Versions" value={<span className="font-semibold">{doc.protocolVersions.join(', ')}</span>} />
+        <InfoRow responsiveWrap label="MCP Version(s)" value={showProtocolVersionSelector ? (
+          <fieldset className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <legend className="sr-only">Effective protocol version</legend>
+            {protocolVersionOptions.map((version) => (
+              <label key={version} className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold cursor-pointer">
+                <input
+                  type="radio"
+                  name={protocolVersionGroupName}
+                  value={version}
+                  checked={selectedProtocolVersion === version}
+                  onChange={() => onProtocolVersionSelect(version)}
+                />
+                {version}
+              </label>
+            ))}
+            <label className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold cursor-pointer">
+              <input
+                type="radio"
+                name={protocolVersionGroupName}
+                value=""
+                checked={selectedProtocolVersion == null}
+                onChange={() => onProtocolVersionSelect(null)}
+              />
+              All versions
+            </label>
+          </fieldset>
+        ) : <span className="font-semibold">{doc.protocolVersions.join(', ')}</span>} />
         {info.id && <InfoRow label="ID" value={<code className="text-xs bg-gray-100 text-gray-800 px-1 rounded">{info.id}</code>} />}
         {info.websiteUrl && <InfoRow label="Website" value={<a className="text-blue-600 underline" href={info.websiteUrl} target="_blank" rel="noopener noreferrer">{info.websiteUrl}</a>} />}
         {info.icons?.length ? (
@@ -356,7 +432,7 @@ function TransportsCard({ doc, defaultOpen, badge }: { doc: McpDescDocument; def
     <Section title="Transports" count={doc.transports?.length ?? 0} defaultOpen={defaultOpen}>
       {doc.transports?.length ? doc.transports.map((t, i) => (
         <div key={i} className="mb-2 p-2 rounded bg-gray-50 border border-gray-200 text-sm">
-            {badge(t.type, 'transports', t.type, 'bg-gray-200 text-gray-500')}
+        {badge(t.type, 'transports', t.type, 'bg-gray-200 text-gray-500', { index: i })}
             {t.url && <span className="ml-2 text-black">{t.url}</span>}
             {t.command && (
               <code className="ml-2 text-black">
@@ -373,6 +449,7 @@ function TransportsCard({ doc, defaultOpen, badge }: { doc: McpDescDocument; def
                 />
               </div>
             )}
+            <ClientRequirements requirements={t.clientRequirements} />
         </div>
       )) : (
         <p className="text-sm text-gray-400 italic">No transport defined</p>
@@ -426,8 +503,72 @@ function SecurityCard({ doc, defaultOpen, badge }: { doc: McpDescDocument; defau
   );
 }
 
-function ToolsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect }: {
+function capabilityPaths(value: unknown, prefix = ''): string[] {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return prefix ? [prefix] : [];
+  }
+  const entries = Object.entries(value);
+  if (entries.length === 0) return prefix ? [prefix] : [];
+  return entries.flatMap(([name, nestedValue]) => (
+    capabilityPaths(nestedValue, prefix ? `${prefix}/${name}` : name)
+  ));
+}
+
+function capabilityLabel(name: string): string {
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+function CapabilitiesCard({ doc, defaultOpen, selectedProtocolVersion }: {
+  doc: McpDescDocument;
+  defaultOpen: boolean;
+  selectedProtocolVersion?: McpDescDocument['protocolVersions'][number] | null;
+}) {
+  if (!doc.capabilities?.length) return null;
+  const omittedKeys = new Set(['protocolVersions', 'security', 'clientRequirements', '_meta']);
+
+  return (
+    <Section title="Capabilities" defaultOpen={defaultOpen}>
+      <div className="space-y-2">
+        {doc.capabilities.map((capabilities, capabilityIndex) => {
+          const protocolVersions = capabilities.protocolVersions
+            ?? (selectedProtocolVersion ? [selectedProtocolVersion] : doc.protocolVersions);
+          return (
+            <div key={capabilityIndex} className="p-1.5 rounded bg-gray-50 border border-gray-200 text-[11px] flex items-center gap-1.5 whitespace-nowrap">
+              <span className="inline-flex items-center leading-4 px-1.5 py-0.5 rounded-full bg-gray-200 text-gray-700 shrink-0">
+                {protocolVersions.join(', ')}
+              </span>
+              {Object.entries(capabilities)
+                .filter(([name]) => !omittedKeys.has(name) && name !== 'extensions')
+                .map(([name, value]) => {
+                  const details = capabilityPaths(value);
+                  return (
+                    <span key={name} className="text-gray-700 whitespace-nowrap">
+                      <span className="font-semibold">{capabilityLabel(name)}</span>
+                      {details.length > 0 && <span className="text-gray-500"> ({details.join(', ')})</span>}
+                    </span>
+                  );
+                })}
+              {capabilities.extensions && (
+                <>
+                  <span className="inline-flex items-center leading-4 font-semibold text-gray-700">Extensions</span>
+                  {Object.keys(capabilities.extensions).map(extension => (
+                    <span key={extension} className="inline-flex items-center leading-4 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 shrink-0">
+                      {extension}
+                    </span>
+                  ))}
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </Section>
+  );
+}
+
+function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect }: {
   doc: McpDescDocument; errorPaths: Set<string>; defaultOpen: boolean; badge: BadgeRenderer; disabledTags: Set<string>;
+  sourceDoc?: McpDescDocument; selectedProtocolVersion?: McpDescDocument['protocolVersions'][number] | null;
   exampleDisplay: ExampleDisplayMode; onExampleSelect?: (selection: ExampleSelection) => void;
 }) {
   if (!doc.tools?.length) return null;
@@ -441,12 +582,18 @@ function ToolsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleD
     <Section title="Tools" count={visible.length} defaultOpen={defaultOpen}>
       {visible.map((tool) => {
         const toolIndex = doc.tools?.indexOf(tool) ?? -1;
+        const sourceTool = selectedProtocolVersion
+          ? sourceDoc?.tools?.find(candidate => (
+            candidate.name === tool.name && candidate.protocolVersions?.includes(selectedProtocolVersion)
+          )) ?? sourceDoc?.tools?.find(candidate => candidate.name === tool.name && !candidate.protocolVersions)
+          : tool;
+        const toolProtocolVersions = sourceTool?.protocolVersions;
         const props = tool.inputSchema?.properties as Record<string, unknown> | undefined;
         const hasInputProps = props != null && Object.keys(props).length > 0;
         return (
-          <details key={tool.name} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
+          <details key={`${tool.name}-${toolIndex}`} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
             <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
-              {badge('tool', 'tools', tool.name)}
+              {badge('tool', 'tools', tool.name, undefined, { index: toolIndex })}
               <span className="font-mono text-amber-600">{tool.name}</span>
               {tool.title && <span className="text-gray-500">{tool.title}</span>}
               {tool.deprecated && <Badge color="bg-red-100 text-red-700">deprecated</Badge>}
@@ -456,6 +603,12 @@ function ToolsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleD
             <div className="px-2 pb-2 pt-0 space-y-2">
               <div className="ml-[26px] text-xs space-y-2">
                 {tool.description && <Desc text={tool.description} />}
+                {toolProtocolVersions?.length && (
+                  <div className="flex flex-wrap items-center gap-2 text-gray-500">
+                    <span className="font-medium">MCP Version</span>
+                    <InlineBadge color="bg-gray-200 text-gray-700">{toolProtocolVersions.join(', ')}</InlineBadge>
+                  </div>
+                )}
                 {tool.annotations && (
                   <div className="flex gap-2 flex-wrap">
                     {tool.annotations.readOnlyHint && <Badge color="bg-green-100 text-green-700">read-only</Badge>}
@@ -469,6 +622,15 @@ function ToolsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleD
                     <SecurityRequirements requirements={tool.security} />
                   </div>
                 )}
+                {tool.execution && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="font-medium text-gray-500">Execution</div>
+                    {tool.execution.taskSupport
+                      ? <InlineBadge color="bg-amber-100 text-amber-800">task support: {tool.execution.taskSupport}</InlineBadge>
+                      : <JsonBlock data={tool.execution} />}
+                  </div>
+                )}
+                <ClientRequirements requirements={tool.clientRequirements} inline />
               </div>
               {hasInputProps && (
                 <details className="mt-1 ml-[8px]">
@@ -522,7 +684,7 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exam
         const resourceIndex = doc.resources?.indexOf(r) ?? -1;
         return <details key={r.uri} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
           <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
-            {badge('resource', 'resources', r.uri)}
+            {badge('resource', 'resources', r.uri, undefined, { index: resourceIndex })}
             <span className="font-mono text-teal-600">{r.uri}</span>
             <span className="flex-1" />
             {r.tags?.map((t) => <Tag key={t} value={t} />)}
@@ -537,6 +699,7 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exam
                   <SecurityRequirements requirements={r.security} />
                 </div>
               )}
+              <ClientRequirements requirements={r.clientRequirements} />
             </div>
             <ExamplesView examples={r.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/resources/${resourceIndex}/examples`, section: 'resources', itemName: r.name, kind: 'examples', onSelect: onExampleSelect }} />
           </div>
@@ -546,7 +709,7 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exam
         const templateIndex = doc.resourceTemplates?.indexOf(rt) ?? -1;
         return <details key={rt.uriTemplate} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
           <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
-            {badge('resource', 'resourceTemplates', rt.uriTemplate)}
+            {badge('resource', 'resourceTemplates', rt.uriTemplate, undefined, { index: templateIndex })}
             <span className="font-mono text-teal-600">{rt.uriTemplate}</span>
             <span className="flex-1" />
             {rt.tags?.map((t) => <Tag key={t} value={t} />)}
@@ -561,6 +724,7 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exam
                   <SecurityRequirements requirements={rt.security} />
                 </div>
               )}
+              <ClientRequirements requirements={rt.clientRequirements} />
             </div>
             <ExamplesView examples={rt.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/resourceTemplates/${templateIndex}/examples`, section: 'resourceTemplates', itemName: rt.name, kind: 'examples', onSelect: onExampleSelect }} />
             <ExamplesView examples={rt.completionExamples} title="Completion examples" className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/resourceTemplates/${templateIndex}/completionExamples`, section: 'resourceTemplates', itemName: rt.name, kind: 'completionExamples', onSelect: onExampleSelect }} />
@@ -588,7 +752,7 @@ function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampl
         const promptIndex = doc.prompts?.indexOf(p) ?? -1;
         return <details key={p.name} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
           <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
-            {badge('prompt', 'prompts', p.name)}
+            {badge('prompt', 'prompts', p.name, undefined, { index: promptIndex })}
             <span className="font-mono text-fuchsia-600">{p.name}</span>
             {p.title && <span className="text-gray-500">{p.title}</span>}
             <span className="flex-1" />
@@ -603,6 +767,7 @@ function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampl
                   <SecurityRequirements requirements={p.security} />
                 </div>
               )}
+              <ClientRequirements requirements={p.clientRequirements} />
             </div>
             {p.arguments?.length ? (
               <details className="mt-1 ml-[8px]">
@@ -704,6 +869,8 @@ function TagFilterBar({ tags, disabledTags, onToggle }: {
 
 export interface McpDescCardViewProps {
   doc: McpDescDocument;
+  /** Original unprojected document, used to retain declaration scope in effective views. */
+  sourceDoc?: McpDescDocument;
   validation?: ValidationResult;
   /** Whether <details> sections start expanded (default: true) */
   defaultOpen?: boolean;
@@ -713,10 +880,19 @@ export interface McpDescCardViewProps {
   exampleDisplay?: ExampleDisplayMode;
   /** Receives the exact JSON pointer when a named example is selected. */
   onExampleSelect?: (selection: ExampleSelection) => void;
+  /** Whether the host-controlled effective-view projection selector is shown (default: disabled). */
+  protocolVersionProjectionMode?: ProtocolVersionProjectionMode;
+  /** Protocol versions offered for host-controlled effective-view projection. */
+  protocolVersionOptions?: McpDescDocument['protocolVersions'];
+  /** Currently selected effective-view protocol version; null shows all versions. */
+  selectedProtocolVersion?: McpDescDocument['protocolVersions'][number] | null;
+  /** Called when the effective-view protocol version selection changes. */
+  onProtocolVersionSelect?: (protocolVersion: McpDescDocument['protocolVersions'][number] | null) => void;
 }
 
-export function McpDescCardView({ doc, validation, defaultOpen = true, renderBadge, exampleDisplay = 'hidden', onExampleSelect }: McpDescCardViewProps) {
+export function McpDescCardView({ doc, sourceDoc, validation, defaultOpen = true, renderBadge, exampleDisplay = 'hidden', onExampleSelect, protocolVersionProjectionMode = 'disabled', protocolVersionOptions, selectedProtocolVersion, onProtocolVersionSelect }: McpDescCardViewProps) {
   const [disabledTags, setDisabledTags] = useState<Set<string>>(new Set());
+  const protocolVersionGroupName = useId();
 
   // Reset filter when the document changes
   useEffect(() => { setDisabledTags(new Set()); }, [doc]);
@@ -745,11 +921,19 @@ export function McpDescCardView({ doc, validation, defaultOpen = true, renderBad
 
   return (
     <div className="space-y-1">
-      <InfoCard doc={doc} />
+      <InfoCard
+        doc={doc}
+        protocolVersionProjectionMode={protocolVersionProjectionMode}
+        protocolVersionOptions={protocolVersionOptions}
+        selectedProtocolVersion={selectedProtocolVersion}
+        onProtocolVersionSelect={onProtocolVersionSelect}
+        protocolVersionGroupName={protocolVersionGroupName}
+      />
+      <CapabilitiesCard doc={doc} defaultOpen={defaultOpen} selectedProtocolVersion={selectedProtocolVersion} />
       <TransportsCard doc={doc} defaultOpen={defaultOpen} badge={badge} />
       <SecurityCard doc={doc} defaultOpen={defaultOpen} badge={badge} />
       <TagFilterBar tags={doc.tags} disabledTags={disabledTags} onToggle={toggleTag} />
-      <ToolsCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
+      <ToolsCard doc={doc} sourceDoc={sourceDoc} selectedProtocolVersion={selectedProtocolVersion} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
       <ResourcesCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
       <PromptsCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
       <TagsCard doc={doc} defaultOpen={defaultOpen} />

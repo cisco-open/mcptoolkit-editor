@@ -33,6 +33,20 @@ function MyPage({ doc, validation }) {
 }
 ```
 
+Protocol-version projection controls are disabled by default. Hosts that own
+the projection state can opt in with `protocolVersionProjectionMode="enabled"`,
+and provide the source versions, current selection, and selection callback:
+
+```tsx
+<McpDescCardView
+  doc={effectiveDoc}
+  protocolVersionProjectionMode="enabled"
+  protocolVersionOptions={sourceDoc.protocolVersions}
+  selectedProtocolVersion={selectedProtocolVersion}
+  onProtocolVersionSelect={setSelectedProtocolVersion}
+/>
+```
+
 ## API
 
 ### `McpToolkitViewer(options)`
