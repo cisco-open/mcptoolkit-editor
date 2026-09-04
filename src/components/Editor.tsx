@@ -6,10 +6,10 @@ import { useRef, useCallback, useState, useEffect } from 'react';
 import MonacoEditor, { type OnMount, type OnChange } from '@monaco-editor/react';
 import { type editor } from 'monaco-editor';
 import { useDoc } from '../hooks/useDoc';
-import type { ValidationIssue } from '../core';
 import mcpdescSchema from '../core/mcpdesc-schema.json';
 import { sourcePathToLine } from './preview/navigation';
 import { findComponentDefinitionLine, pathToLine as componentPathToLine } from './componentNavigation';
+import { groupEditorIssues, type EditorIssue } from './editorDiagnostics';
 
 const DEFAULT_FONT_SIZE = 15;
 const MIN_FONT_SIZE = 10;
@@ -158,18 +158,14 @@ export default function Editor() {
     const monaco = monacoRef.current;
     if (!ed || !monaco) return;
 
-    const allIssues: (ValidationIssue & { severity: 'error' | 'warning' })[] = [
+    const allIssues: EditorIssue[] = [
       ...state.validation.errors.map(e => ({ ...e, severity: 'error' as const })),
       ...state.validation.warnings.map(w => ({ ...w, severity: 'warning' as const })),
     ];
 
-    // Group by line, collect unmapped
-    const lineMap = new Map<number, string[]>();
-    const unmapped: string[] = [];
     const parserMarkers: editor.IMarkerData[] = [];
     for (const issue of allIssues) {
       const line = issue.line ?? pathToLine(state.text, issue.path, issue.params);
-      const label = `${issue.severity === 'error' ? '✕' : '⚠'} ${issue.path}: ${issue.message}`;
       if (issue.line && ed.getModel()) {
         parserMarkers.push({
           severity: issue.severity === 'error' ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning,
@@ -180,27 +176,44 @@ export default function Editor() {
           endColumn: (issue.column ?? 1) + 1,
         });
       }
-      if (line === 0) {
-        unmapped.push(label);
-      } else {
-        const existing = lineMap.get(line) ?? [];
-        existing.push(label);
-        lineMap.set(line, existing);
-      }
     }
+    const { byLine, unmapped } = groupEditorIssues(
+      allIssues,
+      issue => issue.line ?? pathToLine(state.text, issue.path, issue.params),
+    );
     setUnmappedIssues(unmapped);
 
     const newDecorations: editor.IModelDeltaDecoration[] = [];
-    for (const [line, messages] of lineMap) {
-      newDecorations.push({
-        range: new monaco.Range(line, 1, line, 1),
-        options: {
-          isWholeLine: true,
-          glyphMarginClassName: 'error-glyph',
-          glyphMarginHoverMessage: { value: messages.join('\n\n') },
-          className: 'error-line-highlight',
-        },
-      });
+    for (const [line, issues] of byLine) {
+      const mixedSeverity = issues.errors.length > 0 && issues.warnings.length > 0;
+      if (issues.errors.length > 0) {
+        newDecorations.push({
+          range: new monaco.Range(line, 1, line, 1),
+          options: {
+            isWholeLine: true,
+            glyphMarginClassName: 'error-glyph',
+            glyphMarginHoverMessage: { value: issues.errors.join('\n\n') },
+            glyphMargin: {
+              position: mixedSeverity ? monaco.editor.GlyphMarginLane.Left : monaco.editor.GlyphMarginLane.Center,
+            },
+            className: 'error-line-highlight',
+          },
+        });
+      }
+      if (issues.warnings.length > 0) {
+        newDecorations.push({
+          range: new monaco.Range(line, 1, line, 1),
+          options: {
+            isWholeLine: true,
+            glyphMarginClassName: 'warning-glyph',
+            glyphMarginHoverMessage: { value: issues.warnings.join('\n\n') },
+            glyphMargin: {
+              position: mixedSeverity ? monaco.editor.GlyphMarginLane.Right : monaco.editor.GlyphMarginLane.Center,
+            },
+            className: issues.errors.length === 0 ? 'warning-line-highlight' : undefined,
+          },
+        });
+      }
     }
 
     if (decorationsRef.current) {

@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
-/* Monaco glyph-margin error markers */
-.error-glyph {
+/* Monaco glyph-margin validation markers */
+.error-glyph,
+.warning-glyph {
   background: transparent;
   display: flex !important;
   align-items: center;
@@ -14,6 +15,16 @@
   font-weight: 700;
   line-height: 1;
 }
+.warning-glyph::after {
+  content: '⚠';
+  color: #facc15;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
 .error-line-highlight {
   background: rgba(239, 68, 68, 0.08);
+}
+.warning-line-highlight {
+  background: rgba(250, 204, 21, 0.06);
 }

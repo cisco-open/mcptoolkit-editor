@@ -34,7 +34,7 @@ import {
   type McpDescDocument,
   type ValidationResult,
 } from '../core';
-import minimalExample from '../../examples/minimal.yaml?raw';
+import { defaultExample } from '../examples';
 
 // ============================================================================
 // State shape
@@ -126,7 +126,7 @@ function loadInitialText(): string {
     const saved = localStorage.getItem(LOCALSTORAGE_KEY);
     if (saved) return saved;
   } catch { /* ignore */ }
-  return minimalExample;
+  return defaultExample;
 }
 
 const initialState: DocState = {

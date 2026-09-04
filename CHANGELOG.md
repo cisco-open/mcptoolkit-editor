@@ -25,6 +25,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
+### Fixed
+
+- Show error and warning glyphs together when both severities occur on the
+  same editor line, while retaining severity-specific hover details and line
+  highlighting.
+- Support nested relative paths in the examples menu configuration and use its
+  declared default example as the initial editor document.
+
 ## [2.0.0-rc.1] — 2026-09-04
 
 ### Added

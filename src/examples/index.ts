@@ -9,23 +9,23 @@
  * `examples/config.yaml` — edit that file to add/remove/reorder
  * examples without touching code.
  *
- * YAML files live in /examples/ at the project root and are eagerly imported
- * as raw strings via Vite's `import.meta.glob`.
+ * YAML files live below /examples/ at the project root and are eagerly
+ * imported as raw strings via Vite's `import.meta.glob`.
  */
 import { parse } from 'yaml';
 import menuConfigRaw from '../../examples/config.yaml?raw';
 
 // Eagerly import every .yaml in examples/ as raw text (except the menu config)
 const yamlModules = import.meta.glob<string>(
-  ['../../examples/*.yaml', '!../../examples/config.yaml'],
+  ['../../examples/**/*.yaml', '!../../examples/config.yaml'],
   { query: '?raw', eager: true, import: 'default' },
 );
 
-// Build a filename → content map for fast lookup
+// Build a path relative to examples/ → content map for fast lookup
 const fileContents: Record<string, string> = {};
+const examplesPrefix = '../../examples/';
 for (const [path, raw] of Object.entries(yamlModules)) {
-  const filename = path.split('/').pop()!;
-  fileContents[filename] = raw;
+  fileContents[path.slice(examplesPrefix.length)] = raw;
 }
 
 export interface ExampleEntry {
@@ -42,7 +42,15 @@ export interface ExampleGroup {
 // Parse the menu config
 interface MenuEntry { file: string; label: string }
 interface MenuSection { label: string; entries?: MenuEntry[] }
-const menuConfig: { sections: MenuSection[] } = parse(menuConfigRaw);
+const menuConfig: { default: string; sections: MenuSection[] } = parse(menuConfigRaw);
+
+function getExampleContent(file: string): string {
+  const content = fileContents[file];
+  if (!content) {
+    throw new Error(`Example "${file}" from examples/config.yaml was not found below examples/`);
+  }
+  return content;
+}
 
 /** Grouped examples for the toolbar dropdown (sections with no entries are hidden). */
 export const exampleGroups: ExampleGroup[] = menuConfig.sections
@@ -50,14 +58,16 @@ export const exampleGroups: ExampleGroup[] = menuConfig.sections
   .map((s) => ({
     label: s.label,
     entries: s.entries!
-      .filter((e) => fileContents[e.file])
       .map((e) => ({
         name: e.file.replace(/\.yaml$/, ''),
         label: e.label,
-        content: fileContents[e.file],
+        content: getExampleContent(e.file),
       })),
   }))
   .filter((g) => g.entries.length > 0);
 
 /** Flat list for lookup by name. */
 export const examples: ExampleEntry[] = exampleGroups.flatMap((g) => g.entries);
+
+/** Initial document loaded when no editor content has been saved. */
+export const defaultExample = getExampleContent(menuConfig.default);
