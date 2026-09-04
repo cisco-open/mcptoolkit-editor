@@ -92,6 +92,18 @@ export interface McpDescCapabilities extends ProtocolScoped {
   extensions?: Record<string, Record<string, unknown>>;
 }
 
+export interface McpDescElicitation extends ProtocolScoped {
+  name: string;
+  mode: 'form' | 'url';
+  message: string;
+  when?: string;
+  requestedSchema?: McpDescSchema | { $componentRef: string };
+  url?: string;
+  onDecline?: string;
+  onCancel?: string;
+  [key: string]: unknown;
+}
+
 export interface McpDescTool extends ProtocolScoped {
   name: string;
   title?: string;
@@ -109,7 +121,7 @@ export interface McpDescTool extends ProtocolScoped {
   execution?: { taskSupport?: 'forbidden' | 'optional' | 'required'; [key: string]: unknown };
   examples?: Record<string, unknown>;
   interactionExamples?: Record<string, unknown>;
-  elicitations?: Record<string, unknown>[];
+  elicitations?: McpDescElicitation[];
   icons?: McpDescIcon[];
   tags?: string[];
   deprecated?: boolean;
@@ -124,7 +136,7 @@ export interface McpDescResource extends ProtocolScoped {
   size?: number;
   annotations?: Record<string, unknown>;
   examples?: Record<string, unknown>;
-  elicitations?: Record<string, unknown>[];
+  elicitations?: McpDescElicitation[];
   icons?: McpDescIcon[];
   tags?: string[];
   deprecated?: boolean;
@@ -139,7 +151,7 @@ export interface McpDescResourceTemplate extends ProtocolScoped {
   annotations?: Record<string, unknown>;
   examples?: Record<string, unknown>;
   completionExamples?: Record<string, unknown>;
-  elicitations?: Record<string, unknown>[];
+  elicitations?: McpDescElicitation[];
   icons?: McpDescIcon[];
   tags?: string[];
   deprecated?: boolean;
@@ -160,7 +172,7 @@ export interface McpDescPrompt extends ProtocolScoped {
   arguments?: McpDescPromptArgument[];
   examples?: Record<string, unknown>;
   completionExamples?: Record<string, unknown>;
-  elicitations?: Record<string, unknown>[];
+  elicitations?: McpDescElicitation[];
   icons?: McpDescIcon[];
   tags?: string[];
   deprecated?: boolean;

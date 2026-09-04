@@ -8,6 +8,15 @@ this file records the bundle's releases. The viewer has its own
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This package uses [Semantic Versioning](https://semver.org/) and tracks the MCP Description Editor app version.
 
+## Unreleased
+
+## [2.0.0-rc.1] — 2026-09-04
+
+### Changed
+
+- Ship the MCP Description Editor 2.0 release candidate with MCP Description
+  0.8.0 RC.1 validation, effective protocol views, and expanded card previews.
+
 ## [1.1.0-rc.2] — 2026-07-08
 
 ### Added

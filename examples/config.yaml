@@ -16,13 +16,11 @@ sections:
         label: Minimal
       - file: http-server.yaml
         label: Streamable HTTP
-      - file: stdio-server.yaml
-        label: STDIO
       - file: multi-transport.yaml
         label: Multi-Transport
-      - file: full-featured.yaml
-        label: Full-Featured
       - file: multi-version-tasks.yaml
         label: Multi-Version (tasks)
       - file: elicitation-MRTR.yaml
         label: Elicitation (MRTR)
+      - file: full-featured.yaml
+        label: Full-Featured

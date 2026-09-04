@@ -13,6 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[2.0.0-rc.1] — 2026-09-04](#200-rc1--2026-09-04)
 - [[1.1.0-rc.2] — 2026-07-08](#110-rc2--2026-07-08)
 - [[1.0.1] — 2026-07-07](#101--2026-07-07)
 - [[1.0.0] — 2026-07-07](#100--2026-07-07)
@@ -23,6 +24,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+## [2.0.0-rc.1] — 2026-09-04
 
 ### Added
 
@@ -38,6 +41,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ### Changed
 
+- Expand elicitation summaries into optional detail views for messages,
+  conditions, form schemas or URLs, outcomes, and protocol scopes.
 - Render all client capability requirements as compact path badges instead of
   JSON, and show protocol-version values as compact black-outlined bubbles.
 - Target MCP Description `0.8.0-rc.1` using the CSP-safe

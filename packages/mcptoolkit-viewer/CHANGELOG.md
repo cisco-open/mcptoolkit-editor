@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 <!-- toc -->
 
+- [Unreleased](#unreleased)
+- [[2.0.0-rc.1] — 2026-09-04](#200-rc1--2026-09-04)
 - [[1.0.0] — 2026-07-07](#100--2026-07-07)
 - [[1.0.0-rc.3] — 2026-07-07](#100-rc3--2026-07-07)
 - [[1.0.0-rc.2] — 2026-07-06](#100-rc2--2026-07-06)
@@ -15,6 +17,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
+## [2.0.0-rc.1] — 2026-09-04
+
 ### Added
 
 - Show compact, protocol-labelled capability summaries and per-tool execution and client requirements in card views, with extensions rendered as yellow badges.
@@ -23,6 +27,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ### Changed
 
+- Expand elicitation summaries into optional detail views for messages,
+  conditions, form schemas or URLs, outcomes, and protocol scopes.
 - Render all client capability requirements as compact path badges instead of
   JSON, and show protocol-version values as compact black-outlined bubbles.
 - Provide an optional displayed-item index to custom badge renderers so hosts can identify duplicate protocol-scoped declarations.

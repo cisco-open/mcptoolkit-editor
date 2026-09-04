@@ -27,7 +27,20 @@ const baseDoc = {
       customCapability: {},
     },
     elicitations: [
-      { name: 'choose_section', mode: 'form', message: 'Choose a section', requestedSchema: { type: 'object', properties: {} } },
+      {
+        name: 'choose_section',
+        mode: 'form',
+        message: 'Choose a section',
+        when: 'After eligibility is calculated',
+        onDecline: 'Registration is not created',
+        onCancel: 'Registration is abandoned',
+        requestedSchema: {
+          type: 'object',
+          properties: {
+            section: { type: 'string', oneOf: [{ const: 'u2000', title: 'Under 2000' }] },
+          },
+        },
+      },
       { name: 'authorize_registration', mode: 'url', message: 'Authorize registration', url: 'https://example.com/authorize' },
     ],
   }],
@@ -69,8 +82,16 @@ describe('McpDescCardView protocol projections', () => {
     expect(markup).toContain('customCapability');
     expect(markup).not.toContain('&quot;elicitation&quot;');
     expect(markup).toContain('Elicitations');
+    expect(markup).toContain('Elicitations <span class="text-gray-400">(2)</span>');
     expect(markup).toContain('choose_section');
     expect(markup).toContain('authorize_registration');
+    expect(markup).toContain('Choose a section');
+    expect(markup).toContain('https://example.com/authorize');
+    expect(markup).toContain('Requested input');
+    expect(markup).toContain('Under 2000');
+    expect(markup.indexOf('When')).toBeLessThan(markup.indexOf('On decline'));
+    expect(markup.indexOf('On decline')).toBeLessThan(markup.indexOf('On cancel'));
+    expect(markup.indexOf('On cancel')).toBeLessThan(markup.indexOf('Requested input'));
     expect(markup).toContain('confirm_access');
     expect(markup).toContain('form');
     expect(markup).toContain('url');

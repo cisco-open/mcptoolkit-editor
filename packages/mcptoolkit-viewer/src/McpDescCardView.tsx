@@ -4,7 +4,7 @@
 
 import { useEffect, useId, useMemo, useState, useCallback } from 'react';
 import { marked } from 'marked';
-import type { McpDescDocument, ValidationResult } from '@core/types';
+import type { McpDescDocument, McpDescElicitation, ValidationResult } from '@core/types';
 
 // Configure marked for inline rendering
 marked.setOptions({ breaks: true });
@@ -231,24 +231,58 @@ function ClientRequirements({ requirements, inline = false }: {
   );
 }
 
-function ElicitationsSummary({ elicitations }: {
-  elicitations?: Record<string, unknown>[];
+function ElicitationsView({ elicitations, className = 'mt-1 ml-[8px]' }: {
+  elicitations?: McpDescElicitation[];
+  className?: string;
 }) {
   if (!elicitations?.length) return null;
   return (
-    <div className="flex flex-wrap items-center gap-1">
-      <span className="mr-1 font-medium text-gray-500">Elicitations</span>
-      {elicitations.map((elicitation, index) => (
-        <span key={`${String(elicitation.name)}-${index}`} className="inline-flex items-center gap-1">
-          <InlineBadge>{String(elicitation.name)}</InlineBadge>
-          <InlineBadge color={elicitation.mode === 'url'
-            ? 'bg-blue-100 text-blue-800'
-            : 'bg-amber-100 text-amber-800'}>
-            {String(elicitation.mode)}
-          </InlineBadge>
-        </span>
-      ))}
-    </div>
+    <details className={className}>
+      <summary className="cursor-pointer select-none text-xs font-sans underline text-gray-900">
+        Elicitations <span className="text-gray-400">({elicitations.length})</span>
+      </summary>
+      <div className="pt-1 ml-[18px] max-w-full overflow-x-auto space-y-3">
+        {elicitations.map((elicitation, index) => {
+          const componentRef = typeof elicitation.requestedSchema?.$componentRef === 'string'
+            ? elicitation.requestedSchema.$componentRef
+            : undefined;
+          return (
+            <div key={`${elicitation.name}-${index}`} className="border-l-2 border-amber-200 pl-3 text-xs">
+              <div className="flex flex-wrap items-center gap-1 mb-1">
+                <code className="font-mono text-gray-800">{elicitation.name}</code>
+                <InlineBadge color={elicitation.mode === 'url'
+                  ? 'bg-blue-100 text-blue-800'
+                  : 'bg-amber-100 text-amber-800'}>
+                  {elicitation.mode}
+                </InlineBadge>
+                {elicitation.protocolVersions?.map(version => (
+                  <InlineBadge key={version} color="border border-black bg-white text-black">{version}</InlineBadge>
+                ))}
+              </div>
+              <p className="text-gray-700 mb-1">{elicitation.message}</p>
+              {elicitation.when && <InfoRow compact label="When" value={elicitation.when} />}
+              {elicitation.mode === 'url' && elicitation.url && (
+                <InfoRow compact label="URL" value={
+                  <a className="text-blue-600 underline break-all" href={elicitation.url} target="_blank" rel="noopener noreferrer">
+                    {elicitation.url}
+                  </a>
+                } />
+              )}
+              {elicitation.onDecline && <InfoRow compact label="On decline" value={elicitation.onDecline} />}
+              {elicitation.onCancel && <InfoRow compact label="On cancel" value={elicitation.onCancel} />}
+              {elicitation.mode === 'form' && elicitation.requestedSchema && (
+                <div className="mt-2">
+                  <div className="font-medium text-gray-500">Requested input</div>
+                  {componentRef
+                    ? <code className="inline-block mt-1 text-xs bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded break-all">{componentRef}</code>
+                    : <SchemaView schema={elicitation.requestedSchema as Record<string, unknown>} />}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </details>
   );
 }
 
@@ -307,6 +341,7 @@ function SchemaView({ schema, level = 0 }: { schema: Record<string, unknown>; le
               const isRequired = required.includes(name);
               const propDesc = prop.description as string | undefined;
               const propEnum = prop.enum as unknown[] | undefined;
+              const propOneOf = prop.oneOf as Record<string, unknown>[] | undefined;
               const propDefault = prop.default;
               const isNested = prop.properties != null;
               const isArray = propType === 'array';
@@ -328,6 +363,15 @@ function SchemaView({ schema, level = 0 }: { schema: Record<string, unknown>; le
                         {propEnum.map((v, i) => (
                           <span key={i} className="inline-block text-xs bg-gray-100 text-gray-600 rounded px-1 font-mono">
                             {JSON.stringify(v)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {propOneOf && (
+                      <div className="mt-0.5 flex flex-wrap gap-0.5">
+                        {propOneOf.map((option, optionIndex) => (
+                          <span key={optionIndex} className="inline-block text-xs bg-gray-100 text-gray-600 rounded px-1">
+                            {typeof option.title === 'string' ? option.title : JSON.stringify(option.const)}
                           </span>
                         ))}
                       </div>
@@ -390,7 +434,7 @@ function InfoCard({ doc, protocolVersionProjectionMode, protocolVersionOptions, 
 
       {info.description && <div className="mb-3"><Desc text={info.description} /></div>}
       <div className="space-y-0.5">
-        <InfoRow responsiveWrap label="MCP Version(s)" value={showProtocolVersionSelector ? (
+        <InfoRow responsiveWrap label="MCP Versions" value={showProtocolVersionSelector ? (
           <fieldset className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <legend className="sr-only">Effective protocol version</legend>
             {protocolVersionOptions.map((version) => (
@@ -644,7 +688,6 @@ function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaul
                   </div>
                 )}
                 <ClientRequirements requirements={tool.clientRequirements} inline />
-                <ElicitationsSummary elicitations={tool.elicitations} />
               </div>
               {hasInputProps && (
                 <details className="mt-1 ml-[8px]">
@@ -666,6 +709,7 @@ function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaul
                   </div>
                 </details>
               )}
+              <ElicitationsView elicitations={tool.elicitations} />
               <ExamplesView examples={tool.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/tools/${toolIndex}/examples`, section: 'tools', itemName: tool.name, kind: 'examples', onSelect: onExampleSelect }} />
               <ExamplesView examples={tool.interactionExamples} title="Interaction examples" className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/tools/${toolIndex}/interactionExamples`, section: 'tools', itemName: tool.name, kind: 'interactionExamples', onSelect: onExampleSelect }} />
             </div>
@@ -714,8 +758,8 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exam
                 </div>
               )}
               <ClientRequirements requirements={r.clientRequirements} />
-              <ElicitationsSummary elicitations={r.elicitations} />
             </div>
+            <ElicitationsView elicitations={r.elicitations} />
             <ExamplesView examples={r.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/resources/${resourceIndex}/examples`, section: 'resources', itemName: r.name, kind: 'examples', onSelect: onExampleSelect }} />
           </div>
         </details>;
@@ -740,8 +784,8 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exam
                 </div>
               )}
               <ClientRequirements requirements={rt.clientRequirements} />
-              <ElicitationsSummary elicitations={rt.elicitations} />
             </div>
+            <ElicitationsView elicitations={rt.elicitations} />
             <ExamplesView examples={rt.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/resourceTemplates/${templateIndex}/examples`, section: 'resourceTemplates', itemName: rt.name, kind: 'examples', onSelect: onExampleSelect }} />
             <ExamplesView examples={rt.completionExamples} title="Completion examples" className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/resourceTemplates/${templateIndex}/completionExamples`, section: 'resourceTemplates', itemName: rt.name, kind: 'completionExamples', onSelect: onExampleSelect }} />
           </div>
@@ -784,7 +828,6 @@ function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampl
                 </div>
               )}
               <ClientRequirements requirements={p.clientRequirements} />
-              <ElicitationsSummary elicitations={p.elicitations} />
             </div>
             {p.arguments?.length ? (
               <details className="mt-1 ml-[8px]">
@@ -813,6 +856,7 @@ function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampl
                 </div>
               </details>
             ) : null}
+            <ElicitationsView elicitations={p.elicitations} />
             <ExamplesView examples={p.examples} className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/prompts/${promptIndex}/examples`, section: 'prompts', itemName: p.name, kind: 'examples', onSelect: onExampleSelect }} />
             <ExamplesView examples={p.completionExamples} title="Completion examples" className="mt-1 ml-[8px]" mode={exampleDisplay} selection={{ path: `/prompts/${promptIndex}/completionExamples`, section: 'prompts', itemName: p.name, kind: 'completionExamples', onSelect: onExampleSelect }} />
           </div>
