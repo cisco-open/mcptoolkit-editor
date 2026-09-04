@@ -14,6 +14,7 @@ export default defineConfig({
     tailwindcss(),
     dts({
       include: ['src'],
+      exclude: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
       rollupTypes: false,
       tsconfigPath: resolve(__dirname, 'tsconfig.json'),
       outDir: resolve(__dirname, 'dist'),

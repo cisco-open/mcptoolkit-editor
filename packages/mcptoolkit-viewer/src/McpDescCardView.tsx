@@ -4,7 +4,8 @@
 
 import { useEffect, useId, useMemo, useState, useCallback } from 'react';
 import { marked } from 'marked';
-import type { McpDescDocument, McpDescElicitation, ValidationResult } from '@core/types';
+import { isComponentReference } from '@core/types';
+import type { McpDescComponentReference, McpDescDocument, McpDescElicitation, McpDescSchema, ValidationResult } from '@core/types';
 
 // Configure marked for inline rendering
 marked.setOptions({ breaks: true });
@@ -139,6 +140,16 @@ function JsonBlock({ data }: { data: unknown }) {
   );
 }
 
+/** Shown when a `$componentRef` reaches the view unresolved (e.g. the target is missing). */
+function UnresolvedComponentRef({ reference }: { reference: McpDescComponentReference }) {
+  return (
+    <div className="text-xs text-gray-500">
+      unresolved component reference{' '}
+      <span className="font-mono text-blue-700">{reference.$componentRef}</span>
+    </div>
+  );
+}
+
 function ExamplesView({ examples, title = 'Examples', className = 'mt-2', mode, selection }: {
   examples?: Record<string, unknown>; title?: string; className?: string;
   mode: ExampleDisplayMode;
@@ -151,22 +162,23 @@ function ExamplesView({ examples, title = 'Examples', className = 'mt-2', mode, 
       <div className={`${className} flex flex-wrap items-center gap-x-2 gap-y-1 text-xs`}>
         <span className="font-sans text-gray-500">{title}</span>
         {entries.map(([name]) => (
-          selection.onSelect ? (
-            <button
-              key={name}
-              className="cursor-pointer font-mono text-xs text-blue-700 underline"
-              title="Select example"
-              onClick={() => selection.onSelect?.({
-                path: `${selection.path}/${name}`,
-                section: selection.section,
-                itemName: selection.itemName,
-                exampleName: name,
-                kind: selection.kind,
-              })}
-            >
-              {name}
-            </button>
-          ) : <span key={name} className="font-mono text-xs text-blue-700">{name}</span>
+          <span key={name} className="inline-flex items-center gap-1">
+            {selection.onSelect ? (
+              <button
+                className="cursor-pointer font-mono text-xs text-blue-700 underline"
+                title="Select example"
+                onClick={() => selection.onSelect?.({
+                  path: `${selection.path}/${name}`,
+                  section: selection.section,
+                  itemName: selection.itemName,
+                  exampleName: name,
+                  kind: selection.kind,
+                })}
+              >
+                {name}
+              </button>
+            ) : <span className="font-mono text-xs text-blue-700">{name}</span>}
+          </span>
         ))}
       </div>
     ) : (
@@ -177,7 +189,9 @@ function ExamplesView({ examples, title = 'Examples', className = 'mt-2', mode, 
         <div className="mt-1 ml-[18px] space-y-1">
           {entries.map(([name, example]) => (
             <details key={name}>
-              <summary className="cursor-pointer select-none font-mono text-xs text-blue-700">{name}</summary>
+              <summary className="cursor-pointer select-none font-mono text-xs text-blue-700">
+                {name}
+              </summary>
               <JsonBlock data={example} />
             </details>
           ))}
@@ -645,8 +659,10 @@ function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaul
           )) ?? sourceDoc?.tools?.find(candidate => candidate.name === tool.name && !candidate.protocolVersions)
           : tool;
         const toolProtocolVersions = sourceTool?.protocolVersions;
-        const props = tool.inputSchema?.properties as Record<string, unknown> | undefined;
-        const hasInputProps = props != null && Object.keys(props).length > 0;
+        const inputRef = isComponentReference(tool.inputSchema) ? tool.inputSchema : null;
+        const outputRef = isComponentReference(tool.outputSchema) ? tool.outputSchema : null;
+        const props = inputRef ? undefined : (tool.inputSchema as McpDescSchema | undefined)?.properties as Record<string, unknown> | undefined;
+        const hasInputProps = inputRef != null || (props != null && Object.keys(props).length > 0);
         return (
           <details key={`${tool.name}-${toolIndex}`} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
             <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
@@ -695,7 +711,9 @@ function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaul
                     Input
                   </summary>
                   <div className="pt-1 ml-[18px]">
-                    <SchemaView schema={tool.inputSchema!} />
+                    {inputRef
+                      ? <UnresolvedComponentRef reference={inputRef} />
+                      : <SchemaView schema={tool.inputSchema as McpDescSchema} />}
                   </div>
                 </details>
               )}
@@ -705,7 +723,9 @@ function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaul
                     Output
                   </summary>
                   <div className="pt-1 ml-[18px]">
-                    <SchemaView schema={tool.outputSchema} />
+                    {outputRef
+                      ? <UnresolvedComponentRef reference={outputRef} />
+                      : <SchemaView schema={tool.outputSchema as McpDescSchema} />}
                   </div>
                 </details>
               )}

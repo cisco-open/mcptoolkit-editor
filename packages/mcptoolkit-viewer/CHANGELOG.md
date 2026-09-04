@@ -32,6 +32,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 - Render all client capability requirements as compact path badges instead of
   JSON, and show protocol-version values as compact black-outlined bubbles.
 - Provide an optional displayed-item index to custom badge renderers so hosts can identify duplicate protocol-scoped declarations.
+- Accept reusable component references in tool `inputSchema` / `outputSchema`
+  and declaration examples. Resolved references render identically to inline
+  content; unresolved `$componentRef` values render as a compact reference
+  indicator instead of raw JSON.
 - Render MCP Description 0.8 RC.1 root protocol versions and named
   `securitySchemes` in the shared card view.
 - Render explicitly declared security requirements for the root, transports,

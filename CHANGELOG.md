@@ -34,6 +34,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   resource templates, and prompts.
 - Add single- and multi-version MRTR elicitation examples.
 - Add an advanced multi-version Tasks example demonstrating the migration from core Tasks execution to the Tasks extension.
+- Resolve local `$componentRef` references via
+  `@mcpdesc/core@0.7.0`. The card preview and Markdown export render resolved
+  schemas and examples while the editor source keeps the authored references.
+  Ctrl+clicking a reference in the editor navigates to its component definition.
+- Bundle the `Reusable Components` example (vendored from the specification
+  repo) demonstrating root `components` registries and local `$componentRef`
+  references.
+- Add a Vitest setup (`npm run test`) with valid and invalid component-reference
+  fixtures covering every registry, chains, shared targets, missing targets,
+  namespace errors, cycles, and strict-CSP resolution. `npm run prerelease` now
+  runs the suite.
+- Report MCP Description 0.7 migration outcomes as success, success with
+  warnings, or failure, with a downloadable deterministic conversion report.
+  Missing legacy protocol versions default to `2025-11-25` through the core
+  converter and are reported as warnings.
+- Render a lightweight named index for tool, resource, resource template,
+  prompt, interaction, and completion examples in the editor card preview;
+  selecting a name navigates Monaco to its source definition.
+- Include up to ten allowed values in enum validation diagnostics and place
+  parser diagnostics on their reported source line in Monaco.
+- Restore a STDIO transport and sample tool in the bundled Minimal example.
 
 ### Fixed
 
@@ -45,6 +66,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   conditions, form schemas or URLs, outcomes, and protocol scopes.
 - Render all client capability requirements as compact path badges instead of
   JSON, and show protocol-version values as compact black-outlined bubbles.
+- Upgrade to `@mcpdesc/core@^0.7.0` and `@mcpdesc/validator@^0.8.0`.
+- Replace the untyped `components` placeholder with typed component registries
+  and inline-or-reference unions for tool schemas and declaration examples.
 - Target MCP Description `0.8.0-rc.1` using the CSP-safe
   `@mcpdesc/validator/standalone` and `@mcpdesc/core` packages. The editor now
   validates the full structural and semantic RC.1 contract.
@@ -56,21 +80,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   preview without inferring inherited security policy.
 - Refresh the README and V2 support plan for the implemented RC.1 integration,
   current migration behavior, and deferred release work.
-- Emphasize card-view MCP Version(s) values and reduce the Input, Output, and
+- Emphasize card-view MCP Versions values and reduce the Input, Output, and
   Arguments summary labels.
-- Move opt-in multi-version effective-view selection into the MCP Version(s)
+- Move opt-in multi-version effective-view selection into the MCP Versions
   row, default it to All versions, and demonstrate it with protocol-scoped
   tools in the bundled multi-version example.
-
-- Automatically migrate valid MCP Description 0.7.0 documents to RC.1 when they
-  are opened, pasted, or restored. Documents that cannot migrate show an
-  actionable v0.8 migration message; versions before 0.7 are unsupported.
-- Render a lightweight named index for tool, resource, resource template,
-  prompt, interaction, and completion examples in the editor card preview;
-  selecting a name navigates Monaco to its source definition.
-- Include up to ten allowed values in enum validation diagnostics and place
-  parser diagnostics on their reported source line in Monaco.
-- Restore a STDIO transport and sample tool in the bundled Minimal example.
+- Prompt before migrating MCP Description 0.7 documents instead of converting
+  them automatically. Cancelled and failed migrations preserve the original
+  source and show an unsupported-version preview.
 
 
 ## [1.1.0-rc.2] — 2026-07-08
