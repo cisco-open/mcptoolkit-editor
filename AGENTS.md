@@ -41,7 +41,7 @@ This is a **pure client-side** web application for editing, validating, and visu
 
 ### Spec Version
 
-The editor currently targets **MCP Description v0.7.0**. The schema lives at `src/core/mcpdesc-schema.json`. Types in `src/core/types.ts` mirror the spec structure.
+The editor currently validates against **MCP Description v0.8.0-rc.2**. The schema lives at `src/core/mcpdesc-schema.json`. Types in `src/core/types.ts` mirror the spec structure. Legacy v0.7 documents remain supported as migration inputs.
 
 ## Changelogs
 

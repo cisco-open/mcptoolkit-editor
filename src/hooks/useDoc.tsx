@@ -30,6 +30,7 @@ import type { SupportedProtocolVersion } from '@mcpdesc/validator/browser';
 import {
   getMcpDesc07ValidationErrors,
   isValidMcpDesc07,
+  MCPDESC_SPECIFICATION,
   McpDescValidator,
   type McpDescDocument,
   type ValidationResult,
@@ -330,7 +331,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
   const effectiveDoc = useMemo(() => {
     if (!state.doc || !state.selectedProtocolVersion) return state.doc;
     const projection = projectEffectiveProtocolView(state.doc, {
-      specification: '0.8.0-rc.1',
+      specification: MCPDESC_SPECIFICATION,
       protocolVersion: state.selectedProtocolVersion,
     });
     return projection.ok ? projection.value as McpDescDocument : state.doc;
@@ -339,7 +340,9 @@ export function DocProvider({ children }: { children: ReactNode }) {
   // Resolution runs after projection so references on filtered-out declarations are ignored.
   const resolution = useMemo(
     () => (effectiveDoc
-      ? resolveMcpDescriptionComponentReferences(effectiveDoc, { specification: '0.8.0-rc.1' })
+      ? effectiveDoc.components
+        ? resolveMcpDescriptionComponentReferences(effectiveDoc, { specification: '0.8.0-rc.1' })
+        : { ok: true as const, value: effectiveDoc }
       : null),
     [effectiveDoc],
   );

@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from 'vitest';
 import type { McpDescDocument } from '../../core/types';
+import miroExample from '../../../examples/vendors/miro.mcpdesc.yaml?raw';
 import { sourceItemPath, sourcePathToLine } from './navigation';
 
 const doc = {
@@ -44,5 +45,9 @@ describe('sourcePathToLine', () => {
   it('locates each duplicate declaration without an off-by-one error', () => {
     expect(sourcePathToLine(source, '/tools/1/name')).toBe(4);
     expect(sourcePathToLine(source, '/tools/2/name')).toBe(8);
+  });
+
+  it('locates the Miro pre-standard extensions warning', () => {
+    expect(sourcePathToLine(miroExample, '/capabilities/0/extensions')).toBe(24);
   });
 });

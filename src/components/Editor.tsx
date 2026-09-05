@@ -6,6 +6,7 @@ import { useRef, useCallback, useState, useEffect } from 'react';
 import MonacoEditor, { type OnMount, type OnChange } from '@monaco-editor/react';
 import { type editor } from 'monaco-editor';
 import { useDoc } from '../hooks/useDoc';
+import { MCPDESC_SCHEMA_URI } from '../core';
 import mcpdescSchema from '../core/mcpdesc-schema.json';
 import { sourcePathToLine } from './preview/navigation';
 import { findComponentDefinitionLine, pathToLine as componentPathToLine } from './componentNavigation';
@@ -119,7 +120,7 @@ export default function Editor() {
         validate: true,
         schemas: [
           {
-            uri: 'https://mcpdesc.org/schema/mcp-description/0.8.0-rc.1.json',
+            uri: MCPDESC_SCHEMA_URI,
             fileMatch: ['*'],
             schema: mcpdescSchema as Record<string, unknown>,
           },

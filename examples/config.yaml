@@ -35,4 +35,10 @@ sections:
 
       - label: Full-Featured
         file: features/full-featured.yaml
+
+  - label: "vendors"
+    entries:
+      - label: Miro
+        file: vendors/miro.mcpdesc.yaml
+
 # End of examples menu configuration.
