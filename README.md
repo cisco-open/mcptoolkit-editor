@@ -78,7 +78,7 @@ mcpcontract dump \
 > repository (`spec/` and `schemas/mcp-description/`). This editor targets the
 > immutable **`0.8.0-rc.2`** snapshot from that source. It accepts valid `0.7.0`
 > documents on import, paste, or restore and migrates them one-way to the
-> RC.1-compatible 0.8 document shape; earlier versions are unsupported.
+> RC.2 0.8 document shape; earlier versions are unsupported.
 
 ## Build and deploy
 

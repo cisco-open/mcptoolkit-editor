@@ -41,4 +41,7 @@ sections:
       - label: Miro
         file: vendors/miro.mcpdesc.yaml
 
+      - label: Microsoft Learn
+        file: vendors/mslearn.mcpdesc.yaml
+
 # End of examples menu configuration.

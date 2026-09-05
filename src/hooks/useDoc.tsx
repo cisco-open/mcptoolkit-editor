@@ -18,7 +18,7 @@ import {
   type ReactNode,
 } from 'react';
 import {
-  migrateMcpDescription07ToRc1,
+  migrateMcpDescription07ToRc2,
   projectEffectiveProtocolView,
   serializeMcpDescription,
   type JsonValue,
@@ -297,7 +297,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
         report: {
           status: 'failed',
           sourceSpecification: '0.7.0',
-          targetSpecification: '0.8.0-rc.1',
+          targetSpecification: MCPDESC_SPECIFICATION,
           diagnostics,
           defaultsApplied: [],
           changes: [],
@@ -306,8 +306,8 @@ export function DocProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const result = migrateMcpDescription07ToRc1(migration.source, {
-      specification: '0.8.0-rc.1',
+    const result = migrateMcpDescription07ToRc2(migration.source, {
+      specification: MCPDESC_SPECIFICATION,
       sourceValidated: true,
       defaultProtocolVersion: '2025-11-25',
     });

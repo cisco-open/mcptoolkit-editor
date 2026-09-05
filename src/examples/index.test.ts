@@ -9,6 +9,7 @@ describe('bundled examples', () => {
     ]);
     expect(examples.map(({ name }) => name)).toContain('features/minimal');
     expect(examples.map(({ name }) => name)).toContain('vendors/miro.mcpdesc');
+    expect(examples.map(({ name }) => name)).toContain('vendors/mslearn.mcpdesc');
     expect(examples.every(({ content }) => content.length > 0)).toBe(true);
   });
 
