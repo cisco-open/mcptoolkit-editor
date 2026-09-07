@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { migrateMcpDescription07ToRc2, RC_2_SCHEMA_URI } from '@mcpdesc/core';
+import { migrateMcpDescription07ToRc3, RC_3_SCHEMA_URI } from '@mcpdesc/core';
 import { isValidMcpDesc07, McpDescValidator } from './validator';
 
 describe('0.7 migration', () => {
-  it('targets and validates against MCP Description RC.2', () => {
+  it('targets and validates against MCP Description RC.3', () => {
     const source = {
       mcpdesc: '0.7.0',
       info: { name: 'example', version: '1.0.0' },
@@ -20,8 +20,8 @@ describe('0.7 migration', () => {
     };
     expect(isValidMcpDesc07(source)).toBe(true);
 
-    const result = migrateMcpDescription07ToRc2(source, {
-      specification: '0.8.0-rc.2',
+    const result = migrateMcpDescription07ToRc3(source, {
+      specification: '0.8.0-rc.3',
       sourceValidated: true,
       defaultProtocolVersion: '2025-11-25',
     });
@@ -29,8 +29,8 @@ describe('0.7 migration', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.report.targetSpecification).toBe('0.8.0-rc.2');
-    expect(result.value.$schema).toBe(RC_2_SCHEMA_URI);
+    expect(result.report.targetSpecification).toBe('0.8.0-rc.3');
+    expect(result.value.$schema).toBe(RC_3_SCHEMA_URI);
     expect(new McpDescValidator().validateDocument(result.value).errors).toEqual([]);
   });
 });

@@ -36,7 +36,7 @@ describe('strict CSP', () => {
       if (!parsed.ok) return;
 
       const result = resolveMcpDescriptionComponentReferences(parsed.value, {
-        specification: '0.8.0-rc.1',
+        specification: '0.8.0-rc.3',
       });
       expect(result.ok).toBe(true);
     } finally {

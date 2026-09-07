@@ -18,7 +18,7 @@ import {
   type ReactNode,
 } from 'react';
 import {
-  migrateMcpDescription07ToRc2,
+  migrateMcpDescription07ToRc3,
   projectEffectiveProtocolView,
   serializeMcpDescription,
   type JsonValue,
@@ -306,7 +306,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const result = migrateMcpDescription07ToRc2(migration.source, {
+    const result = migrateMcpDescription07ToRc3(migration.source, {
       specification: MCPDESC_SPECIFICATION,
       sourceValidated: true,
       defaultProtocolVersion: '2025-11-25',
@@ -341,7 +341,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
   const resolution = useMemo(
     () => (effectiveDoc
       ? effectiveDoc.components
-        ? resolveMcpDescriptionComponentReferences(effectiveDoc, { specification: '0.8.0-rc.1' })
+        ? resolveMcpDescriptionComponentReferences(effectiveDoc, { specification: MCPDESC_SPECIFICATION })
         : { ok: true as const, value: effectiveDoc }
       : null),
     [effectiveDoc],

@@ -20,7 +20,7 @@ import referencedSource from '../../../src/core/__fixtures__/components/valid/eq
 function resolved(source: string) {
   const parsed = parseMcpDescriptionSource(source);
   if (!parsed.ok) throw new Error('fixture does not parse');
-  const result = resolveMcpDescriptionComponentReferences(parsed.value, { specification: '0.8.0-rc.1' });
+  const result = resolveMcpDescriptionComponentReferences(parsed.value, { specification: '0.8.0-rc.3' });
   if (!result.ok) throw new Error('fixture does not resolve');
   return { doc: result.value as McpDescDocument, provenance: result.provenance };
 }

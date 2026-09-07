@@ -35,11 +35,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ### Changed
 
-- Target MCP Description `0.8.0-rc.2` with `@mcpdesc/core@^0.8.1` and
-  `@mcpdesc/validator@^0.9.0`. Pre-standard server extension maps on MCP 2025
+- Target MCP Description `0.8.0-rc.3` with `@mcpdesc/core@^0.9.1` and
+  `@mcpdesc/validator@^0.10.1`. Pre-standard server extension maps on MCP 2025
   protocols are preserved and reported as warnings, demonstrated by the bundled
   Miro vendor example.
-- Migrate legacy MCP Description 0.7 documents directly to the immutable RC.2
+- Migrate legacy MCP Description 0.7 documents directly to the immutable RC.3
   snapshot using the native core converter.
 - Bundle the Microsoft Learn MCP server as a vendor example.
 
