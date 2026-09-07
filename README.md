@@ -3,9 +3,15 @@
 A web-based editor for [MCP Description](#the-mcp-description-mcpdesc-format) documents.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Status: pre-release](https://img.shields.io/badge/status-2.0.0--rc.1-orange.svg)](CHANGELOG.md)
+[![Status: release](https://img.shields.io/badge/status-2.0.0-brightgreen.svg)](CHANGELOG.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![mcpdesc](https://img.shields.io/endpoint?url=https://mcpdesc.org/badge/0.8.0.json)](https://mcpdesc.org)
+
+The current 2.x editor targets MCP Description 0.8. Documents authored for 0.7
+are automatically migrated one-way to 0.8 when opened. For native MCP
+Description 0.7 support, use the maintained
+[`v1/main` branch](https://github.com/cisco-open/mcptoolkit-editor/tree/v1/main)
+and the latest 1.x release.
 
 - **Monaco Editor** — JSON Schema-driven autocomplete, inline squiggles, folding, and syntax highlighting for JSON and YAML
 - **Real-time validation** — CSP-safe structural and semantic validation against MCP Description `0.8.0-rc.3`

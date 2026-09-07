@@ -10,6 +10,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pa
 
 ## Unreleased
 
+## [2.0.0] — 2026-09-07
+
+### Changed
+
+- Ship the stable MCP Description Editor 2.0 release with MCP Description
+  0.8.0 RC.3 validation and automatic migration of 0.7 documents.
+
 ## [2.0.0-rc.1] — 2026-09-04
 
 ### Changed

@@ -13,6 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[2.0.0] — 2026-09-07](#200--2026-09-07)
 - [[2.0.0-rc.1] — 2026-09-04](#200-rc1--2026-09-04)
 - [[1.1.0-rc.2] — 2026-07-08](#110-rc2--2026-07-08)
 - [[1.0.1] — 2026-07-07](#101--2026-07-07)
@@ -24,6 +25,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+## [2.0.0] — 2026-09-07
 
 ### Fixed
 
