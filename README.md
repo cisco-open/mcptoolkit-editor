@@ -6,9 +6,13 @@ A web-based editor for [MCP Description](#the-mcp-description-mcpdesc-format) do
 [![Status: pre-release](https://img.shields.io/badge/status-1.1.0--rc.2-orange.svg)](CHANGELOG.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 
-> **Maintenance branch:** This 1.x line natively supports MCP Description 0.7
-> and receives maintenance fixes. For MCP Description 0.8 and later, use the
-> current [`main` branch](https://github.com/cisco-open/mcptoolkit-editor/tree/main)
+## Version Support
+
+> **Maintenance: `v1/main` / 1.x / MCP Description 0.7**
+>
+> This line receives maintenance fixes only. For MCP Description 0.8 and later,
+> use the current
+> [`main` branch](https://github.com/cisco-open/mcptoolkit-editor/tree/main)
 > and the latest 2.x release.
 
 - **Monaco Editor** — JSON Schema-driven autocomplete, inline squiggles, folding, and syntax highlighting for JSON and YAML
