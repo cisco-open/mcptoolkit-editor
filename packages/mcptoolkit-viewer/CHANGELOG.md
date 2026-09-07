@@ -7,6 +7,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[2.0.1] — 2026-09-07](#201--2026-09-07)
 - [[2.0.0] — 2026-09-07](#200--2026-09-07)
 - [[2.0.0-rc.1] — 2026-09-04](#200-rc1--2026-09-04)
 - [[1.0.0] — 2026-07-07](#100--2026-07-07)
@@ -17,6 +18,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+## [2.0.1] — 2026-09-07
+
+### Security
+
+- Rebuild the viewer after updating transitive dependencies to patched versions
+  with no reported npm audit findings.
 
 ## [2.0.0] — 2026-09-07
 

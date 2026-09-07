@@ -10,6 +10,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pa
 
 ## Unreleased
 
+## [2.0.1] — 2026-09-07
+
+### Security
+
+- Rebuild the editor bundle after updating transitive dependencies to patched
+  versions with no reported npm audit findings.
+
 ## [2.0.0] — 2026-09-07
 
 ### Changed

@@ -13,6 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[2.0.1] — 2026-09-07](#201--2026-09-07)
 - [[2.0.0] — 2026-09-07](#200--2026-09-07)
 - [[2.0.0-rc.1] — 2026-09-04](#200-rc1--2026-09-04)
 - [[1.1.0-rc.2] — 2026-07-08](#110-rc2--2026-07-08)
@@ -25,6 +26,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+## [2.0.1] — 2026-09-07
+
+### Changed
+
+- Make the `main` 2.x and `v1/main` maintenance support policy prominent in the
+  README and refresh its editor screenshot for MCP Description 0.8.
+
+### Security
+
+- Update transitive dependencies to resolve all reported npm audit findings in
+  `brace-expansion`, `browserslist`, `fast-uri`, `js-yaml`, `nanoid`, and
+  `postcss`.
 
 ## [2.0.0] — 2026-09-07
 
