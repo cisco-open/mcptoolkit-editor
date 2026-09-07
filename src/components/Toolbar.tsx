@@ -12,7 +12,7 @@ import { mcpdescMarkdownTemplate } from '../core/template';
 const renderer = new McpDescRenderer();
 
 export default function Toolbar() {
-  const { state, loadExample, setText } = useDoc();
+  const { state, loadExample, setText, resolvedDoc } = useDoc();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExampleChange = useCallback(
@@ -64,9 +64,10 @@ export default function Toolbar() {
 
   const handleExportMarkdown = useCallback(() => {
     if (!state.doc) return;
-    const md = renderer.render(state.doc, mcpdescMarkdownTemplate);
+    // Markdown is a rendering, so components are substituted; JSON/YAML export keeps the source.
+    const md = renderer.render(resolvedDoc ?? state.doc, mcpdescMarkdownTemplate);
     download(md, `${baseFilename}.md`, 'text/markdown');
-  }, [state.doc, download, baseFilename]);
+  }, [state.doc, resolvedDoc, download, baseFilename]);
 
   const handleFormatJSON = useCallback(() => {
     if (!state.doc) return;

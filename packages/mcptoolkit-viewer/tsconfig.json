@@ -21,5 +21,6 @@
       "@core/*": ["../../src/core/*"]
     }
   },
-  "include": ["src", "../../src/core", "vite-env.d.ts"]
+  "include": ["src", "../../src/core", "vite-env.d.ts"],
+  "exclude": ["**/*.test.ts", "**/*.test.tsx"]
 }

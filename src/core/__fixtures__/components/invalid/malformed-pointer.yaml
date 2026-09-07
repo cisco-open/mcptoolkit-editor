@@ -1,0 +1,16 @@
+$schema: https://mcpdesc.org/schema/mcp-description/0.8.0-rc.3.json
+mcpdesc: 0.8.0
+info:
+  name: malformed-pointer
+  version: 1.0.0
+protocolVersions:
+  - '2026-07-28'
+components:
+  schemas:
+    SearchInput:
+      type: object
+      additionalProperties: false
+tools:
+  - name: search
+    inputSchema:
+      $componentRef: '#/components/schemas'

@@ -33,6 +33,20 @@ function MyPage({ doc, validation }) {
 }
 ```
 
+Protocol-version projection controls are disabled by default. Hosts that own
+the projection state can opt in with `protocolVersionProjectionMode="enabled"`,
+and provide the source versions, current selection, and selection callback:
+
+```tsx
+<McpDescCardView
+  doc={effectiveDoc}
+  protocolVersionProjectionMode="enabled"
+  protocolVersionOptions={sourceDoc.protocolVersions}
+  selectedProtocolVersion={selectedProtocolVersion}
+  onProtocolVersionSelect={setSelectedProtocolVersion}
+/>
+```
+
 ## API
 
 ### `McpToolkitViewer(options)`
@@ -45,6 +59,8 @@ function MyPage({ doc, validation }) {
 | `theme` | `'light' \| 'dark'` | `'light'` | Color theme. |
 | `defaultOpen` | `boolean` | `true` | Whether `<details>` sections start expanded. |
 | `showValidation` | `boolean` | `true` | Show validation panel at the bottom. |
+| `exampleDisplay` | `'hidden' \| 'names' \| 'details'` | `'hidden'` | Hide examples, show their names, or show expandable JSON details. |
+| `onExampleSelect` | `(selection) => void` | — | Called with an example's name, kind, and exact JSON pointer when selected in `names` mode. |
 
 Returns a `McpToolkitViewerInstance` with:
 - `updateSpec(spec)` — Update the displayed document

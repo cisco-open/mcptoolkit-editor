@@ -23,5 +23,6 @@
       "@core/*": ["./src/core/*"]
     }
   },
-  "include": ["src", "packages/mcptoolkit-viewer/src", "vite-env.d.ts"]
+  "include": ["src", "packages/mcptoolkit-viewer/src", "vite-env.d.ts"],
+  "exclude": ["**/*.test.ts", "**/*.test.tsx"]
 }

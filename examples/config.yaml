@@ -4,21 +4,44 @@
 # "Examples…" dropdown.  Each section becomes an <optgroup> in the menu.
 #
 # To add a new example:
-#   1. Drop the .yaml file into the examples/ directory
-#   2. Add an entry below with `file` (filename) and `label` (display name)
+#   1. Drop the .yaml file anywhere below the examples/ directory
+#   2. Add an entry below with `file` (path relative to examples/) and `label`
+#   3. To load it for first-time users, set `default` to the same relative path
 #
 # Sections with no entries are hidden from the menu.
+
+default: features/minimal.yaml
 
 sections:
   - label: "Features Demonstration"
     entries:
-      - file: minimal.yaml
-        label: Minimal
-      - file: http-server.yaml
-        label: Streamable HTTP
-      - file: stdio-server.yaml
-        label: STDIO
-      - file: multi-transport.yaml
-        label: Multi-Transport
-      - file: full-featured.yaml
-        label: Full-Featured
+      - label: Basic
+        file: features/minimal.yaml
+
+      - label: Streamable HTTP
+        file: features/http-server.yaml
+
+      - label: Multi-Transport
+        file: features/multi-transport.yaml
+
+      - label: Multi-Version (tasks)
+        file: features/multi-version-tasks.yaml
+
+      - label: Elicitation (MRTR)
+        file: features/elicitation-MRTR.yaml
+
+      - label: Reusable Components
+        file: features/reusable-components.yaml
+
+      - label: Full-Featured
+        file: features/full-featured.yaml
+
+  - label: "vendors"
+    entries:
+      - label: Miro
+        file: vendors/miro.mcpdesc.yaml
+
+      - label: Microsoft Learn
+        file: vendors/mslearn.mcpdesc.yaml
+
+# End of examples menu configuration.

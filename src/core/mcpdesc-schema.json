@@ -1,818 +1,2820 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://developer.cisco.com/mcp-description/schema/0.7.0",
-  "title": "MCP Server Description",
-  "description": "Standalone MCP Server Description format — a static, curated declaration of what an MCP server offers. Uses MCP-native terminology, OpenAPI-aligned info/security structure, and support for multiple transports and specification extensions. Compatible with MCP protocol versions 2025-03-26, 2025-06-18, and 2025-11-25.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcpdesc.org/schema/mcp-description/0.8.0-rc.3.json",
+  "title": "MCP Description",
+  "description": "MCP Description 0.8.0 Release Candidate 3 (v0.8.0-rc.3; prerelease).",
   "type": "object",
   "required": [
     "mcpdesc",
     "info",
-    "transports"
+    "protocolVersions"
   ],
+  "additionalProperties": false,
   "properties": {
     "$schema": {
-      "type": "string",
-      "description": "JSON Schema reference for IDE validation"
-    },
-    "mcpdesc": {
-      "type": "string",
-      "const": "0.7.0",
-      "description": "MCP Description specification version"
-    },
-    "info": {
-      "type": "object",
-      "description": "Server metadata — OpenAPI-aligned info object with MCP BaseMetadata support (name + title)",
-      "required": [
-        "name",
-        "version"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Programmatic server name (identifier)"
-        },
-        "title": {
-          "type": "string",
-          "description": "Human-readable display name for UI contexts (MCP BaseMetadata, since 2025-06-18). Falls back to name if not provided."
-        },
-        "description": {
-          "type": "string",
-          "description": "Brief description of what the server does"
-        },
-        "version": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Server version (semver recommended)"
-        },
-        "protocolVersion": {
-          "type": "string",
-          "enum": [
-            "2024-11-05",
-            "2025-03-26",
-            "2025-06-18",
-            "2025-11-25"
-          ],
-          "description": "MCP protocol version implemented by this server"
-        },
-        "id": {
-          "type": "string",
-          "description": "Unique server identifier (URI, DID, or URN)"
-        },
-        "icons": {
-          "$ref": "#/definitions/icons",
-          "description": "Optional set of sized icons for UI display (MCP 2025-11-25+)"
-        },
-        "websiteUrl": {
-          "type": "string",
-          "format": "uri",
-          "description": "URL of the server's website (MCP 2025-11-25+)"
-        },
-        "contact": {
-          "type": "object",
-          "description": "Contact information (OpenAPI-style)",
-          "properties": {
-            "name": {
-              "type": "string",
-              "description": "Organization or maintainer name"
-            },
-            "url": {
-              "type": "string",
-              "format": "uri",
-              "description": "URL for the contact"
-            },
-            "email": {
-              "type": "string",
-              "format": "email",
-              "description": "Contact email address"
-            }
-          },
-          "additionalProperties": false
-        },
-        "license": {
-          "type": "object",
-          "description": "License information (OpenAPI-style)",
-          "required": [
-            "name"
-          ],
-          "properties": {
-            "name": {
-              "type": "string",
-              "description": "License name (e.g., 'Apache-2.0', 'MIT')"
-            },
-            "url": {
-              "type": "string",
-              "format": "uri",
-              "description": "URL to the license text"
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    "transports": {
-      "type": "array",
-      "description": "Transport configurations — one or more supported transports for this server",
-      "minItems": 1,
-      "items": {
-        "oneOf": [
-          {
-            "type": "object",
-            "description": "Streamable HTTP transport",
-            "required": [
-              "type",
-              "url"
-            ],
-            "properties": {
-              "type": {
-                "type": "string",
-                "const": "streamable-http",
-                "description": "Streamable HTTP transport type"
-              },
-              "url": {
-                "type": "string",
-                "format": "uri",
-                "description": "MCP endpoint URL"
-              },
-              "security": {
-                "$ref": "#/definitions/securitySchemes",
-                "description": "Transport-specific security. Overrides root-level security for this transport."
-              }
-            },
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "description": "stdio transport",
-            "required": [
-              "type",
-              "command"
-            ],
-            "properties": {
-              "type": {
-                "type": "string",
-                "const": "stdio",
-                "description": "stdio transport type"
-              },
-              "command": {
-                "type": "string",
-                "description": "Command to launch the server"
-              },
-              "args": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "description": "Command arguments"
-              },
-              "env": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "string"
-                },
-                "description": "Environment variables"
-              },
-              "security": {
-                "$ref": "#/definitions/securitySchemes",
-                "description": "Transport-specific security. Overrides root-level security for this transport."
-              }
-            },
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "description": "SSE transport (legacy, for backward compatibility)",
-            "required": [
-              "type",
-              "url"
-            ],
-            "properties": {
-              "type": {
-                "type": "string",
-                "const": "sse",
-                "description": "Server-Sent Events transport type (legacy)"
-              },
-              "url": {
-                "type": "string",
-                "format": "uri",
-                "description": "SSE endpoint URL"
-              },
-              "security": {
-                "$ref": "#/definitions/securitySchemes",
-                "description": "Transport-specific security. Overrides root-level security for this transport."
-              }
-            },
-            "additionalProperties": false
-          }
-        ]
-      }
-    },
-    "security": {
-      "$ref": "#/definitions/securitySchemes",
-      "description": "Default security schemes — applies to all transports unless overridden. Empty array or omitted means no authentication required."
+      "type": "string"
     },
     "capabilities": {
-      "type": "object",
-      "description": "Server capabilities from MCP InitializeResult",
-      "properties": {
-        "tools": {
-          "type": "object",
-          "properties": {
-            "listChanged": {
-              "type": "boolean"
-            }
-          }
-        },
-        "resources": {
-          "type": "object",
-          "properties": {
-            "subscribe": {
-              "type": "boolean"
-            },
-            "listChanged": {
-              "type": "boolean"
-            }
-          }
-        },
-        "prompts": {
-          "type": "object",
-          "properties": {
-            "listChanged": {
-              "type": "boolean"
-            }
-          }
-        },
-        "completions": {
-          "type": "object",
-          "description": "Present if the server supports argument autocompletion suggestions (MCP 2025-03-26+)"
-        },
-        "logging": {
-          "type": "object",
-          "description": "Present if the server supports sending log messages to the client"
-        },
-        "tasks": {
-          "type": "object",
-          "description": "Present if the server supports task-augmented requests (MCP 2025-11-25+)",
-          "properties": {
-            "list": {
-              "type": "object"
-            },
-            "cancel": {
-              "type": "object"
-            },
-            "requests": {
-              "type": "object",
-              "properties": {
-                "tools": {
-                  "type": "object",
-                  "properties": {
-                    "call": {
-                      "type": "object"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "experimental": {
-          "type": "object",
-          "description": "Experimental, non-standard capabilities"
-        }
+      "items": {
+        "$ref": "#/$defs/capabilities"
       },
-      "additionalProperties": true
+      "minItems": 1,
+      "type": "array"
     },
-    "tools": {
-      "type": "array",
-      "description": "Tools exposed by the server — MCP-native format",
-      "items": {
-        "type": "object",
-        "required": [
-          "name"
-        ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Programmatic tool name (identifier)"
-          },
-          "title": {
-            "type": "string",
-            "description": "Human-readable display name for UI contexts (MCP BaseMetadata, since 2025-06-18)"
-          },
-          "description": {
-            "type": "string",
-            "description": "Human-readable tool description"
-          },
-          "inputSchema": {
-            "type": "object",
-            "description": "JSON Schema for tool input parameters",
-            "properties": {
-              "$schema": {
-                "type": "string",
-                "description": "Explicit JSON Schema dialect (MCP 2025-11-25+)"
-              },
-              "type": {
-                "type": "string"
-              },
-              "properties": {
-                "type": "object"
-              },
-              "required": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            },
-            "additionalProperties": true
-          },
-          "outputSchema": {
-            "type": "object",
-            "description": "JSON Schema for structured tool output (MCP 2025-06-18+). Defaults to JSON Schema 2020-12 when no explicit $schema is provided.",
-            "properties": {
-              "$schema": {
-                "type": "string",
-                "description": "Explicit JSON Schema dialect (MCP 2025-11-25+)"
-              },
-              "type": {
-                "type": "string"
-              },
-              "properties": {
-                "type": "object"
-              },
-              "required": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            },
-            "additionalProperties": true
-          },
-          "annotations": {
-            "type": "object",
-            "description": "MCP tool annotations — hints about tool behavior (not guaranteed faithful). Since 2025-03-26.",
-            "properties": {
-              "title": {
-                "type": "string",
-                "description": "Human-readable title for the tool"
-              },
-              "readOnlyHint": {
-                "type": "boolean",
-                "description": "If true, the tool does not modify its environment. Default: false"
-              },
-              "destructiveHint": {
-                "type": "boolean",
-                "description": "If true, the tool may perform destructive updates. Default: true"
-              },
-              "idempotentHint": {
-                "type": "boolean",
-                "description": "If true, repeated calls with same arguments have no additional effect. Default: false"
-              },
-              "openWorldHint": {
-                "type": "boolean",
-                "description": "If true, the tool may interact with external entities. Default: true"
-              }
-            },
-            "additionalProperties": true
-          },
-          "execution": {
-            "type": "object",
-            "description": "Execution-related properties for this tool (MCP 2025-11-25+)",
-            "properties": {
-              "taskSupport": {
-                "type": "string",
-                "enum": [
-                  "forbidden",
-                  "optional",
-                  "required"
-                ],
-                "description": "Whether this tool supports task-augmented execution. Default: forbidden"
-              }
-            },
-            "additionalProperties": false
-          },
-          "icons": {
-            "$ref": "#/definitions/icons",
-            "description": "Optional set of sized icons for UI display (MCP 2025-11-25+)"
-          },
-          "tags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Categorization tags"
-          },
-          "deprecated": {
-            "type": "boolean",
-            "description": "Whether the tool is deprecated"
-          },
-          "_meta": {
-            "type": "object",
-            "description": "Protocol-reserved metadata (MCP 2025-06-18+)",
-            "additionalProperties": true
-          }
-        },
-        "additionalProperties": false
-      }
+    "components": {
+      "$ref": "#/$defs/components"
     },
-    "resources": {
-      "type": "array",
-      "description": "Resources exposed by the server — MCP-native format",
-      "items": {
-        "type": "object",
-        "required": [
-          "uri",
-          "name"
-        ],
-        "properties": {
-          "uri": {
-            "type": "string",
-            "description": "Resource URI"
-          },
-          "name": {
-            "type": "string",
-            "description": "Programmatic resource name (identifier)"
-          },
-          "title": {
-            "type": "string",
-            "description": "Human-readable display name for UI contexts (MCP BaseMetadata, since 2025-06-18)"
-          },
-          "description": {
-            "type": "string",
-            "description": "Human-readable resource description"
-          },
-          "mimeType": {
-            "type": "string",
-            "description": "MIME type of the resource content"
-          },
-          "size": {
-            "type": "number",
-            "description": "Size of the raw resource content in bytes, before base64 encoding or tokenization"
-          },
-          "annotations": {
-            "type": "object",
-            "description": "Resource annotations",
-            "additionalProperties": true
-          },
-          "icons": {
-            "$ref": "#/definitions/icons",
-            "description": "Optional set of sized icons for UI display (MCP 2025-11-25+)"
-          },
-          "tags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Categorization tags"
-          },
-          "deprecated": {
-            "type": "boolean",
-            "description": "Whether the resource is deprecated"
-          },
-          "_meta": {
-            "type": "object",
-            "description": "Protocol-reserved metadata (MCP 2025-06-18+)",
-            "additionalProperties": true
-          }
-        },
-        "additionalProperties": false
-      }
+    "info": {
+      "$ref": "#/$defs/info"
     },
-    "resourceTemplates": {
-      "type": "array",
-      "description": "Resource templates — MCP-native format with URI templates",
-      "items": {
-        "type": "object",
-        "required": [
-          "uriTemplate",
-          "name"
-        ],
-        "properties": {
-          "uriTemplate": {
-            "type": "string",
-            "description": "URI template (RFC 6570)"
-          },
-          "name": {
-            "type": "string",
-            "description": "Programmatic template name (identifier)"
-          },
-          "title": {
-            "type": "string",
-            "description": "Human-readable display name for UI contexts (MCP BaseMetadata, since 2025-06-18)"
-          },
-          "description": {
-            "type": "string",
-            "description": "Human-readable template description"
-          },
-          "mimeType": {
-            "type": "string",
-            "description": "MIME type of the resource content"
-          },
-          "annotations": {
-            "type": "object",
-            "description": "Resource template annotations",
-            "additionalProperties": true
-          },
-          "icons": {
-            "$ref": "#/definitions/icons",
-            "description": "Optional set of sized icons for UI display (MCP 2025-11-25+)"
-          },
-          "tags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Categorization tags"
-          },
-          "deprecated": {
-            "type": "boolean",
-            "description": "Whether the template is deprecated"
-          },
-          "_meta": {
-            "type": "object",
-            "description": "Protocol-reserved metadata (MCP 2025-06-18+)",
-            "additionalProperties": true
-          }
-        },
-        "additionalProperties": false
-      }
+    "instructions": {
+      "type": "string"
+    },
+    "mcpdesc": {
+      "const": "0.8.0",
+      "type": "string"
     },
     "prompts": {
-      "type": "array",
-      "description": "Prompts exposed by the server — MCP-native format (single arguments array)",
       "items": {
-        "type": "object",
-        "required": [
-          "name"
-        ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Programmatic prompt name (identifier)"
-          },
-          "title": {
-            "type": "string",
-            "description": "Human-readable display name for UI contexts (MCP BaseMetadata, since 2025-06-18)"
-          },
-          "description": {
-            "type": "string",
-            "description": "Human-readable prompt description"
-          },
-          "arguments": {
-            "type": "array",
-            "description": "Prompt arguments — MCP-native array format",
-            "items": {
-              "type": "object",
-              "required": [
-                "name"
-              ],
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "Programmatic argument name (identifier)"
-                },
-                "title": {
-                  "type": "string",
-                  "description": "Human-readable display name for UI contexts (MCP BaseMetadata, since 2025-06-18)"
-                },
-                "description": {
-                  "type": "string",
-                  "description": "Argument description"
-                },
-                "required": {
-                  "type": "boolean",
-                  "description": "Whether the argument is required"
-                }
-              },
-              "additionalProperties": false
-            }
-          },
-          "icons": {
-            "$ref": "#/definitions/icons",
-            "description": "Optional set of sized icons for UI display (MCP 2025-11-25+)"
-          },
-          "tags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Categorization tags"
-          },
-          "deprecated": {
-            "type": "boolean",
-            "description": "Whether the prompt is deprecated"
-          },
-          "_meta": {
-            "type": "object",
-            "description": "Protocol-reserved metadata (MCP 2025-06-18+)",
-            "additionalProperties": true
-          }
-        },
-        "additionalProperties": false
-      }
+        "$ref": "#/$defs/prompt"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "protocolVersions": {
+      "$ref": "#/$defs/protocolVersionScope"
+    },
+    "resourceTemplates": {
+      "items": {
+        "$ref": "#/$defs/resourceTemplate"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "resources": {
+      "items": {
+        "$ref": "#/$defs/resource"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "security": {
+      "$ref": "#/$defs/securityRequirementArray"
+    },
+    "securitySchemes": {
+      "$ref": "#/$defs/securitySchemeMap"
     },
     "tags": {
-      "type": "array",
-      "description": "Flat tag list — declares all valid tags for categorizing tools, resources, resource templates, and prompts. Array order determines display priority. Tag names MUST be unique.",
       "items": {
-        "$ref": "#/definitions/tag"
-      }
+        "$ref": "#/$defs/tag"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "tools": {
+      "items": {
+        "$ref": "#/$defs/tool"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "transports": {
+      "items": {
+        "$ref": "#/$defs/transport"
+      },
+      "minItems": 1,
+      "type": "array"
     }
   },
   "patternProperties": {
     "^x-": {
-      "description": "Specification extensions",
-      "type": [
-        "object",
-        "array",
-        "string",
-        "number",
-        "boolean",
-        "null"
-      ]
+      "$ref": "#/$defs/jsonValue"
     }
   },
-  "additionalProperties": false,
-  "anyOf": [
-    {
-      "required": [
-        "tools"
-      ]
-    },
-    {
-      "required": [
-        "resources"
-      ]
-    },
-    {
-      "required": [
-        "resourceTemplates"
-      ]
-    },
-    {
-      "required": [
-        "prompts"
-      ]
-    }
-  ],
-  "definitions": {
-    "tag": {
-      "type": "object",
-      "description": "A tag for categorizing server capabilities. Tag names MUST be unique.",
-      "required": [
-        "name"
-      ],
+  "$defs": {
+    "capabilities": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
       "properties": {
-        "name": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Tag identifier. MUST be unique across all tags."
+        "completions": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "experimental": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensionCapabilities"
+        },
+        "logging": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "prompts": {
+          "$ref": "#/$defs/capabilityPrompts"
+        },
+        "protocolVersions": {
+          "$ref": "#/$defs/protocolVersionScope"
+        },
+        "resources": {
+          "$ref": "#/$defs/capabilityResources"
+        },
+        "tasks": {
+          "additionalProperties": false,
+          "properties": {
+            "cancel": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "list": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "requests": {
+              "additionalProperties": false,
+              "properties": {
+                "tools": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "call": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "tools": {
+          "$ref": "#/$defs/capabilityTools"
+        }
+      },
+      "type": "object"
+    },
+    "capabilityPrompts": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "listChanged": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "capabilityResources": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "listChanged": {
+          "type": "boolean"
+        },
+        "subscribe": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "capabilityTools": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "listChanged": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "clientCapabilityRequirements": {
+      "additionalProperties": {
+        "$ref": "#/$defs/clientCapabilityValue"
+      },
+      "minProperties": 1,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "elicitation": {
+          "$ref": "#/$defs/clientCapabilityValue"
+        },
+        "experimental": {
+          "additionalProperties": {
+            "$ref": "#/$defs/clientCapabilityValue"
+          },
+          "type": "object"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensionCapabilities"
+        },
+        "roots": {
+          "$ref": "#/$defs/clientCapabilityValue"
+        },
+        "sampling": {
+          "$ref": "#/$defs/clientCapabilityValue"
+        },
+        "tasks": {
+          "$ref": "#/$defs/clientCapabilityValue"
+        }
+      },
+      "type": "object"
+    },
+    "clientCapabilityValue": {
+      "additionalProperties": {
+        "$ref": "#/$defs/jsonValue"
+      },
+      "type": "object"
+    },
+    "completedCompletionResultExample": {
+      "additionalProperties": true,
+      "properties": {
+        "_meta": {
+          "$ref": "#/$defs/metaObject"
+        },
+        "completion": {
+          "$ref": "#/$defs/completionResult"
+        },
+        "resultType": {
+          "const": "complete"
+        }
+      },
+      "required": [
+        "completion"
+      ],
+      "type": "object"
+    },
+    "completedPromptResultExample": {
+      "additionalProperties": true,
+      "properties": {
+        "_meta": {
+          "$ref": "#/$defs/metaObject"
         },
         "description": {
-          "type": "string",
-          "description": "Human-readable description of the tag's purpose"
+          "type": "string"
+        },
+        "messages": {
+          "items": {
+            "$ref": "#/$defs/promptMessageExample"
+          },
+          "type": "array"
+        },
+        "resultType": {
+          "const": "complete"
         }
       },
-      "additionalProperties": false
+      "required": [
+        "messages"
+      ],
+      "type": "object"
     },
-    "oauthFlow": {
-      "type": "object",
+    "completedReadResourceResultExample": {
+      "additionalProperties": true,
       "properties": {
-        "authorizationUrl": {
-          "type": "string",
-          "format": "uri"
+        "_meta": {
+          "$ref": "#/$defs/metaObject"
         },
-        "tokenUrl": {
-          "type": "string",
-          "format": "uri"
+        "cacheScope": {
+          "enum": [
+            "public",
+            "private"
+          ]
         },
-        "refreshUrl": {
-          "type": "string",
-          "format": "uri"
+        "contents": {
+          "items": {
+            "$ref": "#/$defs/resourceContents"
+          },
+          "minItems": 1,
+          "type": "array"
         },
-        "scopes": {
-          "type": "object",
+        "resultType": {
+          "const": "complete"
+        },
+        "ttlMs": {
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "contents"
+      ],
+      "type": "object"
+    },
+    "completedToolResultExample": {
+      "additionalProperties": true,
+      "properties": {
+        "_meta": {
+          "$ref": "#/$defs/metaObject"
+        },
+        "content": {
+          "items": {
+            "$ref": "#/$defs/toolResultContent"
+          },
+          "type": "array"
+        },
+        "isError": {
+          "type": "boolean"
+        },
+        "resultType": {
+          "const": "complete"
+        },
+        "structuredContent": {
+          "$ref": "#/$defs/jsonValue"
+        }
+      },
+      "required": [
+        "content"
+      ],
+      "type": "object"
+    },
+    "completionArgument": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "type": "object"
+    },
+    "completionContext": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "arguments": {
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "minProperties": 1,
+          "type": "object"
         }
       },
-      "additionalProperties": false
-    },
-    "icon": {
-      "type": "object",
-      "description": "An optionally-sized icon for UI display (MCP 2025-11-25+)",
       "required": [
-        "src"
+        "arguments"
       ],
+      "type": "object"
+    },
+    "completionExample": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
       "properties": {
-        "src": {
-          "type": "string",
-          "format": "uri",
-          "description": "URI pointing to an icon resource (HTTP/HTTPS URL or data: URI)"
+        "argument": {
+          "$ref": "#/$defs/completionArgument"
         },
-        "mimeType": {
-          "type": "string",
-          "description": "Optional MIME type override (e.g., 'image/png', 'image/svg+xml')"
+        "context": {
+          "$ref": "#/$defs/completionContext"
         },
-        "sizes": {
-          "type": "array",
+        "result": {
+          "$ref": "#/$defs/completedCompletionResultExample"
+        }
+      },
+      "required": [
+        "argument",
+        "result"
+      ],
+      "type": "object"
+    },
+    "completionExamples": {
+      "additionalProperties": {
+        "$ref": "#/$defs/completionExample"
+      },
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9._-]+$"
+      },
+      "type": "object"
+    },
+    "completionResult": {
+      "additionalProperties": true,
+      "properties": {
+        "hasMore": {
+          "type": "boolean"
+        },
+        "total": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "values": {
           "items": {
             "type": "string"
           },
-          "description": "Sizes at which the icon can be used (e.g., '48x48', '96x96', 'any')"
+          "maxItems": 100,
+          "type": "array"
+        }
+      },
+      "required": [
+        "values"
+      ],
+      "type": "object"
+    },
+    "componentMap": {
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9._-]+$"
+      },
+      "type": "object"
+    },
+    "components": {
+      "additionalProperties": false,
+      "minProperties": 1,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "promptExamples": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/componentMap"
+            },
+            {
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/referenceObject"
+                  },
+                  {
+                    "$ref": "#/$defs/promptExample"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "resourceExamples": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/componentMap"
+            },
+            {
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/referenceObject"
+                  },
+                  {
+                    "$ref": "#/$defs/resourceExample"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "resourceTemplateExamples": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/componentMap"
+            },
+            {
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/referenceObject"
+                  },
+                  {
+                    "$ref": "#/$defs/resourceTemplateExample"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "schemas": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/componentMap"
+            },
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/schemaComponentValue"
+              }
+            }
+          ]
+        },
+        "toolExamples": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/componentMap"
+            },
+            {
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/referenceObject"
+                  },
+                  {
+                    "$ref": "#/$defs/toolExample"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "contact": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "email": {
+          "format": "email",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "format": "uri",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "elicitationDeclaration": {
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "not": {
+            "required": [
+              "url"
+            ]
+          },
+          "properties": {
+            "mode": {
+              "const": "form"
+            }
+          },
+          "required": [
+            "requestedSchema"
+          ]
+        },
+        {
+          "not": {
+            "required": [
+              "requestedSchema"
+            ]
+          },
+          "properties": {
+            "mode": {
+              "const": "url"
+            }
+          }
+        }
+      ],
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "message": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "form",
+            "url"
+          ]
+        },
+        "name": {
+          "pattern": "^[A-Za-z0-9._-]+$",
+          "type": "string"
+        },
+        "onCancel": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "onDecline": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "protocolVersions": {
+          "$ref": "#/$defs/protocolVersionScope"
+        },
+        "requestedSchema": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/referenceObject"
+            },
+            {
+              "$ref": "#/$defs/elicitationFormSchema"
+            }
+          ]
+        },
+        "url": {
+          "format": "uri",
+          "type": "string"
+        },
+        "when": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "mode",
+        "message"
+      ],
+      "type": "object"
+    },
+    "elicitationFormOption": {
+      "additionalProperties": false,
+      "properties": {
+        "const": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "const",
+        "title"
+      ],
+      "type": "object"
+    },
+    "elicitationFormProperty": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "default": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "format": {
+              "enum": [
+                "email",
+                "uri",
+                "date",
+                "date-time"
+              ]
+            },
+            "maxLength": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "minLength": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "const": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "default": {
+              "type": "number"
+            },
+            "description": {
+              "type": "string"
+            },
+            "maximum": {
+              "type": "number"
+            },
+            "minimum": {
+              "type": "number"
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "enum": [
+                "number",
+                "integer"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "default": {
+              "type": "boolean"
+            },
+            "description": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "const": "boolean"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "default": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "enum": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "enumNames": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "const": "string"
+            }
+          },
+          "required": [
+            "type",
+            "enum"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "default": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "oneOf": {
+              "items": {
+                "$ref": "#/$defs/elicitationFormOption"
+              },
+              "type": "array"
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "const": "string"
+            }
+          },
+          "required": [
+            "type",
+            "oneOf"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "default": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "description": {
+              "type": "string"
+            },
+            "items": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "enum": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "type": {
+                      "const": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "enum"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "anyOf": {
+                      "items": {
+                        "$ref": "#/$defs/elicitationFormOption"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "anyOf"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "maxItems": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "minItems": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "const": "array"
+            }
+          },
+          "required": [
+            "type",
+            "items"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "elicitationFormSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "$schema": {
+          "format": "uri",
+          "type": "string"
+        },
+        "properties": {
+          "additionalProperties": {
+            "$ref": "#/$defs/elicitationFormProperty"
+          },
+          "type": "object"
+        },
+        "required": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "type": {
+          "const": "object"
+        }
+      },
+      "required": [
+        "type",
+        "properties"
+      ],
+      "type": "object"
+    },
+    "elicitationInteractionAcceptedResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "const": "accept"
+        },
+        "content": {
+          "additionalProperties": {
+            "$ref": "#/$defs/jsonValue"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "type": "object"
+    },
+    "elicitationInteractionDeclinedResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "enum": [
+            "decline",
+            "cancel"
+          ]
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "type": "object"
+    },
+    "elicitationInteractionFormRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "mode": {
+          "const": "form"
+        },
+        "requestedSchema": {
+          "$ref": "#/$defs/elicitationFormSchema"
+        }
+      },
+      "required": [
+        "mode",
+        "message",
+        "requestedSchema"
+      ],
+      "type": "object"
+    },
+    "elicitationInteractionRequest": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/elicitationInteractionFormRequest"
+        },
+        {
+          "$ref": "#/$defs/elicitationInteractionUrlRequest"
+        }
+      ]
+    },
+    "elicitationInteractionResponse": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/elicitationInteractionAcceptedResponse"
+        },
+        {
+          "$ref": "#/$defs/elicitationInteractionDeclinedResponse"
+        }
+      ]
+    },
+    "elicitationInteractionUrlRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "mode": {
+          "const": "url"
+        },
+        "url": {
+          "format": "uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "mode",
+        "message",
+        "url"
+      ],
+      "type": "object"
+    },
+    "execution": {
+      "additionalProperties": false,
+      "properties": {
+        "taskSupport": {
+          "enum": [
+            "forbidden",
+            "optional",
+            "required"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "extensionCapabilities": {
+      "additionalProperties": {
+        "type": "object"
+      },
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*/[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$"
+      },
+      "type": "object"
+    },
+    "icon": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "mimeType": {
+          "type": "string"
+        },
+        "sizes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "src": {
+          "format": "uri",
+          "type": "string"
         },
         "theme": {
-          "type": "string",
           "enum": [
             "light",
             "dark"
           ],
-          "description": "Theme this icon is designed for"
+          "type": "string"
         }
       },
-      "additionalProperties": false
+      "required": [
+        "src"
+      ],
+      "type": "object"
     },
     "icons": {
-      "type": "array",
-      "description": "Set of sized icons that clients can display in a user interface. Clients MUST support image/png and image/jpeg, SHOULD also support image/svg+xml and image/webp.",
       "items": {
-        "$ref": "#/definitions/icon"
-      }
+        "$ref": "#/$defs/icon"
+      },
+      "minItems": 1,
+      "type": "array"
     },
-    "securitySchemes": {
-      "type": "array",
-      "description": "Array of OpenAPI Security Scheme Objects.",
-      "items": {
-        "type": "object",
-        "required": [
-          "type"
-        ],
-        "properties": {
-          "type": {
-            "type": "string",
-            "enum": [
-              "http",
-              "apiKey",
-              "oauth2",
-              "openIdConnect"
-            ],
-            "description": "Security scheme type (OpenAPI 3.1)"
-          },
-          "scheme": {
-            "type": "string",
-            "description": "HTTP auth scheme (e.g., 'bearer', 'basic'). Required when type is 'http'."
-          },
-          "bearerFormat": {
-            "type": "string",
-            "description": "Bearer token format hint (e.g., 'JWT')"
-          },
-          "name": {
-            "type": "string",
-            "description": "Name of the API key (header, query, or cookie name). Required when type is 'apiKey'."
-          },
-          "in": {
-            "type": "string",
-            "enum": [
-              "header",
-              "query",
-              "cookie"
-            ],
-            "description": "Location of the API key. Required when type is 'apiKey'."
-          },
-          "flows": {
-            "type": "object",
-            "description": "OAuth2 flows. Required when type is 'oauth2'.",
-            "properties": {
-              "implicit": {
-                "$ref": "#/definitions/oauthFlow"
-              },
-              "password": {
-                "$ref": "#/definitions/oauthFlow"
-              },
-              "clientCredentials": {
-                "$ref": "#/definitions/oauthFlow"
-              },
-              "authorizationCode": {
-                "$ref": "#/definitions/oauthFlow"
-              }
-            },
-            "additionalProperties": false
-          },
-          "openIdConnectUrl": {
-            "type": "string",
-            "format": "uri",
-            "description": "OpenID Connect discovery URL. Required when type is 'openIdConnect'."
-          },
-          "description": {
-            "type": "string",
-            "description": "Description of the security scheme"
-          }
+    "info": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "contact": {
+          "$ref": "#/$defs/contact"
         },
-        "additionalProperties": false
-      }
+        "description": {
+          "type": "string"
+        },
+        "icons": {
+          "$ref": "#/$defs/icons"
+        },
+        "id": {
+          "type": "string"
+        },
+        "license": {
+          "$ref": "#/$defs/license"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "websiteUrl": {
+          "format": "uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "type": "object"
+    },
+    "jsonSchemaObject": {
+      "additionalProperties": true,
+      "type": "object"
+    },
+    "jsonValue": {
+      "oneOf": [
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/jsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/jsonValue"
+          },
+          "type": "array"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "license": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "format": "uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "metaObject": {
+      "additionalProperties": true,
+      "propertyNames": {
+        "pattern": "^(?:(?:[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?)(?:\\.[A-Za-z](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*\\/)?(?:[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)?$"
+      },
+      "type": "object"
+    },
+    "oauthFlow": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "authorizationUrl": {
+          "format": "uri",
+          "type": "string"
+        },
+        "refreshUrl": {
+          "format": "uri",
+          "type": "string"
+        },
+        "scopes": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "tokenUrl": {
+          "format": "uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scopes"
+      ],
+      "type": "object"
+    },
+    "oauthFlows": {
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "required": [
+            "implicit"
+          ]
+        },
+        {
+          "required": [
+            "password"
+          ]
+        },
+        {
+          "required": [
+            "clientCredentials"
+          ]
+        },
+        {
+          "required": [
+            "authorizationCode"
+          ]
+        }
+      ],
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "authorizationCode": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/oauthFlow"
+            },
+            {
+              "required": [
+                "authorizationUrl",
+                "tokenUrl"
+              ]
+            }
+          ]
+        },
+        "clientCredentials": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/oauthFlow"
+            },
+            {
+              "required": [
+                "tokenUrl"
+              ]
+            }
+          ]
+        },
+        "implicit": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/oauthFlow"
+            },
+            {
+              "required": [
+                "authorizationUrl"
+              ]
+            }
+          ]
+        },
+        "password": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/oauthFlow"
+            },
+            {
+              "required": [
+                "tokenUrl"
+              ]
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "prompt": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "_meta": {
+          "$ref": "#/$defs/metaObject"
+        },
+        "arguments": {
+          "items": {
+            "$ref": "#/$defs/promptArgument"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "clientRequirements": {
+          "$ref": "#/$defs/clientCapabilityRequirements"
+        },
+        "completionExamples": {
+          "$ref": "#/$defs/completionExamples"
+        },
+        "deprecated": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        },
+        "elicitations": {
+          "items": {
+            "$ref": "#/$defs/elicitationDeclaration"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "examples": {
+          "$ref": "#/$defs/promptExamples"
+        },
+        "icons": {
+          "$ref": "#/$defs/icons"
+        },
+        "name": {
+          "type": "string"
+        },
+        "protocolVersions": {
+          "$ref": "#/$defs/protocolVersionScope"
+        },
+        "security": {
+          "$ref": "#/$defs/securityRequirementArray"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "promptArgument": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "promptExample": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "arguments": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "result": {
+          "$ref": "#/$defs/completedPromptResultExample"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object"
+    },
+    "promptExamples": {
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/referenceObject"
+          },
+          {
+            "$ref": "#/$defs/promptExample"
+          }
+        ]
+      },
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9._-]+$"
+      },
+      "type": "object"
+    },
+    "promptMessageExample": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "$ref": "#/$defs/toolResultContent"
+        },
+        "role": {
+          "enum": [
+            "user",
+            "assistant"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "content"
+      ],
+      "type": "object"
+    },
+    "protocolVersionScope": {
+      "items": {
+        "$ref": "#/$defs/supportedProtocolVersion"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "referenceObject": {
+      "additionalProperties": false,
+      "properties": {
+        "$componentRef": {
+          "pattern": "^#/components/(schemas|toolExamples|resourceExamples|resourceTemplateExamples|promptExamples)/[A-Za-z0-9._-]+$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "$componentRef"
+      ],
+      "type": "object"
+    },
+    "resource": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "_meta": {
+          "$ref": "#/$defs/metaObject"
+        },
+        "annotations": {
+          "$ref": "#/$defs/resourceAnnotations"
+        },
+        "clientRequirements": {
+          "$ref": "#/$defs/clientCapabilityRequirements"
+        },
+        "deprecated": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        },
+        "elicitations": {
+          "items": {
+            "$ref": "#/$defs/elicitationDeclaration"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "examples": {
+          "$ref": "#/$defs/resourceExamples"
+        },
+        "icons": {
+          "$ref": "#/$defs/icons"
+        },
+        "mimeType": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "protocolVersions": {
+          "$ref": "#/$defs/protocolVersionScope"
+        },
+        "security": {
+          "$ref": "#/$defs/securityRequirementArray"
+        },
+        "size": {
+          "type": "number"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "title": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri",
+        "name"
+      ],
+      "type": "object"
+    },
+    "resourceAnnotations": {
+      "additionalProperties": true,
+      "properties": {
+        "audience": {
+          "items": {
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "lastModified": {
+          "type": "string"
+        },
+        "priority": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "resourceContents": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "_meta": {
+              "$ref": "#/$defs/metaObject"
+            },
+            "mimeType": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "uri": {
+              "format": "uri",
+              "type": "string"
+            }
+          },
+          "required": [
+            "uri",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "_meta": {
+              "$ref": "#/$defs/metaObject"
+            },
+            "blob": {
+              "type": "string"
+            },
+            "mimeType": {
+              "type": "string"
+            },
+            "uri": {
+              "format": "uri",
+              "type": "string"
+            }
+          },
+          "required": [
+            "uri",
+            "blob"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "resourceExample": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "result": {
+          "$ref": "#/$defs/completedReadResourceResultExample"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object"
+    },
+    "resourceExamples": {
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/referenceObject"
+          },
+          {
+            "$ref": "#/$defs/resourceExample"
+          }
+        ]
+      },
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9._-]+$"
+      },
+      "type": "object"
+    },
+    "resourceTemplate": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "_meta": {
+          "$ref": "#/$defs/metaObject"
+        },
+        "annotations": {
+          "$ref": "#/$defs/resourceAnnotations"
+        },
+        "clientRequirements": {
+          "$ref": "#/$defs/clientCapabilityRequirements"
+        },
+        "completionExamples": {
+          "$ref": "#/$defs/completionExamples"
+        },
+        "deprecated": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        },
+        "elicitations": {
+          "items": {
+            "$ref": "#/$defs/elicitationDeclaration"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "examples": {
+          "$ref": "#/$defs/resourceTemplateExamples"
+        },
+        "icons": {
+          "$ref": "#/$defs/icons"
+        },
+        "mimeType": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "protocolVersions": {
+          "$ref": "#/$defs/protocolVersionScope"
+        },
+        "security": {
+          "$ref": "#/$defs/securityRequirementArray"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "title": {
+          "type": "string"
+        },
+        "uriTemplate": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uriTemplate",
+        "name"
+      ],
+      "type": "object"
+    },
+    "resourceTemplateExample": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "result": {
+          "$ref": "#/$defs/completedReadResourceResultExample"
+        },
+        "uri": {
+          "format": "uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri",
+        "result"
+      ],
+      "type": "object"
+    },
+    "resourceTemplateExamples": {
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/referenceObject"
+          },
+          {
+            "$ref": "#/$defs/resourceTemplateExample"
+          }
+        ]
+      },
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9._-]+$"
+      },
+      "type": "object"
+    },
+    "rootDeclaration": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "uri": {
+          "format": "uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri"
+      ],
+      "type": "object"
+    },
+    "rootsListRequest": {
+      "additionalProperties": false,
+      "maxProperties": 0,
+      "type": "object"
+    },
+    "rootsListResult": {
+      "additionalProperties": false,
+      "properties": {
+        "roots": {
+          "items": {
+            "$ref": "#/$defs/rootDeclaration"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "roots"
+      ],
+      "type": "object"
+    },
+    "samplingContentBlock": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/toolResultContent"
+        },
+        {
+          "$ref": "#/$defs/samplingToolUseContent"
+        },
+        {
+          "$ref": "#/$defs/samplingToolResultContent"
+        }
+      ]
+    },
+    "samplingCreateMessageRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "includeContext": {
+          "enum": [
+            "none",
+            "thisServer",
+            "allServers"
+          ]
+        },
+        "maxTokens": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "messages": {
+          "items": {
+            "$ref": "#/$defs/samplingMessage"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "metadata": {
+          "additionalProperties": {
+            "$ref": "#/$defs/jsonValue"
+          },
+          "type": "object"
+        },
+        "modelPreferences": {
+          "$ref": "#/$defs/samplingModelPreferences"
+        },
+        "stopSequences": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "systemPrompt": {
+          "type": "string"
+        },
+        "temperature": {
+          "type": "number"
+        },
+        "toolChoice": {
+          "$ref": "#/$defs/samplingToolChoice"
+        },
+        "tools": {
+          "items": {
+            "$ref": "#/$defs/samplingRequestTool"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "messages",
+        "maxTokens"
+      ],
+      "type": "object"
+    },
+    "samplingCreateMessageResult": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "$ref": "#/$defs/samplingMessageContent"
+        },
+        "model": {
+          "type": "string"
+        },
+        "role": {
+          "const": "assistant"
+        },
+        "stopReason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "content",
+        "model"
+      ],
+      "type": "object"
+    },
+    "samplingMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "$ref": "#/$defs/samplingMessageContent"
+        },
+        "role": {
+          "enum": [
+            "user",
+            "assistant"
+          ]
+        }
+      },
+      "required": [
+        "role",
+        "content"
+      ],
+      "type": "object"
+    },
+    "samplingMessageContent": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/samplingContentBlock"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/samplingContentBlock"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      ]
+    },
+    "samplingModelHint": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "samplingModelPreferences": {
+      "additionalProperties": false,
+      "properties": {
+        "costPriority": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "hints": {
+          "items": {
+            "$ref": "#/$defs/samplingModelHint"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "intelligencePriority": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "speedPriority": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "samplingRequestTool": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "annotations": {
+          "$ref": "#/$defs/toolAnnotations"
+        },
+        "description": {
+          "type": "string"
+        },
+        "inputSchema": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/schemaComponentValue"
+            },
+            {
+              "properties": {
+                "type": {
+                  "const": "object"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            }
+          ]
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "inputSchema"
+      ],
+      "type": "object"
+    },
+    "samplingToolChoice": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "auto",
+            "required",
+            "none"
+          ]
+        }
+      },
+      "required": [
+        "mode"
+      ],
+      "type": "object"
+    },
+    "samplingToolResultContent": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/toolResultContent"
+            },
+            {
+              "items": {
+                "$ref": "#/$defs/toolResultContent"
+              },
+              "minItems": 1,
+              "type": "array"
+            }
+          ]
+        },
+        "isError": {
+          "type": "boolean"
+        },
+        "toolUseId": {
+          "type": "string"
+        },
+        "type": {
+          "const": "tool_result"
+        }
+      },
+      "required": [
+        "type",
+        "toolUseId",
+        "content"
+      ],
+      "type": "object"
+    },
+    "samplingToolUseContent": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "input": {
+          "additionalProperties": {
+            "$ref": "#/$defs/jsonValue"
+          },
+          "type": "object"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "const": "tool_use"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "name",
+        "input"
+      ],
+      "type": "object"
+    },
+    "schemaComponentValue": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/referenceObject"
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/jsonSchemaObject"
+            },
+            {
+              "not": {
+                "required": [
+                  "$componentRef"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "securityRequirement": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "uniqueItems": true
+      },
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9._-]+$"
+      },
+      "type": "object"
+    },
+    "securityRequirementArray": {
+      "items": {
+        "$ref": "#/$defs/securityRequirement"
+      },
+      "type": "array"
+    },
+    "securityScheme": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "patternProperties": {
+            "^x-": {
+              "$ref": "#/$defs/specificationExtensionValue"
+            }
+          },
+          "properties": {
+            "bearerFormat": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "scheme": {
+              "type": "string"
+            },
+            "type": {
+              "const": "http"
+            }
+          },
+          "required": [
+            "type",
+            "scheme"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "patternProperties": {
+            "^x-": {
+              "$ref": "#/$defs/specificationExtensionValue"
+            }
+          },
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "in": {
+              "enum": [
+                "header",
+                "query",
+                "cookie"
+              ],
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "type": {
+              "const": "apiKey"
+            }
+          },
+          "required": [
+            "type",
+            "name",
+            "in"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "patternProperties": {
+            "^x-": {
+              "$ref": "#/$defs/specificationExtensionValue"
+            }
+          },
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "flows": {
+              "$ref": "#/$defs/oauthFlows"
+            },
+            "type": {
+              "const": "oauth2"
+            }
+          },
+          "required": [
+            "type",
+            "flows"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "patternProperties": {
+            "^x-": {
+              "$ref": "#/$defs/specificationExtensionValue"
+            }
+          },
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "openIdConnectUrl": {
+              "format": "uri",
+              "type": "string"
+            },
+            "type": {
+              "const": "openIdConnect"
+            }
+          },
+          "required": [
+            "type",
+            "openIdConnectUrl"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "securitySchemeMap": {
+      "additionalProperties": {
+        "$ref": "#/$defs/securityScheme"
+      },
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9._-]+$"
+      },
+      "type": "object"
+    },
+    "specificationExtensionValue": {
+      "$ref": "#/$defs/jsonValue"
+    },
+    "supportedProtocolVersion": {
+      "enum": [
+        "2024-11-05",
+        "2025-03-26",
+        "2025-06-18",
+        "2025-11-25",
+        "2026-07-28"
+      ],
+      "type": "string"
+    },
+    "tag": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "tool": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "_meta": {
+          "$ref": "#/$defs/metaObject"
+        },
+        "annotations": {
+          "$ref": "#/$defs/toolAnnotations"
+        },
+        "clientRequirements": {
+          "$ref": "#/$defs/clientCapabilityRequirements"
+        },
+        "deprecated": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        },
+        "elicitations": {
+          "items": {
+            "$ref": "#/$defs/elicitationDeclaration"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "examples": {
+          "$ref": "#/$defs/toolExamples"
+        },
+        "execution": {
+          "$ref": "#/$defs/execution"
+        },
+        "icons": {
+          "$ref": "#/$defs/icons"
+        },
+        "inputSchema": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/referenceObject"
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/schemaComponentValue"
+                },
+                {
+                  "properties": {
+                    "type": {
+                      "const": "object"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "interactionExamples": {
+          "$ref": "#/$defs/toolInteractionExamples"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "outputSchema": {
+          "$ref": "#/$defs/schemaComponentValue"
+        },
+        "protocolVersions": {
+          "$ref": "#/$defs/protocolVersionScope"
+        },
+        "security": {
+          "$ref": "#/$defs/securityRequirementArray"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "inputSchema"
+      ],
+      "type": "object"
+    },
+    "toolAnnotations": {
+      "additionalProperties": true,
+      "properties": {
+        "destructiveHint": {
+          "type": "boolean"
+        },
+        "idempotentHint": {
+          "type": "boolean"
+        },
+        "openWorldHint": {
+          "type": "boolean"
+        },
+        "readOnlyHint": {
+          "type": "boolean"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "toolExample": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "input": {
+          "additionalProperties": {
+            "$ref": "#/$defs/jsonValue"
+          },
+          "type": "object"
+        },
+        "result": {
+          "$ref": "#/$defs/completedToolResultExample"
+        }
+      },
+      "required": [
+        "input",
+        "result"
+      ],
+      "type": "object"
+    },
+    "toolExamples": {
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/referenceObject"
+          },
+          {
+            "$ref": "#/$defs/toolExample"
+          }
+        ]
+      },
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9._-]+$"
+      },
+      "type": "object"
+    },
+    "toolInteractionElicitationStep": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "declaration": {
+          "pattern": "^[A-Za-z0-9._-]+$",
+          "type": "string"
+        },
+        "request": {
+          "$ref": "#/$defs/elicitationInteractionRequest"
+        },
+        "response": {
+          "$ref": "#/$defs/elicitationInteractionResponse"
+        },
+        "type": {
+          "const": "elicitation"
+        }
+      },
+      "required": [
+        "type",
+        "request",
+        "response"
+      ],
+      "type": "object"
+    },
+    "toolInteractionExample": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "input": {
+          "additionalProperties": {
+            "$ref": "#/$defs/jsonValue"
+          },
+          "type": "object"
+        },
+        "result": {
+          "$ref": "#/$defs/completedToolResultExample"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/toolInteractionStep"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "input",
+        "steps",
+        "result"
+      ],
+      "type": "object"
+    },
+    "toolInteractionExamples": {
+      "additionalProperties": {
+        "$ref": "#/$defs/toolInteractionExample"
+      },
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9._-]+$"
+      },
+      "type": "object"
+    },
+    "toolInteractionRootsStep": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "request": {
+          "$ref": "#/$defs/rootsListRequest"
+        },
+        "response": {
+          "$ref": "#/$defs/rootsListResult"
+        },
+        "type": {
+          "const": "roots"
+        }
+      },
+      "required": [
+        "type",
+        "request",
+        "response"
+      ],
+      "type": "object"
+    },
+    "toolInteractionSamplingStep": {
+      "additionalProperties": false,
+      "patternProperties": {
+        "^x-": {
+          "$ref": "#/$defs/specificationExtensionValue"
+        }
+      },
+      "properties": {
+        "request": {
+          "$ref": "#/$defs/samplingCreateMessageRequest"
+        },
+        "response": {
+          "$ref": "#/$defs/samplingCreateMessageResult"
+        },
+        "type": {
+          "const": "sampling"
+        }
+      },
+      "required": [
+        "type",
+        "request",
+        "response"
+      ],
+      "type": "object"
+    },
+    "toolInteractionStep": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/toolInteractionElicitationStep"
+        },
+        {
+          "$ref": "#/$defs/toolInteractionSamplingStep"
+        },
+        {
+          "$ref": "#/$defs/toolInteractionRootsStep"
+        }
+      ]
+    },
+    "toolResultContent": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "_meta": {
+              "$ref": "#/$defs/metaObject"
+            },
+            "annotations": {
+              "$ref": "#/$defs/resourceAnnotations"
+            },
+            "text": {
+              "type": "string"
+            },
+            "type": {
+              "const": "text"
+            }
+          },
+          "required": [
+            "type",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "_meta": {
+              "$ref": "#/$defs/metaObject"
+            },
+            "annotations": {
+              "$ref": "#/$defs/resourceAnnotations"
+            },
+            "data": {
+              "type": "string"
+            },
+            "mimeType": {
+              "type": "string"
+            },
+            "type": {
+              "enum": [
+                "image",
+                "audio"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "data",
+            "mimeType"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "_meta": {
+              "$ref": "#/$defs/metaObject"
+            },
+            "annotations": {
+              "$ref": "#/$defs/resourceAnnotations"
+            },
+            "resource": {
+              "$ref": "#/$defs/resourceContents"
+            },
+            "type": {
+              "const": "resource"
+            }
+          },
+          "required": [
+            "type",
+            "resource"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "_meta": {
+              "$ref": "#/$defs/metaObject"
+            },
+            "annotations": {
+              "$ref": "#/$defs/resourceAnnotations"
+            },
+            "description": {
+              "type": "string"
+            },
+            "icons": {
+              "$ref": "#/$defs/icons"
+            },
+            "mimeType": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "size": {
+              "type": "number"
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "const": "resource_link"
+            },
+            "uri": {
+              "format": "uri",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "uri",
+            "name"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "transport": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "patternProperties": {
+            "^x-": {
+              "$ref": "#/$defs/specificationExtensionValue"
+            }
+          },
+          "properties": {
+            "protocolVersions": {
+              "$ref": "#/$defs/protocolVersionScope"
+            },
+            "security": {
+              "$ref": "#/$defs/securityRequirementArray"
+            },
+            "type": {
+              "const": "streamable-http"
+            },
+            "url": {
+              "format": "uri",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "url"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "patternProperties": {
+            "^x-": {
+              "$ref": "#/$defs/specificationExtensionValue"
+            }
+          },
+          "properties": {
+            "args": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "command": {
+              "type": "string"
+            },
+            "env": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "protocolVersions": {
+              "$ref": "#/$defs/protocolVersionScope"
+            },
+            "security": {
+              "$ref": "#/$defs/securityRequirementArray"
+            },
+            "type": {
+              "const": "stdio"
+            }
+          },
+          "required": [
+            "type",
+            "command"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "patternProperties": {
+            "^x-": {
+              "$ref": "#/$defs/specificationExtensionValue"
+            }
+          },
+          "properties": {
+            "protocolVersions": {
+              "$ref": "#/$defs/protocolVersionScope"
+            },
+            "security": {
+              "$ref": "#/$defs/securityRequirementArray"
+            },
+            "type": {
+              "const": "sse"
+            },
+            "url": {
+              "format": "uri",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "url"
+          ],
+          "type": "object"
+        }
+      ]
     }
   }
 }

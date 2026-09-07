@@ -107,7 +107,13 @@ function App({ initialDoc, initialError, options, controlRef }: AppProps) {
   return (
     <div className={`flex flex-col h-full ${bgClass}`}>
       <div className="flex-1 overflow-y-auto p-4">
-        <McpDescCardView doc={doc} validation={validation ?? undefined} defaultOpen={defaultOpen} />
+        <McpDescCardView
+          doc={doc}
+          validation={validation ?? undefined}
+          defaultOpen={defaultOpen}
+          exampleDisplay={options.exampleDisplay}
+          onExampleSelect={options.onExampleSelect}
+        />
       </div>
       {showValidation && validation && (
         <ValidationPanel
@@ -198,7 +204,7 @@ export function McpToolkitViewer(options: McpToolkitViewerOptions): McpToolkitVi
 }
 
 // Package version
-export const version = '1.0.0';
+export const version = '2.0.0';
 
 // Re-export for consumers
 export { McpDescCardView } from './McpDescCardView';

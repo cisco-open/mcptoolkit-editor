@@ -6,79 +6,21 @@ import { useRef, useCallback, useState, useEffect } from 'react';
 import MonacoEditor, { type OnMount, type OnChange } from '@monaco-editor/react';
 import { type editor } from 'monaco-editor';
 import { useDoc } from '../hooks/useDoc';
-import type { ValidationIssue } from '../core';
+import { MCPDESC_SCHEMA_URI } from '../core';
 import mcpdescSchema from '../core/mcpdesc-schema.json';
+import { sourcePathToLine } from './preview/navigation';
+import { findComponentDefinitionLine, pathToLine as componentPathToLine } from './componentNavigation';
+import { groupEditorIssues, type EditorIssue } from './editorDiagnostics';
 
 const DEFAULT_FONT_SIZE = 15;
 const MIN_FONT_SIZE = 10;
 const MAX_FONT_SIZE = 28;
 const FONT_STEP = 1;
 
-/**
- * Convert a JSON-pointer path (e.g. "/tools/0/name") to a 1-based line number
- * by walking each path segment sequentially through the raw text.
- * Returns 0 when no matching line can be found.
- */
 function pathToLine(text: string, path: string, params?: Record<string, unknown>): number {
-  const segments = (path || '/').split('/').filter(Boolean);
-  const lines = text.split('\n');
-  let lineIdx = 0;
-  let matched = segments.length === 0; // root path counts as matched
-
-  for (let si = 0; si < segments.length; si++) {
-    const seg = segments[si];
-    if (/^\d+$/.test(seg)) {
-      const target = parseInt(seg, 10);
-      let count = -1;
-      let found = false;
-      // YAML: count only "- " lines at the same indent level as the first one
-      let itemIndent = -1;
-      for (let i = lineIdx + 1; i < lines.length; i++) {
-        const raw = lines[i];
-        const lt = raw.trimStart();
-        if (!(lt.startsWith('- ') || lt === '-')) continue;
-        const indent = raw.length - lt.length;
-        if (itemIndent === -1) itemIndent = indent;      // anchor on first "- " found
-        else if (indent !== itemIndent) continue;          // skip nested/deeper items
-        count++;
-        if (count === target) { lineIdx = i; found = true; matched = true; break; }
-      }
-      if (!found) {
-        count = -1;
-        for (let i = lineIdx + 1; i < lines.length; i++) {
-          if (lines[i].trimStart().startsWith('{')) {
-            count++;
-            if (count === target) { lineIdx = i; found = true; matched = true; break; }
-          }
-        }
-      }
-    } else {
-      const escaped = seg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      // For the first segment (root-level keys), only match at indent 0 (YAML)
-      // or indent ≤ 2 (JSON `"key":`) to avoid matching nested keys like capabilities.prompts
-      const isRootSeg = si === 0 && lineIdx === 0;
-      const pat = new RegExp(`["']?${escaped}["']?\\s*[:\\[{]`);
-      for (let i = lineIdx; i < lines.length; i++) {
-        if (!pat.test(lines[i])) continue;
-        if (isRootSeg) {
-          const indent = lines[i].length - lines[i].trimStart().length;
-          if (indent > 2) continue; // skip nested matches (e.g. capabilities.prompts)
-        }
-        lineIdx = i; matched = true; break;
-      }
-    }
-  }
-
-  // For additionalProperties errors, locate the exact offending property
-  if (params?.additionalProperty) {
-    const prop = String(params.additionalProperty).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const pat = new RegExp(`["']?${prop}["']?\\s*:`);
-    for (let i = lineIdx; i < lines.length; i++) {
-      if (pat.test(lines[i])) return i + 1;
-    }
-  }
-
-  return matched ? lineIdx + 1 : 0;
+  const exactLine = sourcePathToLine(text, path);
+  if (exactLine > 0) return exactLine;
+  return componentPathToLine(text, path, params);
 }
 
 /**
@@ -125,16 +67,18 @@ export default function Editor() {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof import('monaco-editor') | null>(null);
   const monacoConfigured = useRef(false);
+  const definitionProvidersRef = useRef<import('monaco-editor').IDisposable[]>([]);
   const decorationsRef = useRef<editor.IEditorDecorationsCollection | null>(null);
   const [fontSize, setFontSize] = useState(DEFAULT_FONT_SIZE);
   const [unmappedIssues, setUnmappedIssues] = useState<string[]>([]);
+  const [editorReady, setEditorReady] = useState(false);
 
   const applyFontSize = useCallback((size: number) => {
     setFontSize(size);
     editorRef.current?.updateOptions({ fontSize: size });
   }, []);
 
-  const { state, setText, revealSectionItemRef } = useDoc();
+  const { state, setText, revealSectionItemRef, revealPathRef } = useDoc();
 
   // Register reveal callback so the preview can jump to a section item in the editor
   useEffect(() => {
@@ -151,6 +95,20 @@ export default function Editor() {
     return () => { revealSectionItemRef.current = null; };
   }, [revealSectionItemRef]);
 
+  useEffect(() => {
+    revealPathRef.current = (path: string) => {
+      const ed = editorRef.current;
+      if (!ed) return;
+      const line = pathToLine(ed.getValue(), path);
+      if (line > 0) {
+        ed.revealLineInCenter(line);
+        ed.setPosition({ lineNumber: line, column: 1 });
+        ed.focus();
+      }
+    };
+    return () => { revealPathRef.current = null; };
+  }, [revealPathRef]);
+
   const handleMount: OnMount = useCallback((ed, monaco) => {
     editorRef.current = ed;
     monacoRef.current = monaco;
@@ -162,7 +120,7 @@ export default function Editor() {
         validate: true,
         schemas: [
           {
-            uri: 'https://developer.cisco.com/mcp-description/schema/0.7.0',
+            uri: MCPDESC_SCHEMA_URI,
             fileMatch: ['*'],
             schema: mcpdescSchema as Record<string, unknown>,
           },
@@ -170,9 +128,29 @@ export default function Editor() {
         allowComments: false,
         schemaValidation: 'error',
       });
+
+      const definitionProvider: import('monaco-editor').languages.DefinitionProvider = {
+        provideDefinition(model, position) {
+          const line = findComponentDefinitionLine(model.getValue(), position.lineNumber, position.column);
+          if (line === 0) return null;
+
+          return {
+            uri: model.uri,
+            range: new monaco.Range(line, 1, line, model.getLineMaxColumn(line)),
+          };
+        },
+      };
+      definitionProvidersRef.current = ['json', 'yaml'].map((language) =>
+        monaco.languages.registerDefinitionProvider(language, definitionProvider),
+      );
     }
 
     ed.focus();
+    setEditorReady(true);
+  }, []);
+
+  useEffect(() => () => {
+    definitionProvidersRef.current.forEach((provider) => provider.dispose());
   }, []);
 
   // Update glyph-margin decorations when validation changes
@@ -181,45 +159,73 @@ export default function Editor() {
     const monaco = monacoRef.current;
     if (!ed || !monaco) return;
 
-    const allIssues: (ValidationIssue & { severity: 'error' | 'warning' })[] = [
+    const allIssues: EditorIssue[] = [
       ...state.validation.errors.map(e => ({ ...e, severity: 'error' as const })),
       ...state.validation.warnings.map(w => ({ ...w, severity: 'warning' as const })),
     ];
 
-    // Group by line, collect unmapped
-    const lineMap = new Map<number, string[]>();
-    const unmapped: string[] = [];
+    const parserMarkers: editor.IMarkerData[] = [];
     for (const issue of allIssues) {
-      const line = pathToLine(state.text, issue.path, issue.params);
-      const label = `${issue.severity === 'error' ? '✕' : '⚠'} ${issue.path}: ${issue.message}`;
-      if (line === 0) {
-        unmapped.push(label);
-      } else {
-        const existing = lineMap.get(line) ?? [];
-        existing.push(label);
-        lineMap.set(line, existing);
+      const line = issue.line ?? pathToLine(state.text, issue.path, issue.params);
+      if (issue.line && ed.getModel()) {
+        parserMarkers.push({
+          severity: issue.severity === 'error' ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning,
+          message: issue.message,
+          startLineNumber: line,
+          startColumn: issue.column ?? 1,
+          endLineNumber: line,
+          endColumn: (issue.column ?? 1) + 1,
+        });
       }
     }
+    const { byLine, unmapped } = groupEditorIssues(
+      allIssues,
+      issue => issue.line ?? pathToLine(state.text, issue.path, issue.params),
+    );
     setUnmappedIssues(unmapped);
 
     const newDecorations: editor.IModelDeltaDecoration[] = [];
-    for (const [line, messages] of lineMap) {
-      newDecorations.push({
-        range: new monaco.Range(line, 1, line, 1),
-        options: {
-          isWholeLine: true,
-          glyphMarginClassName: 'error-glyph',
-          glyphMarginHoverMessage: { value: messages.join('\n\n') },
-          className: 'error-line-highlight',
-        },
-      });
+    for (const [line, issues] of byLine) {
+      const mixedSeverity = issues.errors.length > 0 && issues.warnings.length > 0;
+      if (issues.errors.length > 0) {
+        newDecorations.push({
+          range: new monaco.Range(line, 1, line, 1),
+          options: {
+            isWholeLine: true,
+            glyphMarginClassName: 'error-glyph',
+            glyphMarginHoverMessage: { value: issues.errors.join('\n\n') },
+            glyphMargin: {
+              position: mixedSeverity ? monaco.editor.GlyphMarginLane.Left : monaco.editor.GlyphMarginLane.Center,
+            },
+            className: 'error-line-highlight',
+          },
+        });
+      }
+      if (issues.warnings.length > 0) {
+        newDecorations.push({
+          range: new monaco.Range(line, 1, line, 1),
+          options: {
+            isWholeLine: true,
+            glyphMarginClassName: 'warning-glyph',
+            glyphMarginHoverMessage: { value: issues.warnings.join('\n\n') },
+            glyphMargin: {
+              position: mixedSeverity ? monaco.editor.GlyphMarginLane.Right : monaco.editor.GlyphMarginLane.Center,
+            },
+            className: issues.errors.length === 0 ? 'warning-line-highlight' : undefined,
+          },
+        });
+      }
     }
 
     if (decorationsRef.current) {
       decorationsRef.current.clear();
     }
     decorationsRef.current = ed.createDecorationsCollection(newDecorations);
-  }, [state.validation, state.text]);
+    const model = ed.getModel();
+    if (model) {
+      monaco.editor.setModelMarkers(model, 'mcpdesc-parser', parserMarkers);
+    }
+  }, [editorReady, state.validation, state.text]);
 
   const handleChange: OnChange = useCallback(
     (value) => {

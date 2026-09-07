@@ -43,6 +43,12 @@ export interface McpToolkitViewerOptions {
 
   /** Show validation panel at the bottom (default: true if errors/warnings exist) */
   showValidation?: boolean;
+
+  /** How named examples are rendered (default: 'hidden') */
+  exampleDisplay?: import('./McpDescCardView').ExampleDisplayMode;
+
+  /** Called when a named example is selected in names mode. */
+  onExampleSelect?: (selection: import('./McpDescCardView').ExampleSelection) => void;
 }
 
 export interface McpToolkitViewerInstance {

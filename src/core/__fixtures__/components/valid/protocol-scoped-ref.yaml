@@ -1,0 +1,33 @@
+$schema: https://mcpdesc.org/schema/mcp-description/0.8.0-rc.3.json
+mcpdesc: 0.8.0
+info:
+  name: protocol-scoped-ref
+  version: 1.0.0
+protocolVersions:
+  - '2025-11-25'
+  - '2026-07-28'
+components:
+  schemas:
+    LegacyInput:
+      type: object
+      properties:
+        legacy:
+          type: string
+      additionalProperties: false
+    CurrentInput:
+      type: object
+      properties:
+        current:
+          type: string
+      additionalProperties: false
+tools:
+  - name: legacy_tool
+    protocolVersions:
+      - '2025-11-25'
+    inputSchema:
+      $componentRef: '#/components/schemas/LegacyInput'
+  - name: current_tool
+    protocolVersions:
+      - '2026-07-28'
+    inputSchema:
+      $componentRef: '#/components/schemas/CurrentInput'

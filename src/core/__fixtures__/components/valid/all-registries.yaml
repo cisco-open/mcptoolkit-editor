@@ -1,0 +1,78 @@
+$schema: https://mcpdesc.org/schema/mcp-description/0.8.0-rc.3.json
+mcpdesc: 0.8.0
+info:
+  name: all-registries
+  version: 1.0.0
+protocolVersions:
+  - '2026-07-28'
+components:
+  schemas:
+    SearchInput:
+      type: object
+      properties:
+        query:
+          type: string
+      required: [query]
+      additionalProperties: false
+  toolExamples:
+    basic-search:
+      input:
+        query: components
+      result:
+        resultType: complete
+        content:
+          - type: text
+            text: Found one result.
+  resourceExamples:
+    readme:
+      result:
+        resultType: complete
+        ttlMs: 60000
+        cacheScope: public
+        contents:
+          - uri: file:///readme.md
+            text: Readme body.
+  resourceTemplateExamples:
+    user-file:
+      uri: file:///users/alice.md
+      result:
+        resultType: complete
+        ttlMs: 60000
+        cacheScope: private
+        contents:
+          - uri: file:///users/alice.md
+            text: Alice.
+  promptExamples:
+    default-greeting:
+      arguments: {}
+      result:
+        resultType: complete
+        messages:
+          - role: assistant
+            content:
+              type: text
+              text: Hello.
+tools:
+  - name: search
+    inputSchema:
+      $componentRef: '#/components/schemas/SearchInput'
+    examples:
+      basic:
+        $componentRef: '#/components/toolExamples/basic-search'
+resources:
+  - uri: file:///readme.md
+    name: readme
+    examples:
+      default:
+        $componentRef: '#/components/resourceExamples/readme'
+resourceTemplates:
+  - uriTemplate: file:///users/{name}.md
+    name: user-file
+    examples:
+      default:
+        $componentRef: '#/components/resourceTemplateExamples/user-file'
+prompts:
+  - name: greeting
+    examples:
+      default:
+        $componentRef: '#/components/promptExamples/default-greeting'

@@ -1,0 +1,123 @@
+$schema: https://mcpdesc.org/schema/mcp-description/0.8.0-rc.3.json
+mcpdesc: 0.8.0
+
+info:
+  name: chess-tournament-registration
+  title: Chess Tournament Registration — Multi-Round Interaction
+  version: 2.0.0
+  description: >
+    Demonstrates an interaction with Multi Round-Trip Requests (MRTR).
+
+protocolVersions:
+- '2026-07-28'
+
+transports:
+- type: stdio
+  command: chess-tournament
+  args:
+  - serve
+
+capabilities:
+- tools:
+    listChanged: true
+
+tools:
+
+# The Tool has one Effective Protocol View per revision because the completed
+# result shape changed in 2026. The durable semantics remain the same in both
+# declarations; only the protocol-specific result representation differs.
+#
+# In 2025-11-25, elicitation is performed through the earlier server-to-client
+# interaction model. In 2026-07-28, the same semantic need can be fulfilled
+# through MRTR using an input_required result and a subsequent retry.
+# MCP 2026-07-28 adds the completed-result discriminator.
+  - name: register_tournament_entry
+    title: Register Tournament Entry
+    description: >
+      Register a player for a tournament. The player must select an eligible
+      section before the registration can be completed.
+
+    # Because section selection is mandatory for every invocation in this example,
+    # elicitation can be expressed as an unconditional client requirement.
+    # The elicitation.form capability shape is valid in both selected revisions.
+    clientRequirements:
+      elicitation:
+        form: {}
+
+    inputSchema:
+      type: object
+      properties:
+        player_id:
+          type: string
+          description: Stable player identifier.
+        tournament_id:
+          type: string
+          description: Tournament identifier.
+      required:
+      - player_id
+      - tournament_id
+
+    # Elicitation declarations describe durable user interaction independently of
+    # whether the protocol realizes it as a nested request or an MRTR round trip.
+    elicitations:
+    - name: choose_section
+      mode: form
+      message: Choose the tournament section for this entry.
+      when: After eligibility is calculated for the supplied player.
+      requestedSchema:
+        type: object
+        properties:
+          section:
+            type: string
+            title: Tournament section
+            oneOf:
+            - const: open
+              title: Open
+            - const: u2000
+              title: Under 2000
+            - const: u1600
+              title: Under 1600
+        required:
+        - section
+      onDecline: The registration is not created.
+      onCancel: The registration attempt is abandoned without creating an entry.
+
+    # interactionExamples are semantic examples. They intentionally do not encode
+    # requestState, inputRequests, inputResponses, correlation IDs, or transport
+    # framing. This makes the same example applicable to both protocol revisions.
+    interactionExamples:
+      eligible-player:
+        input:
+          player_id: player-42
+          tournament_id: spring-open-2026
+        steps:
+        - type: elicitation
+          request:
+            mode: form
+            message: Choose the tournament section for this entry.
+            requestedSchema:
+              type: object
+              properties:
+                section:
+                  type: string
+                  oneOf:
+                  - const: open
+                    title: Open
+                  - const: u2000
+                    title: Under 2000
+                  - const: u1600
+                    title: Under 1600
+              required:
+              - section
+          response:
+            action: accept
+            content:
+              section: u2000
+        result:
+          resultType: complete
+          content:
+          - type: text
+            text: Registration created in the Under 2000 section.
+          structuredContent:
+            registration_id: reg-example-001
+            section: u2000

@@ -9,6 +9,8 @@ import Editor from './components/Editor';
 import PreviewPanel from './components/preview/PreviewPanel';
 import ValidationPanel from './components/ValidationPanel';
 import SplitPane from './components/SplitPane';
+import MigrationDialog from './components/MigrationDialog';
+import MigrationStatus from './components/MigrationStatus';
 
 class PreviewErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state: { error: Error | null } = { error: null };
@@ -40,10 +42,18 @@ export default function App() {
         <Toolbar />
         <SplitPane
           left={<Editor />}
-          right={<PreviewErrorBoundary><PreviewPanel /></PreviewErrorBoundary>}
+          right={(
+            <div className="flex h-full flex-col">
+              <div className="min-h-0 flex-1">
+                <PreviewErrorBoundary><PreviewPanel /></PreviewErrorBoundary>
+              </div>
+              <MigrationStatus />
+            </div>
+          )}
           defaultSplit={50}
         />
         <ValidationPanel />
+        <MigrationDialog />
       </div>
     </DocProvider>
   );

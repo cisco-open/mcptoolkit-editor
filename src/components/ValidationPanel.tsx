@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useDoc } from '../hooks/useDoc';
-import { version as uiVersion } from '../../packages/mcptoolkit-viewer/src/index';
+import editorPackage from '../../package.json';
 
 export default function ValidationPanel() {
   const { state } = useDoc();
@@ -33,7 +33,7 @@ export default function ValidationPanel() {
           </span>
         )}
         <span className="text-zinc-600 ml-auto">{state.format.toUpperCase()}</span>
-        <span className="text-zinc-500">mcptoolkit-viewer v{uiVersion}</span>
+        <span className="text-zinc-500">mcptoolkit-editor v{editorPackage.version}</span>
         <a
           href="https://github.com/cisco-open/mcptoolkit-editor"
           target="_blank"

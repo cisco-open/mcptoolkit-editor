@@ -41,7 +41,7 @@ This is a **pure client-side** web application for editing, validating, and visu
 
 ### Spec Version
 
-The editor currently targets **MCP Description v0.7.0**. The schema lives at `src/core/mcpdesc-schema.json`. Types in `src/core/types.ts` mirror the spec structure.
+The editor currently validates against **MCP Description v0.8.0-rc.3**. The schema lives at `src/core/mcpdesc-schema.json`. Types in `src/core/types.ts` mirror the spec structure. Legacy v0.7 documents remain supported as migration inputs.
 
 ## Changelogs
 
@@ -116,9 +116,16 @@ Release checklist (see `.github/agents/release-manager.agent.md` and `.github/sk
 
 ## Testing
 
-No test framework is configured yet. When adding tests:
-- Unit tests for `src/core/` (validator, renderer) — these are pure functions, easy to test with Vitest.
-- Component tests for preview rendering — use React Testing Library.
+Tests run under **Vitest** (jsdom): `npm run test` (or `npm run test:watch`).
+`npm run prerelease` runs them.
+
+- Unit tests for `src/core/` live beside the source (`*.test.ts`). Shared
+  document fixtures live in `src/core/__fixtures__/` and are imported with
+  Vite's `?raw` suffix.
+- Component tests use React Testing Library and live next to the component
+  (`packages/mcptoolkit-viewer/src/*.test.tsx`).
+- Anything that must run under the strict CSP needs a codegen-trap test — see
+  `src/core/components.csp.test.ts`.
 
 ## Common Tasks
 
