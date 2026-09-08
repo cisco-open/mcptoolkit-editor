@@ -11,7 +11,12 @@ import { mcpdescMarkdownTemplate } from '../core/template';
 
 const renderer = new McpDescRenderer();
 
-export default function Toolbar({ onImport }: { onImport: () => void }) {
+export interface ToolbarProps {
+  onImport: () => void;
+  title?: string;
+}
+
+export default function Toolbar({ onImport, title = 'MCP Description Editor' }: ToolbarProps) {
   const { state, loadExample, setText, resolvedDoc } = useDoc();
 
   const handleExampleChange = useCallback(
@@ -68,7 +73,7 @@ export default function Toolbar({ onImport }: { onImport: () => void }) {
   return (
     <header className="flex items-center gap-2 px-3 py-1.5 bg-zinc-950 border-b border-zinc-800 shrink-0">
       {/* Brand */}
-      <span className="text-sm font-semibold text-zinc-200 mr-2 select-none">MCP Description Editor</span>
+      <span className="text-sm font-semibold text-zinc-200 mr-2 select-none">{title}</span>
 
       <div className="w-px h-5 bg-zinc-800" />
 

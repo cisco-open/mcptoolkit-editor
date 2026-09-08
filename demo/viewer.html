@@ -55,14 +55,6 @@
     <div class="separator"></div>
     <select id="examples">
       <option value="">— Examples —</option>
-      <option value="../examples/full-featured.yaml">Full Featured</option>
-      <option value="../examples/http-server.yaml">HTTP Server</option>
-      <option value="../examples/minimal.yaml">Minimal</option>
-      <option value="../examples/multi-transport.yaml">Multi Transport</option>
-      <option value="../examples/stdio-server.yaml">Stdio Server</option>
-      <option value="../examples/inventory-2.9.0.yaml">API Inventory 2.9.0</option>
-      <option value="../examples/openapi_analyzer-0.11.0.yaml">OpenAPI Analyzer 0.11.0</option>
-      <option value="../examples/with-cisco-extension.yaml">Cisco Extension</option>
     </select>
     <div class="separator"></div>
     <input type="text" id="url-input" placeholder="Enter URL to an mcpdesc YAML/JSON file…">
@@ -129,6 +121,38 @@
       setTimeout(function() { status(''); }, 2000);
     }
 
+    async function loadExampleMenu() {
+      var response = await fetch('../examples/config.yaml');
+      if (!response.ok) {
+        throw new Error('Failed to load examples/config.yaml: ' + response.status + ' ' + response.statusText);
+      }
+
+      var config = McpToolkitViewer.parseYaml(await response.text());
+      var select = document.getElementById('examples');
+      var defaultUrl = null;
+
+      config.sections.forEach(function(section) {
+        if (!section.entries || section.entries.length === 0) return;
+        var group = document.createElement('optgroup');
+        group.label = section.label;
+
+        section.entries.forEach(function(entry) {
+          var option = document.createElement('option');
+          option.value = '../examples/' + entry.file;
+          option.textContent = entry.label;
+          group.appendChild(option);
+          if (entry.id === config.default) defaultUrl = option.value;
+        });
+
+        select.appendChild(group);
+      });
+
+      if (!defaultUrl) {
+        throw new Error('Default example "' + config.default + '" was not found in examples/config.yaml');
+      }
+      return defaultUrl;
+    }
+
     // --- URL input ---
     document.getElementById('load-btn').addEventListener('click', function() {
       var url = document.getElementById('url-input').value.trim();
@@ -177,15 +201,25 @@
     var initTheme = params.get('style') || 'light';
     setTheme(initTheme);
 
-    var initUrl = params.get('url');
-    if (initUrl) {
-      document.getElementById('url-input').value = initUrl;
-      loadUrl(initUrl, initTheme);
-    } else {
-      // Default: load full-featured example
-      document.getElementById('examples').value = '../examples/full-featured.yaml';
-      loadUrl('../examples/full-featured.yaml', initTheme);
+    async function init() {
+      var initUrl = params.get('url');
+      if (initUrl) {
+        document.getElementById('url-input').value = initUrl;
+        loadUrl(initUrl, initTheme);
+      }
+
+      try {
+        var defaultUrl = await loadExampleMenu();
+        if (!initUrl) {
+          document.getElementById('examples').value = defaultUrl;
+          loadUrl(defaultUrl, initTheme);
+        }
+      } catch (error) {
+        status(String(error));
+      }
     }
+
+    init();
   </script>
 </body>
 </html>
