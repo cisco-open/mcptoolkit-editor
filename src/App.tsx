@@ -37,14 +37,22 @@ class PreviewErrorBoundary extends Component<{ children: ReactNode }, { error: E
   }
 }
 
-export default function App() {
+export interface EditorOptions {
+  title?: string;
+}
+
+export interface AppProps {
+  options?: EditorOptions;
+}
+
+export default function App({ options = {} }: AppProps) {
   const [initialImportUrl] = useState(() => getImportUrlFromSearch(window.location.search));
   const [importOpen, setImportOpen] = useState(() => Boolean(initialImportUrl));
 
   return (
     <DocProvider>
       <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100">
-        <Toolbar onImport={() => setImportOpen(true)} />
+        <Toolbar title={options.title} onImport={() => setImportOpen(true)} />
         <SplitPane
           left={<Editor />}
           right={(

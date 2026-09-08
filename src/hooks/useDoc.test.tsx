@@ -49,4 +49,22 @@ describe('document startup', () => {
     expect(screen.getByRole('combobox')).toHaveProperty('value', '');
     expect(screen.getByTestId('current-text').textContent).toBe('saved content');
   });
+
+  it('renders the default or customized editor title', () => {
+    const { rerender } = render(
+      <DocProvider>
+        <Toolbar onImport={() => {}} />
+      </DocProvider>,
+    );
+
+    expect(screen.getByText('MCP Description Editor')).toBeTruthy();
+
+    rerender(
+      <DocProvider>
+        <Toolbar title="{mcpdesc} Editor" onImport={() => {}} />
+      </DocProvider>,
+    );
+
+    expect(screen.getByText('{mcpdesc} Editor')).toBeTruthy();
+  });
 });

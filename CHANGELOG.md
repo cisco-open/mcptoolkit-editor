@@ -13,6 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[2.1.1] — 2026-09-08](#211--2026-09-08)
 - [[2.1.0] — 2026-09-08](#210--2026-09-08)
 - [[2.0.1] — 2026-09-07](#201--2026-09-07)
 - [[2.0.0] — 2026-09-07](#200--2026-09-07)
@@ -27,6 +28,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+## [2.1.1] — 2026-09-08
+
+### Added
+
+- Add an editor component `title` option while retaining `MCP Description Editor` as the default toolbar title.
 
 ## [2.1.0] — 2026-09-08
 

@@ -12,10 +12,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import yaml from 'yaml';
 import { McpDescValidator } from '@core/validator';
 import mcpdescSchema from '@core/mcpdesc-schema.json';
 import { McpDescCardView } from './McpDescCardView';
+import { parseYaml } from './parseYaml';
 import { ValidationPanel } from './ValidationPanel';
 import type { McpToolkitViewerOptions, McpToolkitViewerInstance } from './types';
 import type { McpDescDocument, ValidationResult } from '@core/types';
@@ -31,7 +31,7 @@ function parseSpec(raw: string): McpDescDocument {
   if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
     return JSON.parse(raw) as McpDescDocument;
   }
-  return yaml.parse(raw) as McpDescDocument;
+  return parseYaml(raw) as McpDescDocument;
 }
 
 /** Fetch a spec from a URL */
@@ -204,11 +204,14 @@ export function McpToolkitViewer(options: McpToolkitViewerOptions): McpToolkitVi
 }
 
 // Package version
-export const version = '2.1.0';
+export const version = '2.1.1';
 
 // Re-export for consumers
 export { McpDescCardView } from './McpDescCardView';
 export type { McpDescCardViewProps, BadgeRenderer } from './McpDescCardView';
+// Exposed on the UMD global so the standalone demo can parse its menu config.
+// eslint-disable-next-line react-refresh/only-export-components
+export { parseYaml } from './parseYaml';
 export { ValidationPanel } from './ValidationPanel';
 export type { ValidationPanelProps } from './ValidationPanel';
 export type { McpToolkitViewerOptions, McpToolkitViewerInstance } from './types';
