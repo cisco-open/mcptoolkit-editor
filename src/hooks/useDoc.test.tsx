@@ -26,7 +26,7 @@ describe('document startup', () => {
 
     render(
       <DocProvider>
-        <Toolbar />
+        <Toolbar onImport={() => {}} />
         <CurrentText />
       </DocProvider>,
     );
@@ -41,7 +41,7 @@ describe('document startup', () => {
 
     render(
       <DocProvider>
-        <Toolbar />
+        <Toolbar onImport={() => {}} />
         <CurrentText />
       </DocProvider>,
     );

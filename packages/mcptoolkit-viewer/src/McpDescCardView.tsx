@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useEffect, useId, useMemo, useState, useCallback } from 'react';
+import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import { isComponentReference } from '@core/types';
 import type { McpDescComponentReference, McpDescDocument, McpDescElicitation, McpDescSchema, ValidationResult } from '@core/types';
@@ -58,7 +59,7 @@ function Desc({ text }: { text: string }) {
       fixed.push(line);
     }
     formatted = fixed.join('\n');
-    return marked.parse(formatted) as string;
+    return DOMPurify.sanitize(marked.parse(formatted) as string);
   }, [text]);
 
   return (
@@ -71,6 +72,15 @@ function Desc({ text }: { text: string }) {
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
+}
+
+function safeExternalUrl(value: string): string | undefined {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function Badge({ children, color = 'bg-gray-200 text-gray-700' }: { children: React.ReactNode; color?: string }) {
@@ -90,6 +100,12 @@ function InlineBadge({ children, color = 'bg-gray-200 text-gray-700' }: {
       {children}
     </span>
   );
+}
+
+const PROTOCOL_VERSION_BADGE_COLOR = 'border border-gray-300 bg-gray-50 text-[11px] font-medium text-gray-900';
+
+function ProtocolVersionBadge({ children }: { children: React.ReactNode }) {
+  return <InlineBadge color={PROTOCOL_VERSION_BADGE_COLOR}>{children}</InlineBadge>;
 }
 
 function Tag({ value }: { value: string }) {
@@ -270,16 +286,16 @@ function ElicitationsView({ elicitations, className = 'mt-1 ml-[8px]' }: {
                   {elicitation.mode}
                 </InlineBadge>
                 {elicitation.protocolVersions?.map(version => (
-                  <InlineBadge key={version} color="border border-black bg-white text-black">{version}</InlineBadge>
+                  <ProtocolVersionBadge key={version}>{version}</ProtocolVersionBadge>
                 ))}
               </div>
               <p className="text-gray-700 mb-1">{elicitation.message}</p>
               {elicitation.when && <InfoRow compact label="When" value={elicitation.when} />}
               {elicitation.mode === 'url' && elicitation.url && (
                 <InfoRow compact label="URL" value={
-                  <a className="text-blue-600 underline break-all" href={elicitation.url} target="_blank" rel="noopener noreferrer">
-                    {elicitation.url}
-                  </a>
+                  safeExternalUrl(elicitation.url)
+                    ? <a className="text-blue-600 underline break-all" href={safeExternalUrl(elicitation.url)} target="_blank" rel="noopener noreferrer">{elicitation.url}</a>
+                    : <span className="break-all">{elicitation.url}</span>
                 } />
               )}
               {elicitation.onDecline && <InfoRow compact label="On decline" value={elicitation.onDecline} />}
@@ -452,31 +468,35 @@ function InfoCard({ doc, protocolVersionProjectionMode, protocolVersionOptions, 
           <fieldset className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <legend className="sr-only">Effective protocol version</legend>
             {protocolVersionOptions.map((version) => (
-              <label key={version} className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-semibold cursor-pointer rounded-full border border-black bg-white text-black px-2 py-0.5">
+              <label key={version} className={`inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer rounded-full px-2 py-0.5 hover:bg-gray-100 ${PROTOCOL_VERSION_BADGE_COLOR}`}>
                 <input
                   type="radio"
                   name={protocolVersionGroupName}
                   value={version}
                   checked={selectedProtocolVersion === version}
                   onChange={() => onProtocolVersionSelect(version)}
+                  className="size-3 shrink-0 appearance-none rounded-full border border-gray-500 bg-white checked:border-[3px] checked:border-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-1"
                 />
                 {version}
               </label>
             ))}
-            <label className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-semibold cursor-pointer rounded-full border border-black bg-white text-black px-2 py-0.5">
+            <label className={`inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer rounded-full px-2 py-0.5 hover:bg-gray-100 ${PROTOCOL_VERSION_BADGE_COLOR}`}>
               <input
                 type="radio"
                 name={protocolVersionGroupName}
                 value=""
                 checked={selectedProtocolVersion == null}
                 onChange={() => onProtocolVersionSelect(null)}
+                className="size-3 shrink-0 appearance-none rounded-full border border-gray-500 bg-white checked:border-[3px] checked:border-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-1"
               />
               All versions
             </label>
           </fieldset>
-        ) : <InlineBadge color="border border-black bg-white text-black font-semibold">{doc.protocolVersions.join(', ')}</InlineBadge>} />
+        ) : <ProtocolVersionBadge>{doc.protocolVersions.join(', ')}</ProtocolVersionBadge>} />
         {info.id && <InfoRow label="ID" value={<code className="text-xs bg-gray-100 text-gray-800 px-1 rounded">{info.id}</code>} />}
-        {info.websiteUrl && <InfoRow label="Website" value={<a className="text-blue-600 underline" href={info.websiteUrl} target="_blank" rel="noopener noreferrer">{info.websiteUrl}</a>} />}
+        {info.websiteUrl && <InfoRow label="Website" value={safeExternalUrl(info.websiteUrl)
+          ? <a className="text-blue-600 underline" href={safeExternalUrl(info.websiteUrl)} target="_blank" rel="noopener noreferrer">{info.websiteUrl}</a>
+          : info.websiteUrl} />}
         {info.icons?.length ? (
           <InfoRow label="Icons" value={
             <div className="flex gap-2 flex-wrap items-center">
@@ -605,9 +625,7 @@ function CapabilitiesCard({ doc, defaultOpen, selectedProtocolVersion }: {
             ?? (selectedProtocolVersion ? [selectedProtocolVersion] : doc.protocolVersions);
           return (
             <div key={capabilityIndex} className="p-1.5 rounded bg-gray-50 border border-gray-200 text-[11px] flex items-center gap-1.5 whitespace-nowrap">
-              <span className="inline-flex items-center leading-4 px-1.5 py-0.5 rounded-full bg-gray-200 text-gray-700 shrink-0">
-                {protocolVersions.join(', ')}
-              </span>
+              <ProtocolVersionBadge>{protocolVersions.join(', ')}</ProtocolVersionBadge>
               {Object.entries(capabilities)
                 .filter(([name]) => !omittedKeys.has(name) && name !== 'extensions')
                 .map(([name, value]) => {
@@ -679,7 +697,7 @@ function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaul
                 {toolProtocolVersions?.length && (
                   <div className="flex flex-wrap items-center gap-2 text-gray-500">
                     <span className="font-medium">MCP Version</span>
-                    <InlineBadge color="border border-black bg-white text-black">{toolProtocolVersions.join(', ')}</InlineBadge>
+                    <ProtocolVersionBadge>{toolProtocolVersions.join(', ')}</ProtocolVersionBadge>
                   </div>
                 )}
                 {tool.annotations && (

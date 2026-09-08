@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useDoc } from '../hooks/useDoc';
 import { examples, exampleGroups } from '../examples';
 import { stringify as yamlStringify } from 'yaml';
@@ -11,9 +11,8 @@ import { mcpdescMarkdownTemplate } from '../core/template';
 
 const renderer = new McpDescRenderer();
 
-export default function Toolbar() {
+export default function Toolbar({ onImport }: { onImport: () => void }) {
   const { state, loadExample, setText, resolvedDoc } = useDoc();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExampleChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -21,21 +20,6 @@ export default function Toolbar() {
       if (ex) loadExample(ex);
     },
     [loadExample],
-  );
-
-  const handleFileOpen = useCallback(() => fileInputRef.current?.click(), []);
-  const handleFileRead = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === 'string') setText(reader.result);
-      };
-      reader.readAsText(file);
-      e.target.value = '';
-    },
-    [setText],
   );
 
   const download = useCallback((content: string, filename: string, mime: string) => {
@@ -88,15 +72,7 @@ export default function Toolbar() {
 
       <div className="w-px h-5 bg-zinc-800" />
 
-      {/* File open */}
-      <button className={btnClass} onClick={handleFileOpen}>Open File</button>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".json,.yaml,.yml"
-        className="hidden"
-        onChange={handleFileRead}
-      />
+      <button className={btnClass} onClick={onImport}>Import</button>
 
       {/* Examples */}
       <select

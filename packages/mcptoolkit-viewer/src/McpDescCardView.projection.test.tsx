@@ -2,7 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { McpDescCardView } from './McpDescCardView';
 import type { McpDescDocument } from '@core/types';
@@ -31,6 +32,7 @@ const baseDoc = {
         name: 'choose_section',
         mode: 'form',
         message: 'Choose a section',
+        protocolVersions: ['2026-07-28'],
         when: 'After eligibility is calculated',
         onDecline: 'Registration is not created',
         onCancel: 'Registration is abandoned',
@@ -62,6 +64,41 @@ const sourceDoc = {
 } satisfies McpDescDocument;
 
 describe('McpDescCardView protocol projections', () => {
+  it('renders compact custom protocol version controls', () => {
+    const onProtocolVersionSelect = vi.fn();
+    const protocolVersionOptions = ['2025-11-25', '2026-07-28'];
+    const { getByRole } = render(
+      <McpDescCardView
+        doc={{ ...baseDoc, protocolVersions: protocolVersionOptions }}
+        protocolVersionProjectionMode="enabled"
+        protocolVersionOptions={protocolVersionOptions}
+        selectedProtocolVersion="2026-07-28"
+        onProtocolVersionSelect={onProtocolVersionSelect}
+      />,
+    );
+
+    const versionRadio = getByRole('radio', { name: '2025-11-25' });
+    expect(versionRadio.className).toContain('appearance-none');
+    expect(versionRadio.className).toContain('size-3');
+    expect(versionRadio.parentElement?.className).toContain('text-[11px]');
+    expect(versionRadio.parentElement?.className).toContain('bg-gray-50');
+
+    fireEvent.click(versionRadio);
+    expect(onProtocolVersionSelect).toHaveBeenCalledWith('2025-11-25');
+  });
+
+  it('matches the compact protocol styling when only one version is available', () => {
+    const { getAllByText, queryByRole } = render(<McpDescCardView doc={baseDoc} />);
+    const versionBadge = getAllByText('2026-07-28')
+      .find(element => element.className.includes('border-gray-300'));
+
+    expect(versionBadge?.className).toContain('border-gray-300');
+    expect(versionBadge?.className).toContain('bg-gray-50');
+    expect(versionBadge?.className).toContain('text-[11px]');
+    expect(versionBadge?.className).toContain('font-medium');
+    expect(queryByRole('radio')).toBeNull();
+  });
+
   it('shows effective server capabilities and operation client requirements', () => {
     const markup = renderToStaticMarkup(
       <McpDescCardView doc={baseDoc} sourceDoc={sourceDoc} selectedProtocolVersion="2026-07-28" />,
@@ -96,7 +133,8 @@ describe('McpDescCardView protocol projections', () => {
     expect(markup).toContain('form');
     expect(markup).toContain('url');
     expect(markup).toContain('MCP Version');
-    expect(markup).toContain('border border-black bg-white text-black');
+    expect(markup.match(/border border-gray-300 bg-gray-50 text-\[11px\] font-medium text-gray-900/g)).toHaveLength(4);
+    expect(markup).not.toContain('border border-black bg-white text-black');
     expect(markup).toContain('Execution');
     expect(markup).toContain('task support: required');
   });

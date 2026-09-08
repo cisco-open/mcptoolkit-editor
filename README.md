@@ -59,7 +59,17 @@ The URL example takes precedence over content saved in local storage.
 
 ### Load your own document
 
-Use **Open** in the toolbar to load any `.json` or `.yaml` file from disk, or paste content directly into the editor. The format is auto-detected.
+Use **Import** in the toolbar to load a `.json` or `.yaml` file from disk or a
+public HTTPS URL. Remote servers must allow browser CORS requests. Imports are
+limited to 1 MiB. You can also paste content directly into the editor; its
+format is auto-detected.
+
+To import a public document automatically, pass its encoded URL in the query
+string:
+
+```text
+http://localhost:5173/?url=https%3A%2F%2Fexample.com%2Fserver.mcpdesc.yaml
+```
 
 ### Validate and preview
 

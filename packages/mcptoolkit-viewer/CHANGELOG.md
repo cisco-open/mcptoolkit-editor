@@ -19,6 +19,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
+### Changed
+
+- Refine protocol version displays with crisp custom radios, consistent light
+  backgrounds, and more compact labels.
+
+### Security
+
+- Sanitize description Markdown before inserting it into the card view DOM.
+
 ## [2.0.1] — 2026-09-07
 
 ### Security

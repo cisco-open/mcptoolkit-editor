@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Component, type ReactNode } from 'react';
+import { Component, useState, type ReactNode } from 'react';
 import { DocProvider } from './hooks/useDoc';
 import Toolbar from './components/Toolbar';
 import Editor from './components/Editor';
@@ -11,6 +11,8 @@ import ValidationPanel from './components/ValidationPanel';
 import SplitPane from './components/SplitPane';
 import MigrationDialog from './components/MigrationDialog';
 import MigrationStatus from './components/MigrationStatus';
+import ImportDialog from './components/ImportDialog';
+import { getImportUrlFromSearch } from './importDocument';
 
 class PreviewErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state: { error: Error | null } = { error: null };
@@ -36,10 +38,13 @@ class PreviewErrorBoundary extends Component<{ children: ReactNode }, { error: E
 }
 
 export default function App() {
+  const [initialImportUrl] = useState(() => getImportUrlFromSearch(window.location.search));
+  const [importOpen, setImportOpen] = useState(() => Boolean(initialImportUrl));
+
   return (
     <DocProvider>
       <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100">
-        <Toolbar />
+        <Toolbar onImport={() => setImportOpen(true)} />
         <SplitPane
           left={<Editor />}
           right={(
@@ -54,6 +59,11 @@ export default function App() {
         />
         <ValidationPanel />
         <MigrationDialog />
+        <ImportDialog
+          open={importOpen}
+          initialUrl={initialImportUrl}
+          onClose={() => setImportOpen(false)}
+        />
       </div>
     </DocProvider>
   );
