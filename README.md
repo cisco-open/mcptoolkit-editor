@@ -49,6 +49,14 @@ Click **Examples** in the toolbar to load a pre-built MCP Description, including
 Minimal, Streamable HTTP, STDIO, multi-transport, multi-version, and
 full-featured servers. Each example updates the preview instantly.
 
+Link directly to a bundled example with its configured ID:
+
+```text
+http://localhost:5173/?example=full-featured
+```
+
+The URL example takes precedence over content saved in local storage.
+
 ### Load your own document
 
 Use **Open** in the toolbar to load any `.json` or `.yaml` file from disk, or paste content directly into the editor. The format is auto-detected.

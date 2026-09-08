@@ -5,43 +5,61 @@
 #
 # To add a new example:
 #   1. Drop the .yaml file anywhere below the examples/ directory
-#   2. Add an entry below with `file` (path relative to examples/) and `label`
-#   3. To load it for first-time users, set `default` to the same relative path
+#   2. Add an entry with a URI-safe `id`, `file` (relative to examples/), and `label`
+#   3. To load it for first-time users, set `default` to the entry's `id`
 #
 # Sections with no entries are hidden from the menu.
 
-default: features/minimal.yaml
+default: basic
 
 sections:
+
+  #SECTION
   - label: "Features Demonstration"
     entries:
       - label: Basic
+        id: basic
         file: features/minimal.yaml
 
       - label: Streamable HTTP
+        id: streamable-http
         file: features/http-server.yaml
 
       - label: Multi-Transport
+        id: multi-transport
         file: features/multi-transport.yaml
 
-      - label: Multi-Version (tasks)
+      - label: Multi-Version
+        id: multi-version
         file: features/multi-version-tasks.yaml
 
-      - label: Elicitation (MRTR)
-        file: features/elicitation-MRTR.yaml
-
       - label: Reusable Components
+        id: reusable-components
         file: features/reusable-components.yaml
 
+      - label: Elicitation
+        id: elicitation
+        file: features/elicitation-MRTR.yaml
+
       - label: Full-Featured
+        id: full-featured
         file: features/full-featured.yaml
 
-  - label: "vendors"
+  # SECTION
+  - label: "Public Servers"
     entries:
-      - label: Miro
-        file: vendors/miro.mcpdesc.yaml
+      - label: Cisco DevNet
+        id: devnet
+        file: vendors/devnet.mcpdesc.yaml
 
       - label: Microsoft Learn
+        id: microsoft-learn
         file: vendors/mslearn.mcpdesc.yaml
 
+      - label: Miro
+        id: miro
+        file: vendors/miro.mcpdesc.yaml
+
 # End of examples menu configuration.
+
+

@@ -1,21 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { defaultExample, exampleGroups, examples } from '.';
+import { defaultExample, exampleGroups, examples, getExampleFromSearch } from '.';
 
 describe('bundled examples', () => {
   it('loads configured examples from nested relative paths', () => {
     expect(exampleGroups.map(({ label }) => label)).toEqual([
       'Features Demonstration',
-      'vendors',
+      'Public Servers',
     ]);
-    expect(examples.map(({ name }) => name)).toContain('features/minimal');
-    expect(examples.map(({ name }) => name)).toContain('vendors/miro.mcpdesc');
-    expect(examples.map(({ name }) => name)).toContain('vendors/mslearn.mcpdesc');
+    expect(examples.map(({ id }) => id)).toContain('basic');
+    expect(examples.map(({ id }) => id)).toContain('devnet');
+    expect(examples.map(({ id }) => id)).toContain('miro');
+    expect(examples.map(({ id }) => id)).toContain('microsoft-learn');
     expect(examples.every(({ content }) => content.length > 0)).toBe(true);
   });
 
   it('uses the configured default example', () => {
     expect(defaultExample).toBe(
-      examples.find(({ name }) => name === 'features/minimal')?.content,
+      examples.find(({ id }) => id === 'basic')?.content,
     );
+  });
+
+  it('looks up examples by their explicit URL ID', () => {
+    expect(getExampleFromSearch('?example=full-featured')?.id).toBe('full-featured');
+    expect(getExampleFromSearch('?example=features%2Ffull-featured')).toBeUndefined();
+    expect(getExampleFromSearch('?example=unknown')).toBeUndefined();
   });
 });

@@ -35,7 +35,12 @@ import {
   type McpDescDocument,
   type ValidationResult,
 } from '../core';
-import { defaultExample } from '../examples';
+import {
+  defaultExample,
+  defaultExampleId,
+  getExampleFromSearch,
+  type ExampleEntry,
+} from '../examples';
 
 // ============================================================================
 // State shape
@@ -63,13 +68,15 @@ interface DocState {
   validation: ValidationResult;
   /** Protocol revision selected for the Effective Protocol View. */
   selectedProtocolVersion: SupportedProtocolVersion | null;
+  /** Bundled example currently loaded, when the source is unchanged. */
+  selectedExampleId: string | null;
   /** State and downloadable report for an explicit 0.7 to 0.8 migration. */
   migration: MigrationState;
 }
 
 type DocAction =
   | { type: 'SET_TEXT'; text: string }
-  | { type: 'LOAD_EXAMPLE'; text: string }
+  | { type: 'LOAD_EXAMPLE'; example: ExampleEntry }
   | { type: 'REQUEST_MIGRATION'; source: JsonValue; sourceText: string; format: DocFormat }
   | { type: 'CANCEL_MIGRATION'; sourceText: string }
   | { type: 'MIGRATION_SUCCEEDED'; text: string; report: McpDescriptionMigrationReport }
@@ -84,10 +91,16 @@ function reducer(state: DocState, action: DocAction): DocState {
       const migration = 'sourceText' in state.migration && state.migration.sourceText !== action.text
         ? { status: 'idle' as const }
         : state.migration;
-      return { ...state, text: action.text, migration };
+      return { ...state, text: action.text, selectedExampleId: null, migration };
     }
     case 'LOAD_EXAMPLE':
-      return { ...state, text: action.text, selectedProtocolVersion: null, migration: { status: 'idle' } };
+      return {
+        ...state,
+        text: action.example.content,
+        selectedExampleId: action.example.id,
+        selectedProtocolVersion: null,
+        migration: { status: 'idle' },
+      };
     case 'REQUEST_MIGRATION':
       return {
         ...state,
@@ -122,23 +135,41 @@ const LEGACY_MIGRATION_ERROR =
   'mcpdesc v0.7 is not supported, migrate your document to v0.8 or above.';
 const PRE_07_ERROR = 'mcpdesc versions before v0.7 are not supported.';
 
-function loadInitialText(): string {
+function createInitialState(): DocState {
+  const requestedExample = getExampleFromSearch(window.location.search);
+  if (requestedExample) {
+    return {
+      text: requestedExample.content,
+      format: 'yaml',
+      doc: null,
+      parseError: null,
+      validation: emptyValidation,
+      selectedProtocolVersion: null,
+      selectedExampleId: requestedExample.id,
+      migration: { status: 'idle' },
+    };
+  }
+
+  let text = defaultExample;
+  let selectedExampleId: string | null = defaultExampleId;
   try {
     const saved = localStorage.getItem(LOCALSTORAGE_KEY);
-    if (saved) return saved;
+    if (saved) {
+      text = saved;
+      selectedExampleId = null;
+    }
   } catch { /* ignore */ }
-  return defaultExample;
+  return {
+    text,
+    format: 'yaml',
+    doc: null,
+    parseError: null,
+    validation: emptyValidation,
+    selectedProtocolVersion: null,
+    selectedExampleId,
+    migration: { status: 'idle' },
+  };
 }
-
-const initialState: DocState = {
-  text: loadInitialText(),
-  format: 'json',
-  doc: null,
-  parseError: null,
-  validation: emptyValidation,
-  selectedProtocolVersion: null,
-  migration: { status: 'idle' },
-};
 
 // ============================================================================
 // Context
@@ -147,7 +178,7 @@ const initialState: DocState = {
 interface DocContextValue {
   state: DocState;
   setText: (text: string) => void;
-  loadExample: (text: string) => void;
+  loadExample: (example: ExampleEntry) => void;
   setSelectedProtocolVersion: (protocolVersion: SupportedProtocolVersion | null) => void;
   confirmMigration: () => void;
   cancelMigration: () => void;
@@ -175,7 +206,7 @@ export function useDoc() {
 const DEBOUNCE_MS = 300;
 
 export function DocProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(reducer, undefined, createInitialState);
   const validatorRef = useRef<McpDescValidator | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const migrationRef = useRef<MigrationState>(state.migration);
@@ -272,7 +303,10 @@ export function DocProvider({ children }: { children: ReactNode }) {
   }, [state.text, parseAndValidate]);
 
   const setText = useCallback((text: string) => dispatch({ type: 'SET_TEXT', text }), []);
-  const loadExample = useCallback((text: string) => dispatch({ type: 'LOAD_EXAMPLE', text }), []);
+  const loadExample = useCallback(
+    (example: ExampleEntry) => dispatch({ type: 'LOAD_EXAMPLE', example }),
+    [],
+  );
   const cancelMigration = useCallback(() => {
     const migration = migrationRef.current;
     if (migration.status === 'confirmation-required') {

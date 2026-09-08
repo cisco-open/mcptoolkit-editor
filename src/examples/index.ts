@@ -29,7 +29,7 @@ for (const [path, raw] of Object.entries(yamlModules)) {
 }
 
 export interface ExampleEntry {
-  name: string;
+  id: string;
   label: string;
   content: string;
 }
@@ -40,9 +40,21 @@ export interface ExampleGroup {
 }
 
 // Parse the menu config
-interface MenuEntry { file: string; label: string }
+interface MenuEntry { id: string; file: string; label: string }
 interface MenuSection { label: string; entries?: MenuEntry[] }
 const menuConfig: { default: string; sections: MenuSection[] } = parse(menuConfigRaw);
+
+const EXAMPLE_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const configuredIds = menuConfig.sections.flatMap((section) =>
+  section.entries?.map((entry) => entry.id) ?? [],
+);
+
+if (configuredIds.some((id) => !EXAMPLE_ID_PATTERN.test(id))) {
+  throw new Error('Example IDs must contain only lowercase letters, numbers, and hyphens');
+}
+if (new Set(configuredIds).size !== configuredIds.length) {
+  throw new Error('Example IDs in examples/config.yaml must be unique');
+}
 
 function getExampleContent(file: string): string {
   const content = fileContents[file];
@@ -59,15 +71,28 @@ export const exampleGroups: ExampleGroup[] = menuConfig.sections
     label: s.label,
     entries: s.entries!
       .map((e) => ({
-        name: e.file.replace(/\.yaml$/, ''),
+        id: e.id,
         label: e.label,
         content: getExampleContent(e.file),
       })),
   }))
   .filter((g) => g.entries.length > 0);
 
-/** Flat list for lookup by name. */
+/** Flat list for lookup by ID. */
 export const examples: ExampleEntry[] = exampleGroups.flatMap((g) => g.entries);
 
+/** Find the example requested by an `?example=<id>` URL query. */
+export function getExampleFromSearch(search: string): ExampleEntry | undefined {
+  const id = new URLSearchParams(search).get('example');
+  return examples.find((example) => example.id === id);
+}
+
 /** Initial document loaded when no editor content has been saved. */
-export const defaultExample = getExampleContent(menuConfig.default);
+export const defaultExampleId = menuConfig.default;
+const defaultExampleEntry = examples.find((example) => example.id === defaultExampleId);
+
+if (!defaultExampleEntry) {
+  throw new Error(`Default example ID "${menuConfig.default}" was not found in examples/config.yaml`);
+}
+
+export const defaultExample = defaultExampleEntry.content;

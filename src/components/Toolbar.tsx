@@ -17,8 +17,8 @@ export default function Toolbar() {
 
   const handleExampleChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const ex = examples.find((x) => x.name === e.target.value);
-      if (ex) loadExample(ex.content);
+      const ex = examples.find((example) => example.id === e.target.value);
+      if (ex) loadExample(ex);
     },
     [loadExample],
   );
@@ -30,12 +30,12 @@ export default function Toolbar() {
       if (!file) return;
       const reader = new FileReader();
       reader.onload = () => {
-        if (typeof reader.result === 'string') loadExample(reader.result);
+        if (typeof reader.result === 'string') setText(reader.result);
       };
       reader.readAsText(file);
       e.target.value = '';
     },
-    [loadExample],
+    [setText],
   );
 
   const download = useCallback((content: string, filename: string, mime: string) => {
@@ -101,7 +101,7 @@ export default function Toolbar() {
       {/* Examples */}
       <select
         className="text-xs bg-zinc-800 text-zinc-300 rounded px-2 py-1 border border-zinc-700 cursor-pointer"
-        defaultValue=""
+        value={state.selectedExampleId ?? ''}
         onChange={handleExampleChange}
       >
         <option value="" disabled>
@@ -110,7 +110,7 @@ export default function Toolbar() {
         {exampleGroups.map((group) => (
           <optgroup key={group.label} label={group.label}>
             {group.entries.map((ex) => (
-              <option key={ex.name} value={ex.name}>
+              <option key={ex.id} value={ex.id}>
                 {ex.label}
               </option>
             ))}

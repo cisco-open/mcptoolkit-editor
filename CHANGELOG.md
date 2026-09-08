@@ -27,6 +27,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
+### Added
+
+- Support loading bundled examples through stable, explicitly configured IDs using the `?example=<id>` URL parameter.
+
 ## [2.0.1] — 2026-09-07
 
 ### Changed
