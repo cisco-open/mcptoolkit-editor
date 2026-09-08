@@ -13,6 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[2.1.0] — 2026-09-08](#210--2026-09-08)
 - [[2.0.1] — 2026-09-07](#201--2026-09-07)
 - [[2.0.0] — 2026-09-07](#200--2026-09-07)
 - [[2.0.0-rc.1] — 2026-09-04](#200-rc1--2026-09-04)
@@ -26,6 +27,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+## [2.1.0] — 2026-09-08
+
+### Added
+
+- Support loading bundled examples through stable, explicitly configured IDs using the `?example=<id>` URL parameter.
+- Add a unified file and public HTTPS URL import dialog, with automatic remote
+  imports through the `?url=<encoded-url>` parameter.
+
+### Changed
+
+- Refine protocol version displays with crisp custom radios, consistent light
+  backgrounds, and more compact labels.
+- Give the import dialog a consistent dark palette, AA text contrast, and
+  visible keyboard focus states without the browser's light file-input chrome.
+
+### Security
+
+- Sanitize description Markdown before rendering imported documents as HTML.
 
 ## [2.0.1] — 2026-09-07
 

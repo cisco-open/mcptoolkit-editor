@@ -3,7 +3,7 @@
 A web-based editor for [MCP Description](#the-mcp-description-mcpdesc-format) documents.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Status: release](https://img.shields.io/badge/status-2.0.1-brightgreen.svg)](CHANGELOG.md)
+[![Status: release](https://img.shields.io/badge/status-2.1.0-brightgreen.svg)](CHANGELOG.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![mcpdesc](https://img.shields.io/endpoint?url=https://mcpdesc.org/badge/0.8.0.json)](https://mcpdesc.org)
 
@@ -25,7 +25,7 @@ A web-based editor for [MCP Description](#the-mcp-description-mcpdesc-format) do
 - **LocalStorage persistence** — edits survive page reloads
 - **Pure client-side** — no backend required
 
-![Editor screenshot](docs/img/screenshot-minimal.png)
+![Editor screenshot](docs/img/screenshot-basic-example.png)
 
 
 
@@ -49,9 +49,27 @@ Click **Examples** in the toolbar to load a pre-built MCP Description, including
 Minimal, Streamable HTTP, STDIO, multi-transport, multi-version, and
 full-featured servers. Each example updates the preview instantly.
 
+Link directly to a bundled example with its configured ID:
+
+```text
+http://localhost:5173/?example=full-featured
+```
+
+The URL example takes precedence over content saved in local storage.
+
 ### Load your own document
 
-Use **Open** in the toolbar to load any `.json` or `.yaml` file from disk, or paste content directly into the editor. The format is auto-detected.
+Use **Import** in the toolbar to load a `.json` or `.yaml` file from disk or a
+public HTTPS URL. Remote servers must allow browser CORS requests. Imports are
+limited to 1 MiB. You can also paste content directly into the editor; its
+format is auto-detected.
+
+To import a public document automatically, pass its encoded URL in the query
+string:
+
+```text
+http://localhost:5173/?url=https%3A%2F%2Fexample.com%2Fserver.mcpdesc.yaml
+```
 
 ### Validate and preview
 

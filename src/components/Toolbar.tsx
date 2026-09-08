@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useDoc } from '../hooks/useDoc';
 import { examples, exampleGroups } from '../examples';
 import { stringify as yamlStringify } from 'yaml';
@@ -11,29 +11,13 @@ import { mcpdescMarkdownTemplate } from '../core/template';
 
 const renderer = new McpDescRenderer();
 
-export default function Toolbar() {
+export default function Toolbar({ onImport }: { onImport: () => void }) {
   const { state, loadExample, setText, resolvedDoc } = useDoc();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExampleChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const ex = examples.find((x) => x.name === e.target.value);
-      if (ex) loadExample(ex.content);
-    },
-    [loadExample],
-  );
-
-  const handleFileOpen = useCallback(() => fileInputRef.current?.click(), []);
-  const handleFileRead = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === 'string') loadExample(reader.result);
-      };
-      reader.readAsText(file);
-      e.target.value = '';
+      const ex = examples.find((example) => example.id === e.target.value);
+      if (ex) loadExample(ex);
     },
     [loadExample],
   );
@@ -88,20 +72,12 @@ export default function Toolbar() {
 
       <div className="w-px h-5 bg-zinc-800" />
 
-      {/* File open */}
-      <button className={btnClass} onClick={handleFileOpen}>Open File</button>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".json,.yaml,.yml"
-        className="hidden"
-        onChange={handleFileRead}
-      />
+      <button className={btnClass} onClick={onImport}>Import</button>
 
       {/* Examples */}
       <select
         className="text-xs bg-zinc-800 text-zinc-300 rounded px-2 py-1 border border-zinc-700 cursor-pointer"
-        defaultValue=""
+        value={state.selectedExampleId ?? ''}
         onChange={handleExampleChange}
       >
         <option value="" disabled>
@@ -110,7 +86,7 @@ export default function Toolbar() {
         {exampleGroups.map((group) => (
           <optgroup key={group.label} label={group.label}>
             {group.entries.map((ex) => (
-              <option key={ex.name} value={ex.name}>
+              <option key={ex.id} value={ex.id}>
                 {ex.label}
               </option>
             ))}

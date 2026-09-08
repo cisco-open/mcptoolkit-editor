@@ -7,6 +7,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[2.1.0] — 2026-09-08](#210--2026-09-08)
 - [[2.0.1] — 2026-09-07](#201--2026-09-07)
 - [[2.0.0] — 2026-09-07](#200--2026-09-07)
 - [[2.0.0-rc.1] — 2026-09-04](#200-rc1--2026-09-04)
@@ -18,6 +19,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+## [2.1.0] — 2026-09-08
+
+### Changed
+
+- Refine protocol version displays with crisp custom radios, consistent light
+  backgrounds, and more compact labels.
+
+### Security
+
+- Sanitize description Markdown before inserting it into the card view DOM.
 
 ## [2.0.1] — 2026-09-07
 

@@ -10,6 +10,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pa
 
 ## Unreleased
 
+## [2.1.0] — 2026-09-08
+
+### Added
+
+- Ship the editor with URL-addressable examples and secure local-file or public
+  HTTPS document imports.
+
+### Security
+
+- Limit imports to 1 MiB and sanitize rendered description Markdown.
+
 ## [2.0.1] — 2026-09-07
 
 ### Security
