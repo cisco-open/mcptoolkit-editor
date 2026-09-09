@@ -14,9 +14,18 @@ const ZOOM_STEP = 0.1;
 export default function PreviewPanel() {
   const { state, effectiveDoc, resolvedDoc } = useDoc();
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
+  const hasContent = state.text.trim().length > 0;
 
   const fontBtnClass =
     'px-1.5 py-0.5 text-xs rounded bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors cursor-pointer leading-none';
+
+  if (!hasContent) {
+    return (
+      <div className="flex items-center justify-center h-full bg-white text-amber-600 text-sm">
+        No contents
+      </div>
+    );
+  }
 
   if (
     state.migration.status === 'confirmation-required'

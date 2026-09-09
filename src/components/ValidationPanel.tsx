@@ -8,14 +8,23 @@ import editorPackage from '../../package.json';
 export default function ValidationPanel() {
   const { state } = useDoc();
   const { validation } = state;
+  const hasContent = state.text.trim().length > 0;
 
   const errorCount = validation.errors.length;
   const warnCount = validation.warnings.length;
 
-  const statusColor = errorCount > 0 ? 'text-red-400' : warnCount > 0 ? 'text-yellow-400' : 'text-green-400';
-  const statusIcon = errorCount > 0 ? '✕' : warnCount > 0 ? '⚠' : '✓';
+  const statusColor = !hasContent
+    ? 'text-amber-400'
+    : errorCount > 0
+      ? 'text-red-400'
+      : warnCount > 0
+        ? 'text-yellow-400'
+        : 'text-green-400';
+  const statusIcon = !hasContent ? '○' : errorCount > 0 ? '✕' : warnCount > 0 ? '⚠' : '✓';
   const statusText =
-    errorCount > 0
+    !hasContent
+      ? 'No contents'
+      : errorCount > 0
       ? `${errorCount} error${errorCount > 1 ? 's' : ''}`
       : warnCount > 0
         ? `${warnCount} warning${warnCount > 1 ? 's' : ''}`
@@ -24,10 +33,10 @@ export default function ValidationPanel() {
   return (
     <div className="border-t border-zinc-800 bg-zinc-900 text-xs shrink-0">
       <div className="flex items-center gap-2 px-3 py-1.5">
-        <span className={`font-medium ${statusColor}`}>
+        <span role="status" data-testid="validation-status" className={`font-medium ${statusColor}`}>
           {statusIcon} {statusText}
         </span>
-        {warnCount > 0 && errorCount > 0 && (
+        {hasContent && warnCount > 0 && errorCount > 0 && (
           <span className="text-yellow-400">
             ⚠ {warnCount} warning{warnCount > 1 ? 's' : ''}
           </span>

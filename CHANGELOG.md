@@ -32,6 +32,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 ### Fixed
 
 - Keep editor source query parameters in sync when selecting examples, importing documents, or editing loaded content without retaining manually entered import URLs.
+- Recover the preview after invalid content is fixed or replaced with an example, and show a neutral no-content state when the editor contains only whitespace.
 
 ## [2.1.1] — 2026-09-08
 

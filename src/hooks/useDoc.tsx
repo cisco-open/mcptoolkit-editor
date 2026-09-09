@@ -92,12 +92,27 @@ function reducer(state: DocState, action: DocAction): DocState {
       const migration = 'sourceText' in state.migration && state.migration.sourceText !== action.text
         ? { status: 'idle' as const }
         : state.migration;
+      if (action.text.trim().length === 0) {
+        return {
+          ...state,
+          text: action.text,
+          doc: null,
+          parseError: null,
+          validation: emptyValidation,
+          selectedExampleId: null,
+          selectedProtocolVersion: null,
+          migration,
+        };
+      }
       return { ...state, text: action.text, selectedExampleId: null, migration };
     }
     case 'LOAD_EXAMPLE':
       return {
         ...state,
         text: action.example.content,
+        doc: null,
+        parseError: null,
+        validation: emptyValidation,
         selectedExampleId: action.example.id,
         selectedProtocolVersion: null,
         migration: { status: 'idle' },
@@ -229,6 +244,15 @@ export function DocProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const parseAndValidate = useCallback((raw: string) => {
+    if (raw.trim().length === 0) {
+      dispatch({ type: 'SET_PARSED', doc: null, parseError: null, format: 'yaml' });
+      dispatch({ type: 'SET_VALIDATION', validation: emptyValidation });
+      try {
+        localStorage.setItem(LOCALSTORAGE_KEY, raw);
+      } catch { /* quota exceeded — ignore */ }
+      return;
+    }
+
     // 1. Parse
     let doc: McpDescDocument | null = null;
     let parseError: string | null = null;

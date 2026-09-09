@@ -15,7 +15,7 @@ mcpdesc: 0.8.0
 
 info:
   name: chess-analysis-server
-  title: Multi-Protocol Chess Analysis MCP Server
+  title: Chess Analysis MCP Server
   version: 2.0.0
   description: >
     Provides chess-engine analysis while exposing long-running work using the
