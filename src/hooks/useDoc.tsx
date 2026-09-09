@@ -18,7 +18,7 @@ import {
   type ReactNode,
 } from 'react';
 import {
-  migrateMcpDescription07ToRc3,
+  migrateMcpDescription07To08,
   projectEffectiveProtocolView,
   serializeMcpDescription,
   type JsonValue,
@@ -378,7 +378,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const result = migrateMcpDescription07ToRc3(migration.source, {
+    const result = migrateMcpDescription07To08(migration.source, {
       specification: MCPDESC_SPECIFICATION,
       sourceValidated: true,
       defaultProtocolVersion: '2025-11-25',

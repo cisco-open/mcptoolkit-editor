@@ -3,7 +3,7 @@
 A web-based editor for [MCP Description](#the-mcp-description-mcpdesc-format) documents.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Status: release](https://img.shields.io/badge/status-2.1.2-brightgreen.svg)](CHANGELOG.md)
+[![Status: release](https://img.shields.io/badge/status-2.2.0-brightgreen.svg)](CHANGELOG.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![mcpdesc: 0.8](https://img.shields.io/badge/mcpdesc-0.8-blue.svg)](https://mcpdesc.org)
 
@@ -17,7 +17,7 @@ A web-based editor for [MCP Description](#the-mcp-description-mcpdesc-format) do
 > and the latest 1.x release.
 
 - **Monaco Editor** — JSON Schema-driven autocomplete, inline squiggles, folding, and syntax highlighting for JSON and YAML
-- **Real-time validation** — CSP-safe structural and semantic validation against MCP Description `0.8.0-rc.3`
+- **Real-time validation** — CSP-safe structural and semantic validation against MCP Description `0.8.0`
 - **Cards preview** — collapsible server, transport, security, capability, and named example views, including protocol-scoped Effective Protocol Views
 - **Click-to-navigate** — click any type bubble in the preview to jump to its source in the editor
 - **Markdown preview** — Handlebars-rendered documentation, ready to copy-paste or export
@@ -102,10 +102,10 @@ mcpcontract dump \
 > **Canonical source:** the MCP Description specification, versioned schemas, and
 > full governance live in the
 > [mcptoolkit-contract](https://github.com/cisco-open/mcptoolkit-contract)
-> repository (`spec/` and `schemas/mcp-description/`). This editor targets the
-> immutable **`0.8.0-rc.3`** snapshot from that source. It accepts valid `0.7.0`
+> repository (`spec/` and `schemas/mcp-description/`). This editor targets
+> **`0.8.0`** from that source. It accepts valid `0.7.0`
 > documents on import, paste, or restore and migrates them one-way to the
-> RC.3 0.8 document shape; earlier versions are unsupported.
+> stable 0.8 document shape; earlier versions are unsupported.
 
 ## Build and deploy
 
@@ -122,7 +122,7 @@ The editor is pure client-side — deploy the `dist/` folder to any static host 
 src/
   core/                        # Reusable library (browser-compatible, no React)
     types.ts                   # MCP Description TypeScript types
-    validator.ts               # CSP-safe RC.3 adapter; legacy 0.7 validation for migration
+    validator.ts               # CSP-safe 0.8 adapter; legacy 0.7 validation for migration
     validator.generated.js     # Legacy 0.7 validator used only to gate automatic migration
     renderer.ts                # Handlebars markdown renderer
     template.ts                # Markdown Handlebars template
@@ -149,13 +149,13 @@ src/
 
 The core module has **no React or DOM dependencies**. It exports:
 
-- `McpDescValidator` — validate documents through the CSP-safe RC.3 standalone validator
+- `McpDescValidator` — validate documents through the CSP-safe 0.8 standalone validator
 - `McpDescRenderer` — render an MCP Description document to markdown via Handlebars
 - Full TypeScript type definitions for MCP Description
 
 This module is adapted from [mcptoolkit-contract](https://github.com/cisco-open/mcptoolkit-contract) and designed to be extractable as a standalone core package.
 
-> **CSP note:** the editor validates RC.3 with
+> **CSP note:** the editor validates 0.8 with
 > `@mcpdesc/validator/standalone`, which does not use runtime code generation.
 > The committed generated validator remains only for validating legacy 0.7
 > documents before automatic migration.

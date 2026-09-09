@@ -10,6 +10,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pa
 
 ## Unreleased
 
+## [2.2.0] — 2026-09-09
+
+### Changed
+
+- Ship stable MCP Description `0.8.0` validation, schema hints, examples, and
+  automatic migration from 0.7 documents.
+
 ## [2.1.2] — 2026-09-09
 
 ### Fixed
@@ -47,14 +54,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pa
 ### Changed
 
 - Ship the stable MCP Description Editor 2.0 release with MCP Description
-  0.8.0 RC.3 validation and automatic migration of 0.7 documents.
+  0.8.0 validation and automatic migration of 0.7 documents.
 
 ## [2.0.0-rc.1] — 2026-09-04
 
 ### Changed
 
 - Ship the MCP Description Editor 2.0 release candidate with MCP Description
-  0.8.0 RC.1 validation, effective protocol views, and expanded card previews.
+  0.8.0 validation, effective protocol views, and expanded card previews.
 
 ## [1.1.0-rc.2] — 2026-07-08
 
