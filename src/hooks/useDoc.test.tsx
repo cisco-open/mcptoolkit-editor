@@ -17,7 +17,7 @@ function EditDocument() {
 }
 
 function DocumentControls() {
-  const { loadExample, setText, state } = useDoc();
+  const { importText, loadExample, setText, state } = useDoc();
   const basicExample = examples.find(({ id }) => id === 'basic')!;
   return (
     <>
@@ -25,8 +25,10 @@ function DocumentControls() {
       <button onClick={() => setText('{')}>Break document</button>
       <button onClick={() => setText(defaultExample)}>Fix document</button>
       <button onClick={() => loadExample(basicExample)}>Load Basic</button>
+      <button onClick={() => importText(defaultExample, 'https://example.com/imported.yaml')}>Import document</button>
       <output data-testid="has-document">{String(Boolean(state.doc))}</output>
       <output data-testid="parse-error">{state.parseError ?? ''}</output>
+      <output data-testid="document-load-revision">{state.documentLoadRevision}</output>
     </>
   );
 }
@@ -88,6 +90,23 @@ describe('document startup', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit document' }));
     expect(window.location.href).toContain('/editor?theme=dark#preview');
+  });
+
+  it('signals example and URL document loads without signaling editor changes', () => {
+    render(
+      <DocProvider>
+        <DocumentControls />
+      </DocProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Break document' }));
+    expect(screen.getByTestId('document-load-revision').textContent).toBe('0');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Load Basic' }));
+    expect(screen.getByTestId('document-load-revision').textContent).toBe('1');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Import document' }));
+    expect(screen.getByTestId('document-load-revision').textContent).toBe('2');
   });
 
   it('renders the default or customized editor title', () => {

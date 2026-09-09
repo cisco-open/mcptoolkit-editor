@@ -69,6 +69,7 @@ export default function Editor() {
   const monacoConfigured = useRef(false);
   const definitionProvidersRef = useRef<import('monaco-editor').IDisposable[]>([]);
   const decorationsRef = useRef<editor.IEditorDecorationsCollection | null>(null);
+  const handledDocumentLoadRevisionRef = useRef(0);
   const [fontSize, setFontSize] = useState(DEFAULT_FONT_SIZE);
   const [unmappedIssues, setUnmappedIssues] = useState<string[]>([]);
   const [editorReady, setEditorReady] = useState(false);
@@ -79,6 +80,12 @@ export default function Editor() {
   }, []);
 
   const { state, setText, revealSectionItemRef, revealPathRef } = useDoc();
+
+  useEffect(() => {
+    if (!editorReady || handledDocumentLoadRevisionRef.current === state.documentLoadRevision) return;
+    editorRef.current?.setScrollTop(0);
+    handledDocumentLoadRevisionRef.current = state.documentLoadRevision;
+  }, [editorReady, state.documentLoadRevision]);
 
   // Register reveal callback so the preview can jump to a section item in the editor
   useEffect(() => {
