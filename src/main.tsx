@@ -7,9 +7,12 @@ import { createRoot } from 'react-dom/client';
 import './monaco-setup';
 import './index.css';
 import App from './App';
+import { getEditorOptions } from './editorOptions';
 
-createRoot(document.getElementById('root')!).render(
+const rootElement = document.getElementById('root')!;
+
+createRoot(rootElement).render(
   <StrictMode>
-    <App />
+    <App options={getEditorOptions(rootElement)} />
   </StrictMode>,
 );

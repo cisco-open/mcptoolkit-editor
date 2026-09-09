@@ -71,12 +71,15 @@ interface DocState {
   selectedProtocolVersion: SupportedProtocolVersion | null;
   /** Bundled example currently loaded, when the source is unchanged. */
   selectedExampleId: string | null;
+  /** Increments when a new document is loaded through an example or import. */
+  documentLoadRevision: number;
   /** State and downloadable report for an explicit 0.7 to 0.8 migration. */
   migration: MigrationState;
 }
 
 type DocAction =
   | { type: 'SET_TEXT'; text: string }
+  | { type: 'IMPORT_TEXT'; text: string }
   | { type: 'LOAD_EXAMPLE'; example: ExampleEntry }
   | { type: 'REQUEST_MIGRATION'; source: JsonValue; sourceText: string; format: DocFormat }
   | { type: 'CANCEL_MIGRATION'; sourceText: string }
@@ -88,10 +91,14 @@ type DocAction =
 
 function reducer(state: DocState, action: DocAction): DocState {
   switch (action.type) {
-    case 'SET_TEXT': {
+    case 'SET_TEXT':
+    case 'IMPORT_TEXT': {
       const migration = 'sourceText' in state.migration && state.migration.sourceText !== action.text
         ? { status: 'idle' as const }
         : state.migration;
+      const documentLoadRevision = action.type === 'IMPORT_TEXT'
+        ? state.documentLoadRevision + 1
+        : state.documentLoadRevision;
       if (action.text.trim().length === 0) {
         return {
           ...state,
@@ -101,10 +108,11 @@ function reducer(state: DocState, action: DocAction): DocState {
           validation: emptyValidation,
           selectedExampleId: null,
           selectedProtocolVersion: null,
+          documentLoadRevision,
           migration,
         };
       }
-      return { ...state, text: action.text, selectedExampleId: null, migration };
+      return { ...state, text: action.text, selectedExampleId: null, documentLoadRevision, migration };
     }
     case 'LOAD_EXAMPLE':
       return {
@@ -115,6 +123,7 @@ function reducer(state: DocState, action: DocAction): DocState {
         validation: emptyValidation,
         selectedExampleId: action.example.id,
         selectedProtocolVersion: null,
+        documentLoadRevision: state.documentLoadRevision + 1,
         migration: { status: 'idle' },
       };
     case 'REQUEST_MIGRATION':
@@ -162,6 +171,7 @@ function createInitialState(): DocState {
       validation: emptyValidation,
       selectedProtocolVersion: null,
       selectedExampleId: requestedExample.id,
+      documentLoadRevision: 0,
       migration: { status: 'idle' },
     };
   }
@@ -183,6 +193,7 @@ function createInitialState(): DocState {
     validation: emptyValidation,
     selectedProtocolVersion: null,
     selectedExampleId,
+    documentLoadRevision: 0,
     migration: { status: 'idle' },
   };
 }
@@ -340,7 +351,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
     [],
   );
   const importText = useCallback((text: string, sourceUrl?: string) => {
-    dispatch({ type: 'SET_TEXT', text });
+    dispatch({ type: 'IMPORT_TEXT', text });
     replaceEditorUrlSource(sourceUrl
       ? { type: 'url', value: sourceUrl }
       : { type: 'document' });

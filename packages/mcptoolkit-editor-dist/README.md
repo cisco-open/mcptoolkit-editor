@@ -38,6 +38,18 @@ cp -R node_modules/@cisco_open/mcptoolkit-editor-dist/dist/. ./public/editor/
 Because assets use relative paths, serving from a subpath such as
 `https://example.com/editor/` works without extra configuration.
 
+## Configure the editor title
+
+Set a `data-title` attribute on the root element in `dist/index.html` to replace
+the default `MCP Description Editor` toolbar title:
+
+```html
+<div id="root" data-title="{mcpdesc} Editor"></div>
+```
+
+Add the attribute before the editor's module script runs. Omitting it or using
+an empty value keeps the default title.
+
 ## Content-Security-Policy
 
 The editor runs under a strict CSP. A recommended baseline (also shipped as

@@ -10,6 +10,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pa
 
 ## Unreleased
 
+## [2.2.1] — 2026-09-09
+
+### Fixed
+
+- Allow hosts to configure the toolbar title through the root element's
+  `data-title` attribute.
+- Scroll the editor to the top when loading an example or importing a document
+  from a file or URL.
+
 ## [2.2.0] — 2026-09-09
 
 ### Changed
