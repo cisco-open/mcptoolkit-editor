@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Component, useState, type ReactNode } from 'react';
-import { DocProvider } from './hooks/useDoc';
+import { DocProvider, useDoc } from './hooks/useDoc';
 import Toolbar from './components/Toolbar';
 import Editor from './components/Editor';
 import PreviewPanel from './components/preview/PreviewPanel';
@@ -14,11 +14,14 @@ import MigrationStatus from './components/MigrationStatus';
 import ImportDialog from './components/ImportDialog';
 import { getImportUrlFromSearch } from './importDocument';
 
-class PreviewErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+export class PreviewErrorBoundary extends Component<{
+  children: ReactNode;
+  resetKey: string;
+}, { error: Error | null }> {
   state: { error: Error | null } = { error: null };
   static getDerivedStateFromError(error: Error) { return { error }; }
-  componentDidUpdate(prevProps: { children: ReactNode }) {
-    if (prevProps.children !== this.props.children && this.state.error) {
+  componentDidUpdate(prevProps: { children: ReactNode; resetKey: string }) {
+    if (prevProps.resetKey !== this.props.resetKey && this.state.error) {
       this.setState({ error: null });
     }
   }
@@ -35,6 +38,15 @@ class PreviewErrorBoundary extends Component<{ children: ReactNode }, { error: E
     }
     return this.props.children;
   }
+}
+
+function Preview() {
+  const { state } = useDoc();
+  return (
+    <PreviewErrorBoundary resetKey={state.text}>
+      <PreviewPanel />
+    </PreviewErrorBoundary>
+  );
 }
 
 export interface EditorOptions {
@@ -58,7 +70,7 @@ export default function App({ options = {} }: AppProps) {
           right={(
             <div className="flex h-full flex-col">
               <div className="min-h-0 flex-1">
-                <PreviewErrorBoundary><PreviewPanel /></PreviewErrorBoundary>
+                <Preview />
               </div>
               <MigrationStatus />
             </div>

@@ -13,7 +13,7 @@ interface ImportDialogProps {
 }
 
 export default function ImportDialog({ open, initialUrl, onClose }: ImportDialogProps) {
-  const { setText } = useDoc();
+  const { importText } = useDoc();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
   const autoImportStartedRef = useRef(false);
@@ -22,19 +22,19 @@ export default function ImportDialog({ open, initialUrl, onClose }: ImportDialog
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const importUrl = useCallback(async (value: string) => {
+  const importUrl = useCallback(async (value: string, preserveSourceUrl = false) => {
     setLoading(true);
     setError(null);
     try {
       const text = await fetchRemoteDocument(value);
-      setText(text);
+      importText(text, preserveSourceUrl ? value : undefined);
       onClose();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to load this URL.');
     } finally {
       setLoading(false);
     }
-  }, [onClose, setText]);
+  }, [importText, onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -60,7 +60,7 @@ export default function ImportDialog({ open, initialUrl, onClose }: ImportDialog
   useEffect(() => {
     if (!open || !initialUrl || autoImportStartedRef.current) return;
     autoImportStartedRef.current = true;
-    void importUrl(initialUrl);
+    void importUrl(initialUrl, true);
   }, [importUrl, initialUrl, open]);
 
   const handleFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,14 +73,14 @@ export default function ImportDialog({ open, initialUrl, onClose }: ImportDialog
       return;
     }
     try {
-      setText(await file.text());
+      importText(await file.text());
       onClose();
     } catch {
       setError('Unable to read this file.');
     } finally {
       event.target.value = '';
     }
-  }, [onClose, setText]);
+  }, [importText, onClose]);
 
   if (!open) return null;
 

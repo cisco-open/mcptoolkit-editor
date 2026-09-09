@@ -6,13 +6,13 @@ import {
   validateMcpDescription,
   type McpDescriptionDiagnostic,
 } from '@mcpdesc/validator/browser';
-import { RC_3_SCHEMA_URI, RC_3_SPECIFICATION } from '@mcpdesc/core';
+import { V0_8_SCHEMA_URI, V0_8_SPECIFICATION } from '@mcpdesc/core';
 import validateMcpDesc07 from './validator.generated.js';
 import type { ValidationIssue, ValidationResult } from './types';
 import mcpdescSchema from './mcpdesc-schema.json';
 
-export const MCPDESC_SPECIFICATION = RC_3_SPECIFICATION;
-export const MCPDESC_SCHEMA_URI = RC_3_SCHEMA_URI;
+export const MCPDESC_SPECIFICATION = V0_8_SPECIFICATION;
+export const MCPDESC_SCHEMA_URI = V0_8_SCHEMA_URI;
 
 export function isValidMcpDesc07(data: unknown): boolean {
   return validateMcpDesc07(data) as boolean;
@@ -71,11 +71,11 @@ function toIssue(diagnostic: McpDescriptionDiagnostic): ValidationIssue {
   };
 }
 
-/** Browser-safe adapter for the immutable MCP Description 0.8.0 RC.3 snapshot. */
+/** Browser-safe adapter for MCP Description 0.8.0. */
 export class McpDescValidator {
   loadSchema(_schema?: Record<string, unknown>): void {
     void _schema;
-    // The immutable RC.3 snapshot is supplied by @mcpdesc/validator.
+    // The stable 0.8.0 snapshot is supplied by @mcpdesc/validator.
   }
 
   validateDocument(data: unknown): ValidationResult {

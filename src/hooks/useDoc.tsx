@@ -18,7 +18,7 @@ import {
   type ReactNode,
 } from 'react';
 import {
-  migrateMcpDescription07ToRc3,
+  migrateMcpDescription07To08,
   projectEffectiveProtocolView,
   serializeMcpDescription,
   type JsonValue,
@@ -41,6 +41,7 @@ import {
   getExampleFromSearch,
   type ExampleEntry,
 } from '../examples';
+import { replaceEditorUrlSource } from '../editorUrl';
 
 // ============================================================================
 // State shape
@@ -91,12 +92,27 @@ function reducer(state: DocState, action: DocAction): DocState {
       const migration = 'sourceText' in state.migration && state.migration.sourceText !== action.text
         ? { status: 'idle' as const }
         : state.migration;
+      if (action.text.trim().length === 0) {
+        return {
+          ...state,
+          text: action.text,
+          doc: null,
+          parseError: null,
+          validation: emptyValidation,
+          selectedExampleId: null,
+          selectedProtocolVersion: null,
+          migration,
+        };
+      }
       return { ...state, text: action.text, selectedExampleId: null, migration };
     }
     case 'LOAD_EXAMPLE':
       return {
         ...state,
         text: action.example.content,
+        doc: null,
+        parseError: null,
+        validation: emptyValidation,
         selectedExampleId: action.example.id,
         selectedProtocolVersion: null,
         migration: { status: 'idle' },
@@ -179,6 +195,7 @@ interface DocContextValue {
   state: DocState;
   setText: (text: string) => void;
   loadExample: (example: ExampleEntry) => void;
+  importText: (text: string, sourceUrl?: string) => void;
   setSelectedProtocolVersion: (protocolVersion: SupportedProtocolVersion | null) => void;
   confirmMigration: () => void;
   cancelMigration: () => void;
@@ -227,6 +244,15 @@ export function DocProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const parseAndValidate = useCallback((raw: string) => {
+    if (raw.trim().length === 0) {
+      dispatch({ type: 'SET_PARSED', doc: null, parseError: null, format: 'yaml' });
+      dispatch({ type: 'SET_VALIDATION', validation: emptyValidation });
+      try {
+        localStorage.setItem(LOCALSTORAGE_KEY, raw);
+      } catch { /* quota exceeded — ignore */ }
+      return;
+    }
+
     // 1. Parse
     let doc: McpDescDocument | null = null;
     let parseError: string | null = null;
@@ -302,11 +328,23 @@ export function DocProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timerRef.current);
   }, [state.text, parseAndValidate]);
 
-  const setText = useCallback((text: string) => dispatch({ type: 'SET_TEXT', text }), []);
+  const setText = useCallback((text: string) => {
+    dispatch({ type: 'SET_TEXT', text });
+    replaceEditorUrlSource({ type: 'document' });
+  }, []);
   const loadExample = useCallback(
-    (example: ExampleEntry) => dispatch({ type: 'LOAD_EXAMPLE', example }),
+    (example: ExampleEntry) => {
+      dispatch({ type: 'LOAD_EXAMPLE', example });
+      replaceEditorUrlSource({ type: 'example', id: example.id });
+    },
     [],
   );
+  const importText = useCallback((text: string, sourceUrl?: string) => {
+    dispatch({ type: 'SET_TEXT', text });
+    replaceEditorUrlSource(sourceUrl
+      ? { type: 'url', value: sourceUrl }
+      : { type: 'document' });
+  }, []);
   const cancelMigration = useCallback(() => {
     const migration = migrationRef.current;
     if (migration.status === 'confirmation-required') {
@@ -340,7 +378,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const result = migrateMcpDescription07ToRc3(migration.source, {
+    const result = migrateMcpDescription07To08(migration.source, {
       specification: MCPDESC_SPECIFICATION,
       sourceValidated: true,
       defaultProtocolVersion: '2025-11-25',
@@ -356,6 +394,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
 
     const text = serializeMcpDescription(result.value as JsonValue, { format: migration.format });
     dispatch({ type: 'MIGRATION_SUCCEEDED', text, report: result.report });
+    replaceEditorUrlSource({ type: 'document' });
   }, []);
   const setSelectedProtocolVersion = useCallback(
     (protocolVersion: SupportedProtocolVersion | null) =>
@@ -387,6 +426,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
       state,
       setText,
       loadExample,
+      importText,
       confirmMigration,
       cancelMigration,
       setSelectedProtocolVersion,

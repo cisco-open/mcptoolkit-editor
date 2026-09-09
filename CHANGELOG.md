@@ -13,6 +13,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[2.2.0] — 2026-09-09](#220--2026-09-09)
+- [[2.1.2] — 2026-09-09](#212--2026-09-09)
 - [[2.1.1] — 2026-09-08](#211--2026-09-08)
 - [[2.1.0] — 2026-09-08](#210--2026-09-08)
 - [[2.0.1] — 2026-09-07](#201--2026-09-07)
@@ -28,6 +30,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+## [2.2.0] — 2026-09-09
+
+### Changed
+
+- Target the stable MCP Description `0.8.0` specification for validation,
+  schema hints, examples, component resolution, and migration from 0.7
+  documents using `@mcpdesc/core@0.11.0` and
+  `@mcpdesc/validator@0.12.0`.
+
+## [2.1.2] — 2026-09-09
+
+### Fixed
+
+- Keep editor source query parameters in sync when selecting examples, importing documents, or editing loaded content without retaining manually entered import URLs.
+- Recover the preview after invalid content is fixed or replaced with an example, and show a neutral no-content state when the editor contains only whitespace.
 
 ## [2.1.1] — 2026-09-08
 
@@ -79,12 +97,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ### Changed
 
-- Target MCP Description `0.8.0-rc.3` with `@mcpdesc/core@^0.9.1` and
-  `@mcpdesc/validator@^0.10.1`. Pre-standard server extension maps on MCP 2025
+- Target MCP Description `0.8.0` with `@mcpdesc/core` and
+  `@mcpdesc/validator`. Pre-standard server extension maps on MCP 2025
   protocols are preserved and reported as warnings, demonstrated by the bundled
   Miro vendor example.
-- Migrate legacy MCP Description 0.7 documents directly to the immutable RC.3
-  snapshot using the native core converter.
+- Migrate legacy MCP Description 0.7 documents directly to 0.8.0 using the
+  native core converter.
 - Bundle the Microsoft Learn MCP server as a vendor example.
 
 ## [2.0.0-rc.1] — 2026-09-04
@@ -131,17 +149,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 - Upgrade to `@mcpdesc/core@^0.7.0` and `@mcpdesc/validator@^0.8.0`.
 - Replace the untyped `components` placeholder with typed component registries
   and inline-or-reference unions for tool schemas and declaration examples.
-- Target MCP Description `0.8.0-rc.1` using the CSP-safe
+- Target MCP Description `0.8.0` using the CSP-safe
   `@mcpdesc/validator/standalone` and `@mcpdesc/core` packages. The editor now
-  validates the full structural and semantic RC.1 contract.
+  validates the full structural and semantic contract.
 - Update the editor schema, bundled examples, types, Monaco diagnostics, and
   preview for root protocol versions, protocol-scoped capabilities, and named
   security schemes. Multi-version documents can be viewed as an Effective
   Protocol View.
 - Show explicit root and declaration-level security requirements in the card
   preview without inferring inherited security policy.
-- Refresh the README and V2 support plan for the implemented RC.1 integration,
-  current migration behavior, and deferred release work.
+- Refresh the README for the implemented 0.8 integration and current migration
+  behavior.
 - Emphasize card-view MCP Versions values and reduce the Input, Output, and
   Arguments summary labels.
 - Move opt-in multi-version effective-view selection into the MCP Versions

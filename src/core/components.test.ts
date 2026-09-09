@@ -32,7 +32,7 @@ import siblingOverride from './__fixtures__/components/invalid/sibling-override.
 import unknownNamespace from './__fixtures__/components/invalid/unknown-namespace.yaml?raw';
 import wrongNamespace from './__fixtures__/components/invalid/wrong-namespace.yaml?raw';
 
-const SPECIFICATION = '0.8.0-rc.3' as const;
+const SPECIFICATION = '0.8.0' as const;
 
 function parse(source: string) {
   const parsed = parseMcpDescriptionSource(source);

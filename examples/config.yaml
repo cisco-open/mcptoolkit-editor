@@ -46,7 +46,7 @@ sections:
         file: features/full-featured.yaml
 
   # SECTION
-  - label: "Public Servers"
+  - label: "Official Servers"
     entries:
       - label: Cisco DevNet
         id: devnet

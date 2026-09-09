@@ -1,12 +1,34 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Toolbar from '../components/Toolbar';
-import { examples } from '../examples';
+import ValidationPanel from '../components/ValidationPanel';
+import PreviewPanel from '../components/preview/PreviewPanel';
+import { defaultExample, examples } from '../examples';
 import { DocProvider, useDoc } from './useDoc';
 
 function CurrentText() {
   const { state } = useDoc();
   return <output data-testid="current-text">{state.text}</output>;
+}
+
+function EditDocument() {
+  const { setText } = useDoc();
+  return <button onClick={() => setText('edited content')}>Edit document</button>;
+}
+
+function DocumentControls() {
+  const { loadExample, setText, state } = useDoc();
+  const basicExample = examples.find(({ id }) => id === 'basic')!;
+  return (
+    <>
+      <button onClick={() => setText(' \n\t ')}>Clear document</button>
+      <button onClick={() => setText('{')}>Break document</button>
+      <button onClick={() => setText(defaultExample)}>Fix document</button>
+      <button onClick={() => loadExample(basicExample)}>Load Basic</button>
+      <output data-testid="has-document">{String(Boolean(state.doc))}</output>
+      <output data-testid="parse-error">{state.parseError ?? ''}</output>
+    </>
+  );
 }
 
 describe('document startup', () => {
@@ -50,6 +72,24 @@ describe('document startup', () => {
     expect(screen.getByTestId('current-text').textContent).toBe('saved content');
   });
 
+  it('updates the URL for selected examples and clears document source parameters after edits', () => {
+    history.replaceState({}, '', '/editor?url=https%3A%2F%2Fexample.com%2Fdoc.yaml&theme=dark#preview');
+
+    render(
+      <DocProvider>
+        <Toolbar onImport={() => {}} />
+        <CurrentText />
+        <EditDocument />
+      </DocProvider>,
+    );
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'full-featured' } });
+    expect(window.location.href).toContain('/editor?theme=dark&example=full-featured#preview');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit document' }));
+    expect(window.location.href).toContain('/editor?theme=dark#preview');
+  });
+
   it('renders the default or customized editor title', () => {
     const { rerender } = render(
       <DocProvider>
@@ -66,5 +106,64 @@ describe('document startup', () => {
     );
 
     expect(screen.getByText('{mcpdesc} Editor')).toBeTruthy();
+  });
+
+  it('shows a neutral no-content state after clearing the editor', () => {
+    render(
+      <DocProvider>
+        <DocumentControls />
+        <PreviewPanel />
+        <ValidationPanel />
+      </DocProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear document' }));
+
+    expect(screen.getByText('No contents')).toBeTruthy();
+    expect(screen.getByTestId('validation-status').textContent).toContain('No contents');
+    expect(screen.getByTestId('has-document').textContent).toBe('false');
+    expect(screen.queryByText('Valid')).toBeNull();
+  });
+
+  it('recovers the preview after invalid text becomes valid', async () => {
+    vi.useFakeTimers();
+    render(
+      <DocProvider>
+        <DocumentControls />
+        <PreviewPanel />
+      </DocProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Break document' }));
+    await act(async () => vi.advanceTimersByTime(300));
+    expect(screen.getByText('Parse Error')).toBeTruthy();
+    expect(screen.getByTestId('has-document').textContent).toBe('false');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fix document' }));
+    await act(async () => vi.advanceTimersByTime(300));
+    expect(screen.queryByText('Parse Error')).toBeNull();
+    expect(screen.getByTestId('has-document').textContent).toBe('true');
+    vi.useRealTimers();
+  });
+
+  it('clears stale error state immediately when loading Basic', async () => {
+    vi.useFakeTimers();
+    render(
+      <DocProvider>
+        <DocumentControls />
+      </DocProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Break document' }));
+    await act(async () => vi.advanceTimersByTime(300));
+    expect(screen.getByTestId('parse-error').textContent).not.toBe('');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Load Basic' }));
+    expect(screen.getByTestId('parse-error').textContent).toBe('');
+    expect(screen.getByTestId('has-document').textContent).toBe('false');
+
+    await act(async () => vi.advanceTimersByTime(300));
+    expect(screen.getByTestId('has-document').textContent).toBe('true');
+    vi.useRealTimers();
   });
 });

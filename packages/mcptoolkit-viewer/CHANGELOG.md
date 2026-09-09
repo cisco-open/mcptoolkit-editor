@@ -7,6 +7,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[2.2.0] — 2026-09-09](#220--2026-09-09)
 - [[2.1.1] — 2026-09-08](#211--2026-09-08)
 - [[2.1.0] — 2026-09-08](#210--2026-09-08)
 - [[2.0.1] — 2026-09-07](#201--2026-09-07)
@@ -20,6 +21,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+## [2.2.0] — 2026-09-09
+
+### Changed
+
+- Target the stable MCP Description `0.8.0` specification for card rendering,
+  effective protocol views, and reusable component references.
 
 ## [2.1.1] — 2026-09-08
 
@@ -54,7 +62,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ### Changed
 
-- Target the immutable MCP Description `0.8.0-rc.3` schema and support reusable
+- Target the MCP Description `0.8.0` schema and support reusable
   component references in the stable 2.x card-view release.
 
 ## [2.0.0-rc.1] — 2026-09-04
@@ -76,7 +84,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   and declaration examples. Resolved references render identically to inline
   content; unresolved `$componentRef` values render as a compact reference
   indicator instead of raw JSON.
-- Render MCP Description 0.8 RC.1 root protocol versions and named
+- Render MCP Description 0.8 root protocol versions and named
   `securitySchemes` in the shared card view.
 - Render explicitly declared security requirements for the root, transports,
   tools, resources, resource templates, and prompts without inheritance.

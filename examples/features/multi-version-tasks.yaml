@@ -10,12 +10,12 @@
 # protocol contract changed, not because the server happens to ship two
 # unrelated product editions.
 
-$schema: https://mcpdesc.org/schema/mcp-description/0.8.0-rc.3.json
+$schema: https://mcpdesc.org/schema/mcp-description/0.8.0.json
 mcpdesc: 0.8.0
 
 info:
   name: chess-analysis-server
-  title: Multi-Protocol Chess Analysis MCP Server
+  title: Chess Analysis MCP Server
   version: 2.0.0
   description: >
     Provides chess-engine analysis while exposing long-running work using the
