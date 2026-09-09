@@ -5,7 +5,7 @@ describe('bundled examples', () => {
   it('loads configured examples from nested relative paths', () => {
     expect(exampleGroups.map(({ label }) => label)).toEqual([
       'Features Demonstration',
-      'Public Servers',
+      'Official Servers',
     ]);
     expect(examples.map(({ id }) => id)).toContain('basic');
     expect(examples.map(({ id }) => id)).toContain('devnet');

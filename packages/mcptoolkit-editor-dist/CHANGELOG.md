@@ -10,6 +10,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pa
 
 ## Unreleased
 
+## [2.1.2] — 2026-09-09
+
+### Fixed
+
+- Ship the editor with reliable preview recovery after invalid or empty content
+  and when replacing edited content with a bundled example.
+
 ## [2.1.1] — 2026-09-08
 
 ### Added
