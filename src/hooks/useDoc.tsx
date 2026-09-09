@@ -41,6 +41,7 @@ import {
   getExampleFromSearch,
   type ExampleEntry,
 } from '../examples';
+import { replaceEditorUrlSource } from '../editorUrl';
 
 // ============================================================================
 // State shape
@@ -179,6 +180,7 @@ interface DocContextValue {
   state: DocState;
   setText: (text: string) => void;
   loadExample: (example: ExampleEntry) => void;
+  importText: (text: string, sourceUrl?: string) => void;
   setSelectedProtocolVersion: (protocolVersion: SupportedProtocolVersion | null) => void;
   confirmMigration: () => void;
   cancelMigration: () => void;
@@ -302,11 +304,23 @@ export function DocProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timerRef.current);
   }, [state.text, parseAndValidate]);
 
-  const setText = useCallback((text: string) => dispatch({ type: 'SET_TEXT', text }), []);
+  const setText = useCallback((text: string) => {
+    dispatch({ type: 'SET_TEXT', text });
+    replaceEditorUrlSource({ type: 'document' });
+  }, []);
   const loadExample = useCallback(
-    (example: ExampleEntry) => dispatch({ type: 'LOAD_EXAMPLE', example }),
+    (example: ExampleEntry) => {
+      dispatch({ type: 'LOAD_EXAMPLE', example });
+      replaceEditorUrlSource({ type: 'example', id: example.id });
+    },
     [],
   );
+  const importText = useCallback((text: string, sourceUrl?: string) => {
+    dispatch({ type: 'SET_TEXT', text });
+    replaceEditorUrlSource(sourceUrl
+      ? { type: 'url', value: sourceUrl }
+      : { type: 'document' });
+  }, []);
   const cancelMigration = useCallback(() => {
     const migration = migrationRef.current;
     if (migration.status === 'confirmation-required') {
@@ -356,6 +370,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
 
     const text = serializeMcpDescription(result.value as JsonValue, { format: migration.format });
     dispatch({ type: 'MIGRATION_SUCCEEDED', text, report: result.report });
+    replaceEditorUrlSource({ type: 'document' });
   }, []);
   const setSelectedProtocolVersion = useCallback(
     (protocolVersion: SupportedProtocolVersion | null) =>
@@ -387,6 +402,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
       state,
       setText,
       loadExample,
+      importText,
       confirmMigration,
       cancelMigration,
       setSelectedProtocolVersion,

@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import Toolbar from '../components/Toolbar';
 import { examples } from '../examples';
@@ -7,6 +7,11 @@ import { DocProvider, useDoc } from './useDoc';
 function CurrentText() {
   const { state } = useDoc();
   return <output data-testid="current-text">{state.text}</output>;
+}
+
+function EditDocument() {
+  const { setText } = useDoc();
+  return <button onClick={() => setText('edited content')}>Edit document</button>;
 }
 
 describe('document startup', () => {
@@ -48,6 +53,24 @@ describe('document startup', () => {
 
     expect(screen.getByRole('combobox')).toHaveProperty('value', '');
     expect(screen.getByTestId('current-text').textContent).toBe('saved content');
+  });
+
+  it('updates the URL for selected examples and clears document source parameters after edits', () => {
+    history.replaceState({}, '', '/editor?url=https%3A%2F%2Fexample.com%2Fdoc.yaml&theme=dark#preview');
+
+    render(
+      <DocProvider>
+        <Toolbar onImport={() => {}} />
+        <CurrentText />
+        <EditDocument />
+      </DocProvider>,
+    );
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'full-featured' } });
+    expect(window.location.href).toContain('/editor?theme=dark&example=full-featured#preview');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit document' }));
+    expect(window.location.href).toContain('/editor?theme=dark#preview');
   });
 
   it('renders the default or customized editor title', () => {

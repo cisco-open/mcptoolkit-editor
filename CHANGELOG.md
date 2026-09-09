@@ -29,6 +29,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
+### Fixed
+
+- Keep editor source query parameters in sync when selecting examples, importing documents, or editing loaded content without retaining manually entered import URLs.
+
 ## [2.1.1] — 2026-09-08
 
 ### Added
