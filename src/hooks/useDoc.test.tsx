@@ -127,6 +127,55 @@ describe('document startup', () => {
     expect(screen.getByText('{mcpdesc} Editor')).toBeTruthy();
   });
 
+  it('renders a plain title link in a new tab', () => {
+    render(
+      <DocProvider>
+        <Toolbar
+          title="{mcpdesc} Editor"
+          titleUrl="https://mcpdesc.org"
+          titleUrlTarget="_blank"
+          onImport={() => {}}
+        />
+      </DocProvider>,
+    );
+
+    const link = screen.getByRole('link', { name: '{mcpdesc} Editor' });
+    expect(link.getAttribute('href')).toBe('https://mcpdesc.org');
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(link.className).toContain('no-underline');
+  });
+
+  it('does not render unsafe title URLs as links', () => {
+    render(
+      <DocProvider>
+        <Toolbar title="Editor" titleUrl="javascript:alert(1)" onImport={() => {}} />
+      </DocProvider>,
+    );
+
+    expect(screen.queryByRole('link', { name: 'Editor' })).toBeNull();
+    expect(screen.getByText('Editor')).toBeTruthy();
+  });
+
+  it('renders a standard title link in the same tab by default', () => {
+    render(
+      <DocProvider>
+        <Toolbar
+          title="MCP Description"
+          titleUrl=" https://mcpdesc.org "
+          titleLinkAppearance="standard"
+          onImport={() => {}}
+        />
+      </DocProvider>,
+    );
+
+    const link = screen.getByRole('link', { name: 'MCP Description' });
+    expect(link.getAttribute('href')).toBe('https://mcpdesc.org');
+    expect(link.getAttribute('target')).toBe('_self');
+    expect(link.getAttribute('rel')).toBeNull();
+    expect(link.className).toContain('underline');
+  });
+
   it('shows a neutral no-content state after clearing the editor', () => {
     render(
       <DocProvider>

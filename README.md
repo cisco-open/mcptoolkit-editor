@@ -3,7 +3,7 @@
 A web-based editor for [MCP Description](#the-mcp-description-mcpdesc-format) documents.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Status: release](https://img.shields.io/badge/status-2.2.1-brightgreen.svg)](CHANGELOG.md)
+[![Status: release](https://img.shields.io/badge/status-2.2.2-brightgreen.svg)](CHANGELOG.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![mcpdesc: 0.8](https://img.shields.io/badge/mcpdesc-0.8-blue.svg)](https://mcpdesc.org)
 
@@ -42,6 +42,25 @@ npm run dev
 
 Open **http://localhost:5173**. The editor loads the bundled Minimal example;
 your edits persist in local storage.
+
+### Configure the editor title
+
+Source consumers can customize the toolbar title and optionally link it:
+
+```tsx
+<App options={{
+  title: '{mcpdesc} Editor',
+  titleUrl: 'https://mcpdesc.org',
+  titleUrlTarget: '_blank',
+  titleLinkAppearance: 'plain',
+}} />
+```
+
+The target defaults to `_self`; use `_blank` to open a new tab. Link appearance
+defaults to `plain`, matching the unlinked title, or can be `standard` for a
+conventional underlined link. Prebuilt `-dist` hosts can configure the same
+options with root-element attributes; see the
+[`@cisco_open/mcptoolkit-editor-dist` README](packages/mcptoolkit-editor-dist/README.md#configure-the-editor-title).
 
 ### Try the bundled examples
 

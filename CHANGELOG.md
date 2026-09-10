@@ -13,6 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[2.2.2] — 2026-09-09](#222--2026-09-09)
 - [[2.2.1] — 2026-09-09](#221--2026-09-09)
 - [[2.2.0] — 2026-09-09](#220--2026-09-09)
 - [[2.1.2] — 2026-09-09](#212--2026-09-09)
@@ -31,6 +32,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+## [2.2.2] — 2026-09-09
+
+### Added
+
+- Allow editor and prebuilt `-dist` consumers to make the toolbar title an
+  HTTP(S) link, choose same-tab or new-tab navigation, and select a plain or
+  standard link appearance. Include a configured editor demo page.
 
 ## [2.2.1] — 2026-09-09
 
