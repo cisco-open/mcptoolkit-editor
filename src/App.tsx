@@ -51,6 +51,9 @@ function Preview() {
 
 export interface EditorOptions {
   title?: string;
+  titleUrl?: string;
+  titleUrlTarget?: '_self' | '_blank';
+  titleLinkAppearance?: 'plain' | 'standard';
 }
 
 export interface AppProps {
@@ -64,7 +67,13 @@ export default function App({ options = {} }: AppProps) {
   return (
     <DocProvider>
       <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100">
-        <Toolbar title={options.title} onImport={() => setImportOpen(true)} />
+        <Toolbar
+          title={options.title}
+          titleUrl={options.titleUrl}
+          titleUrlTarget={options.titleUrlTarget}
+          titleLinkAppearance={options.titleLinkAppearance}
+          onImport={() => setImportOpen(true)}
+        />
         <SplitPane
           left={<Editor />}
           right={(

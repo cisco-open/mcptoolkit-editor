@@ -14,10 +14,31 @@ const renderer = new McpDescRenderer();
 export interface ToolbarProps {
   onImport: () => void;
   title?: string;
+  titleUrl?: string;
+  titleUrlTarget?: '_self' | '_blank';
+  titleLinkAppearance?: 'plain' | 'standard';
 }
 
-export default function Toolbar({ onImport, title = 'MCP Description Editor' }: ToolbarProps) {
+function safeTitleUrl(value?: string): string | undefined {
+  const candidate = value?.trim();
+  if (!candidate) return undefined;
+  try {
+    const url = new URL(candidate, window.location.href);
+    return url.protocol === 'http:' || url.protocol === 'https:' ? candidate : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export default function Toolbar({
+  onImport,
+  title = 'MCP Description Editor',
+  titleUrl,
+  titleUrlTarget = '_self',
+  titleLinkAppearance = 'plain',
+}: ToolbarProps) {
   const { state, loadExample, setText, resolvedDoc } = useDoc();
+  const linkUrl = safeTitleUrl(titleUrl);
 
   const handleExampleChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -73,7 +94,18 @@ export default function Toolbar({ onImport, title = 'MCP Description Editor' }: 
   return (
     <header className="flex items-center gap-2 px-3 py-1.5 bg-zinc-950 border-b border-zinc-800 shrink-0">
       {/* Brand */}
-      <span className="text-sm font-semibold text-zinc-200 mr-2 select-none">{title}</span>
+      {linkUrl ? (
+        <a
+          className={`text-sm font-semibold mr-2 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${titleLinkAppearance === 'standard' ? 'text-sky-400 underline underline-offset-2 hover:text-sky-300' : 'text-zinc-200 no-underline hover:text-white'}`}
+          href={linkUrl}
+          target={titleUrlTarget}
+          rel={titleUrlTarget === '_blank' ? 'noopener noreferrer' : undefined}
+        >
+          {title}
+        </a>
+      ) : (
+        <span className="text-sm font-semibold text-zinc-200 mr-2 select-none">{title}</span>
+      )}
 
       <div className="w-px h-5 bg-zinc-800" />
 

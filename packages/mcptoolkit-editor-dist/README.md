@@ -41,14 +41,30 @@ Because assets use relative paths, serving from a subpath such as
 ## Configure the editor title
 
 Set a `data-title` attribute on the root element in `dist/index.html` to replace
-the default `MCP Description Editor` toolbar title:
+the default `MCP Description Editor` toolbar title. Add `data-title-url` to make
+the title a link:
 
 ```html
-<div id="root" data-title="{mcpdesc} Editor"></div>
+<div
+	id="root"
+	data-title="{mcpdesc} Editor"
+	data-title-url="https://mcpdesc.org"
+	data-title-url-target="_blank"
+	data-title-link-appearance="plain"
+></div>
 ```
 
-Add the attribute before the editor's module script runs. Omitting it or using
-an empty value keeps the default title.
+Add the attributes before the editor's module script runs. The link accepts
+HTTP and HTTPS URLs. `data-title-url-target` supports `_self` (the default) or
+`_blank`; new-tab links use `noopener noreferrer`. The optional
+`data-title-link-appearance` is `plain` by default, preserving the normal title
+appearance, or `standard` for an underlined blue link. Omitting `data-title` or
+using an empty value keeps the default title.
+
+The repository includes a runnable
+[`demo/editor.html`](https://github.com/cisco-open/mcptoolkit-editor/blob/main/demo/editor.html)
+example. Start the development server with `npm run dev`, then open
+`http://localhost:5173/demo/editor.html`.
 
 ## Content-Security-Policy
 

@@ -10,6 +10,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pa
 
 ## Unreleased
 
+## [2.2.2] — 2026-09-09
+
+### Added
+
+- Allow hosts to configure the toolbar title as an HTTP(S) link with same-tab
+  or new-tab navigation and plain or standard link appearance.
+
 ## [2.2.1] — 2026-09-09
 
 ### Fixed
