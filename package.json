@@ -1,7 +1,7 @@
 {
   "name": "mcptoolkit-editor",
   "private": true,
-  "version": "2.2.2",
+  "version": "2.3.0",
   "description": "A web-based editor for MCP Description documents — validate, visualize, and export.",
   "license": "Apache-2.0",
   "repository": {
@@ -16,6 +16,7 @@
   ],
   "scripts": {
     "dev": "vite",
+    "demo:editor": "vite --host 127.0.0.1 --open /demo/editor.html",
     "build": "tsc -b && vite build",
     "build:viewer": "npm run build --workspace=packages/mcptoolkit-viewer",
     "preview": "vite preview",
@@ -25,8 +26,9 @@
     "sync:badge": "node scripts/sync-badge.mjs",
     "sync:version": "node scripts/align-editor-dist-version.mjs",
     "verify:versions": "node scripts/align-editor-dist-version.mjs --check",
-    "verify:lockfile": "npm ci --dry-run",
-    "prerelease": "npm run verify:versions && npm run sync:badge && npm run verify:lockfile && npm run lint && npm run test && npm run build && npm run build:viewer",
+    "release:prepare": "node scripts/prepare-release.mjs",
+    "release:check": "node scripts/check-release.mjs",
+    "prerelease": "npm run release:check",
     "viewer": "npm run build --workspace=packages/mcptoolkit-viewer && echo '\n🚀 MCP Toolkit Viewer available at:\n   http://localhost:8888/demo/viewer.html?style=light\n' && python3 -m http.server 8888 -b 127.0.0.1"
   },
   "dependencies": {

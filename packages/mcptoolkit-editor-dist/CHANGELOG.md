@@ -10,6 +10,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pa
 
 ## Unreleased
 
+## [2.3.0] — 2026-09-10
+
+### Changed
+
+- Verify the prebuilt package with an artifact smoke test and npm package dry
+  run before release.
+
 ## [2.2.2] — 2026-09-09
 
 ### Added

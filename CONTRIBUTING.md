@@ -51,7 +51,7 @@ npm test
 Before submitting a PR, please run:
 
 ```bash
-npm run prerelease   # link check + build + full test suite
+npm run release:check   # metadata, lint, tests, and affected builds
 ```
 
 ### Developer Certificate of Origin (DCO)

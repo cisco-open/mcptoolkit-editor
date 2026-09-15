@@ -88,6 +88,7 @@ For agents: batch logically related changes into a single branch and PR rather t
 ```bash
 npm install
 npm run dev      # Vite dev server on :5173
+npm run demo:editor # Open the configured editor demo on :5173
 npm run build    # Production build → dist/
 ```
 
@@ -95,29 +96,35 @@ npm run build    # Production build → dist/
 
 The prebuilt `@cisco_open/mcptoolkit-editor-dist` bundle is the **primary** published artifact; releases are tag-driven on the **default bare `v<version>`** tag (matched as `v[0-9]*`) via `.github/workflows/publish-editor-dist.yml`. The `@cisco_open/mcptoolkit-viewer` workspace publishes on `viewer-v*` tags via `.github/workflows/publish.yml`. Editor-dist mirrors the root app version; the viewer versions independently.
 
-**Version alignment:** `@cisco_open/mcptoolkit-editor-dist` is literally the built root app, so its version **must equal the root `package.json` version** (root is the source of truth). `npm run verify:versions` (run first by `prerelease`) fails on drift; `npm run sync:version` copies the root version into the editor-dist manifest. The viewer versions independently and is not affected.
+**Version alignment:** `@cisco_open/mcptoolkit-editor-dist` is literally the built root app, so its version **must equal the root `package.json` version** (root is the source of truth). `npm run release:prepare -- <version>` aligns the manifests and lockfile. The viewer versions independently and is not affected.
 
-Before proposing a release PR, run the prerelease gate:
+Prepare and check a release with:
 
 ```bash
-npm run prerelease
+npm run release:prepare -- X.Y.Z
+npm run release:check
 ```
 
-This runs `npm run verify:versions` (asserts the editor-dist version matches the root app version), `npm run sync:badge` (syncs the README status badge to the new version), `npm ci --dry-run` (verifies `package-lock.json` is in sync with the manifests), lints, and then builds both the editor and the viewer library. It mirrors the `npm ci` + lint + build path that CI and the publish workflow use.
+`release:prepare` is the mutating phase: it requires the matching
+`release/X.Y.Z` branch and changelog sections, aligns root/editor-dist versions,
+updates the lockfile, and syncs the README badge. `release:check` is the
+non-mutating gate: it verifies release metadata, runs lint and the full test
+suite, builds/packages editor-dist, smoke-tests its generated entry point, and
+builds the independent viewer only when viewer or shared-core files changed.
+`npm run prerelease` remains an alias for `release:check`.
 
 Release checklist (see `.github/agents/release-manager.agent.md` and `.github/skills/release/SKILL.md` for the full procedure):
 
-1. Bump `version` in `packages/mcptoolkit-viewer/package.json` (and the root `package.json` for suite alignment).
-2. Update the `version` constant in `packages/mcptoolkit-viewer/src/index.tsx`.
-3. Roll up **both** changelogs (see the Changelogs section above).
-4. Run `npm install` so `package-lock.json` reflects the new versions, and commit it — otherwise `npm ci` fails in CI/publish.
-5. Run `npm run prerelease` and confirm it is green.
-6. Open a `release/X.Y.Z` PR; after merge, tag `viewer-vX.Y.Z` on `main` to publish. RC versions (`-rc.N`) publish under the `next` dist-tag; stable under `latest`.
+1. Create `release/X.Y.Z` and roll up the changelog(s) matching the affected package scope.
+2. Run `npm run release:prepare -- X.Y.Z`.
+3. Run `npm run release:check` and confirm it is green.
+4. Commit the prepared metadata and open the release PR.
+5. After merge, tag `vX.Y.Z` for editor-dist or `viewer-vX.Y.Z` for the independently versioned viewer. RC versions (`-rc.N`) publish under `next`; stable versions under `latest`.
 
 ## Testing
 
 Tests run under **Vitest** (jsdom): `npm run test` (or `npm run test:watch`).
-`npm run prerelease` runs them.
+`npm run release:check` runs them.
 
 - Unit tests for `src/core/` live beside the source (`*.test.ts`). Shared
   document fixtures live in `src/core/__fixtures__/` and are imported with

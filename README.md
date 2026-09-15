@@ -3,7 +3,7 @@
 A web-based editor for [MCP Description](#the-mcp-description-mcpdesc-format) documents.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Status: release](https://img.shields.io/badge/status-2.2.2-brightgreen.svg)](CHANGELOG.md)
+[![Status: release](https://img.shields.io/badge/status-2.3.0-brightgreen.svg)](CHANGELOG.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![mcpdesc: 0.8](https://img.shields.io/badge/mcpdesc-0.8-blue.svg)](https://mcpdesc.org)
 
@@ -42,6 +42,14 @@ npm run dev
 
 Open **http://localhost:5173**. The editor loads the bundled Minimal example;
 your edits persist in local storage.
+
+To launch the configured title-link demo directly, run:
+
+```bash
+npm run demo:editor
+```
+
+This opens **http://localhost:5173/demo/editor.html**.
 
 ### Configure the editor title
 
@@ -234,13 +242,15 @@ Publishing is tag-driven via [`.github/workflows/publish.yml`](.github/workflows
 
 1. Bump `version` in [`packages/mcptoolkit-viewer/package.json`](packages/mcptoolkit-viewer/package.json) and the `version` constant in `packages/mcptoolkit-viewer/src/index.tsx`.
 2. Update both changelogs (see [`AGENTS.md`](AGENTS.md)).
-3. Run `npm install` so [`package-lock.json`](package-lock.json) reflects the new versions, then run the prerelease gate and confirm it is green:
+3. Update the viewer lockfile metadata with `npm install`, then run the release
+  gate and confirm it is green:
 
    ```bash
-   npm run prerelease
+  npm run release:check
    ```
 
-   This runs `npm ci --dry-run` (verifies the lockfile is in sync — the publish workflow's `npm ci` fails otherwise), `npm run verify:versions` (asserts the prebuilt `@cisco_open/mcptoolkit-editor-dist` version matches the root app version), and builds both the editor and the viewer library.
+  The gate verifies editor release metadata, runs lint and all tests, packages
+  editor-dist, and builds the viewer because viewer files changed.
 4. Merge to `main`, then push a `viewer-v<version>` tag. The workflow builds the `mcptoolkit-viewer` workspace and runs `npm publish` with provenance. Pre-release versions (e.g. `-rc.N`) publish under the `next` dist-tag; stable versions under `latest`.
 
 > Release tags: the primary `@cisco_open/mcptoolkit-editor-dist` bundle uses the **default bare `v<version>`** tag; the viewer uses `viewer-v<version>`. See [`docs/maintainers/distribution.md`](docs/maintainers/distribution.md#tag--version-convention).
