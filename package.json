@@ -35,7 +35,7 @@
     "@monaco-editor/react": "^4.7.0",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
-    "handlebars": "^4.7.8",
+    "handlebars": "^4.7.10",
     "marked": "^17.0.4",
     "monaco-editor": "^0.52.2",
     "react": "^18.3.1",
