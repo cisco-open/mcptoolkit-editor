@@ -31,16 +31,16 @@
   },
   "dependencies": {
     "@mcpdesc/core": "0.11.0",
-    "@mcpdesc/validator": "0.12.0",
+    "@mcpdesc/validator": "0.13.0",
     "@monaco-editor/react": "^4.7.0",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
-    "handlebars": "^4.7.8",
+    "handlebars": "^4.7.10",
     "marked": "^17.0.4",
-    "monaco-editor": "^0.52.2",
+    "monaco-editor": "^0.57.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "yaml": "^2.6.1"
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
