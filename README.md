@@ -103,10 +103,16 @@ http://localhost:5173/?url=https%3A%2F%2Fexample.com%2Fserver.mcpdesc.yaml
 
 ### Validate and preview
 
-- The **Validation panel** at the bottom shows schema errors and semantic warnings in real time.
+- The **Validation panel** at the bottom shows errors in a dedicated diagnostic
+  strip. Warnings appear there only when no errors remain; paths navigate to the
+  source. The compact header explicitly labels the active **Selector**.
 - The **card preview** renders a structured, interactive view — click any type badge to jump to its definition in the editor.
-- **Validation details** retains rule IDs, protocol context, and each rule's
-  reported status. `not-applicable` and `not-evaluated` are not passes.
+- Expand the disclosure beside the validation status to inspect rule results.
+  Status checkboxes default to **Passed** only, support multiple selections, and
+  disable statuses with no results. Click **Rule Identifier**, **Protocol**, or
+  **Status** to toggle ascending/descending sorting. RC.1 rule rows link to their
+  versioned documentation on mcpdesc.org. `not-applicable` and `not-evaluated`
+  remain distinct statuses, never passes.
 
 ### Migrate to 0.9 RC.1
 

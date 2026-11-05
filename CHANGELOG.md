@@ -65,6 +65,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 - Add native export icons to collection headings and individual declarations,
   using server-, kind-, entry-, and revision-specific filenames. Keep native
   capabilities export disabled until core supports it.
+- Condense validation into a status-line disclosure with an explicit Selector
+  label. Add multi-select status filters (Passed only by default), sortable
+  rule/protocol/status columns, and versioned RC.1 rule documentation links.
+- Separate diagnostics from the rule table: show errors first and show warnings
+  only when no errors remain, with source navigation retained.
 
 ## [2.3.0] — 2026-09-10
 

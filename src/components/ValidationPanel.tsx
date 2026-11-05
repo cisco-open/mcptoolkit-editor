@@ -2,16 +2,53 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { useId, useState } from 'react';
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
+import type { McpDescriptionRuleResult, McpDescriptionRuleResultStatus } from '@mcpdesc/validator/browser';
 import { useDoc } from '../hooks/useDoc';
 import editorPackage from '../../package.json';
 
+const statuses: { value: McpDescriptionRuleResultStatus; label: string }[] = [
+  { value: 'passed', label: 'Passed' },
+  { value: 'failed', label: 'Failed' },
+  { value: 'warning', label: 'Warning' },
+  { value: 'not-applicable', label: 'Not applicable' },
+  { value: 'not-evaluated', label: 'Not evaluated' },
+  { value: 'delegated', label: 'Delegated' },
+];
+
+const columns = [
+  { key: 'rule', label: 'Rule Identifier' },
+  { key: 'protocolVersion', label: 'Protocol' },
+  { key: 'status', label: 'Status' },
+] as const;
+
+function ruleDocumentationUrl(selector: string | null | undefined, rule: string): string | undefined {
+  if (selector !== '0.9.0-rc.1') return undefined;
+  const match = /^([a-z][a-z0-9-]*)\.([a-z0-9.-]+)$/.exec(rule);
+  return match ? `https://mcpdesc.org/docs/rules/${selector}/${match[1]}/${match[2].replace(/\./g, '-')}/` : undefined;
+}
+
 export default function ValidationPanel() {
   const { state, revealPathRef } = useDoc();
+  const [expanded, setExpanded] = useState(false);
+  const [selectedStatuses, setSelectedStatuses] = useState<Set<McpDescriptionRuleResultStatus>>(() => new Set(['passed']));
+  const [sort, setSort] = useState<{ key: typeof columns[number]['key']; direction: 'ascending' | 'descending' }>({ key: 'rule', direction: 'ascending' });
+  const rulesId = useId();
   const { validation } = state;
   const hasContent = state.text.trim().length > 0;
+  const results = validation.results ?? [];
+  const filteredResults = results.filter((result) => selectedStatuses.has(result.status)).sort((left, right) => {
+    const compared = (left[sort.key] ?? '').localeCompare(right[sort.key] ?? '');
+    return sort.direction === 'ascending' ? compared : -compared;
+  });
+  const statusCounts = new Map<McpDescriptionRuleResultStatus, number>();
+  for (const result of results) statusCounts.set(result.status, (statusCounts.get(result.status) ?? 0) + 1);
 
   const errorCount = validation.errors.length;
   const warnCount = validation.warnings.length;
+  const diagnostics = errorCount > 0 ? validation.errors : validation.warnings;
+  const diagnosticTitle = errorCount > 0 ? 'Errors' : 'Warnings';
 
   const statusColor = !hasContent
     ? 'text-amber-400'
@@ -33,16 +70,16 @@ export default function ValidationPanel() {
   return (
     <div className="border-t border-zinc-800 bg-zinc-900 text-xs shrink-0">
       <div className="flex flex-wrap items-center gap-2 px-3 py-1.5">
-        <span role="status" data-testid="validation-status" className={`font-medium ${statusColor}`}>
-          {statusIcon} {statusText}
-        </span>
-        {hasContent && warnCount > 0 && errorCount > 0 && (
-          <span className="text-yellow-400">
-            ⚠ {warnCount} warning{warnCount > 1 ? 's' : ''}
+        <button type="button" aria-label={`${expanded ? 'Collapse' : 'Expand'} validation rules`} aria-expanded={hasContent && expanded}
+          aria-controls={rulesId} disabled={!hasContent || results.length === 0}
+          className="flex items-center gap-1 text-left disabled:cursor-default" onClick={() => setExpanded(!expanded)}>
+          {hasContent && expanded ? <ChevronDown size={14} aria-hidden="true" /> : <ChevronRight size={14} aria-hidden="true" />}
+          <span role="status" data-testid="validation-status" className={`font-medium ${statusColor}`}>
+            {statusIcon} {statusText}
           </span>
-        )}
+        </button>
         {hasContent && validation.selector && (
-          <span className="whitespace-nowrap text-zinc-400">{validation.selector}</span>
+          <span className="whitespace-nowrap text-zinc-400">Selector: {validation.selector}</span>
         )}
         <span className="text-zinc-600 ml-auto">{state.format.toUpperCase()}</span>
         <span className="whitespace-nowrap text-zinc-500">mcptoolkit-editor v{editorPackage.version}</span>
@@ -65,34 +102,69 @@ export default function ValidationPanel() {
           </svg>
         </a>
       </div>
-      {hasContent && (validation.results || errorCount + warnCount > 0) && (
-        <details className="border-t border-zinc-800 px-3 py-1.5">
-          <summary className="cursor-pointer text-zinc-400">Validation details</summary>
-          <div className="max-h-48 space-y-2 overflow-auto py-2">
-            {[...validation.errors, ...validation.warnings].map((issue, index) => (
-              <div key={index} className="break-words">
+      {hasContent && diagnostics.length > 0 && (
+        <section aria-label={`Validation ${diagnosticTitle.toLowerCase()}`} className="border-t border-zinc-800 bg-zinc-950 px-3 py-2">
+          <h2 className={`mb-1 font-medium ${errorCount > 0 ? 'text-red-400' : 'text-yellow-400'}`}>{diagnosticTitle} ({diagnostics.length})</h2>
+          <ol className="max-h-32 space-y-2 overflow-auto">
+            {diagnostics.map((issue, index) => (
+              <li key={index} className="break-words">
                 <button type="button" className="break-all text-left text-sky-300 underline" onClick={() => revealPathRef.current?.(issue.path)}>{issue.path}</button>
                 <p>{issue.message}</p>
                 <p className="break-all text-zinc-400">{issue.rule}{issue.protocolVersions?.length ? ` | ${issue.protocolVersions.join(', ')}` : ''}</p>
-              </div>
+              </li>
             ))}
-            {validation.results && (
-              <table className="w-full text-left">
-                <caption className="pb-2 text-left text-zinc-400">Rule results</caption>
-                <thead><tr><th className="pr-3">Rule</th><th className="pr-3">Protocol</th><th>Status</th></tr></thead>
-                <tbody>{validation.results.map((result, index) => (
-                  <tr key={index}>
-                    <td className="break-all py-0.5 pr-3">{result.rule}</td>
-                    <td className="pr-3">{result.protocolVersion ?? ''}</td>
-                    <td className={result.status === 'passed' ? 'text-green-400' : result.status === 'failed' ? 'text-red-400' : 'text-zinc-400'}>
-                      {result.status}{result.reason ? ` (${result.reason})` : ''}
-                    </td>
-                  </tr>
-                ))}</tbody>
-              </table>
-            )}
+          </ol>
+        </section>
+      )}
+      {hasContent && expanded && results.length > 0 && (
+        <section id={rulesId} aria-label="Validation rules" className="border-t border-zinc-800 px-3 pb-2">
+          <fieldset className="flex flex-wrap items-center gap-x-4 gap-y-2 py-2">
+            <legend className="sr-only">Filter by status</legend>
+            <span className="font-medium text-zinc-400">Filter:</span>
+            {statuses.map(({ value, label }) => {
+              const count = statusCounts.get(value) ?? 0;
+              return <label key={value} className={`flex items-center gap-1.5 ${count === 0 ? 'text-zinc-600' : 'text-zinc-300'}`}>
+                <input type="checkbox" aria-label={label} checked={selectedStatuses.has(value)} disabled={count === 0}
+                  className="accent-sky-500" onChange={() => setSelectedStatuses((previous) => {
+                    const next = new Set(previous);
+                    if (next.has(value)) next.delete(value); else next.add(value);
+                    return next;
+                  })} />
+                {label} <span className="tabular-nums text-zinc-500">({count})</span>
+              </label>;
+            })}
+          </fieldset>
+          <div className="max-h-56 overflow-auto">
+            <table className="w-full min-w-[32rem] table-fixed text-left">
+              <caption className="sr-only">Validation rule results</caption>
+              <thead className="sticky top-0 bg-zinc-900"><tr>{columns.map(({ key, label }) => {
+                const active = sort.key === key;
+                const SortIcon = !active ? ArrowUpDown : sort.direction === 'ascending' ? ArrowUp : ArrowDown;
+                return <th key={key} scope="col" aria-sort={active ? sort.direction : 'none'} className={`border-b border-zinc-700 pb-2 ${key === 'rule' ? 'w-3/5' : 'w-1/5'}`}>
+                  <button type="button" aria-label={`Sort by ${label}`} className="flex items-center gap-1 pr-3 text-zinc-300 hover:text-white" onClick={() => setSort({
+                    key, direction: active && sort.direction === 'ascending' ? 'descending' : 'ascending',
+                  })}>{label}<SortIcon size={12} aria-hidden="true" /></button>
+                </th>;
+              })}</tr></thead>
+              <tbody>{filteredResults.map((result: McpDescriptionRuleResult, index) => {
+                const href = ruleDocumentationUrl(validation.selector, result.rule);
+                return <tr key={`${result.rule}:${result.protocolVersion ?? ''}:${index}`}>
+                  <td className="py-1 pr-3 align-top"><div className="flex items-start gap-1.5">
+                    <span className="break-all">{result.rule}</span>
+                    {href && <a href={href} target="_blank" rel="noopener noreferrer" title={`Open documentation for ${result.rule}`}
+                      aria-label={`Open documentation for ${result.rule}`} className="shrink-0 p-0.5 text-sky-400 hover:text-sky-200"><ExternalLink size={12} aria-hidden="true" /></a>}
+                  </div></td>
+                  <td className="py-1 pr-3 align-top tabular-nums">{result.protocolVersion ?? ''}</td>
+                  <td className={`py-1 align-top ${result.status === 'passed' ? 'text-green-400' : result.status === 'failed' ? 'text-red-400' : result.status === 'warning' ? 'text-yellow-400' : 'text-zinc-400'}`}>
+                    {statuses.find(({ value }) => value === result.status)?.label}
+                    {result.reason && <span className="block break-words text-zinc-500">{result.reason}</span>}
+                  </td>
+                </tr>;
+              })}</tbody>
+            </table>
+            {filteredResults.length === 0 && <p className="py-3 text-zinc-500" role="status">No rule results match the selected statuses.</p>}
           </div>
-        </details>
+        </section>
       )}
     </div>
   );
