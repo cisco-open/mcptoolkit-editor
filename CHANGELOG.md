@@ -34,6 +34,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
+### Fixed
+
+- Preserve original field ordering, including nested fields, when applying
+  0.8 to 0.9 RC.1 conversion to YAML or JSON documents instead of alphabetically
+  sorting keys during serialization.
+
+### Added
+
+- Preview support for MCP Description `0.9.0-rc.1`, pinned to
+  `@mcpdesc/core@0.13.0-rc.5` and `@mcpdesc/validator@0.14.0-rc.5`.
+- Explicit 0.8 to 0.9 RC.1 migration with blocker review, author-selected
+  fixes, a downloadable report and JSON Patch. Migrated documents always
+  retain `$schema: https://mcpdesc.org/schema/mcp-description/0.9.0-rc.1.json`
+  and use `mcpdesc: 0.9.0`; dropping the schema awaits final-release support.
+- Native MCP preview and JSON export for tools, resources, resource templates,
+  and prompts, scoped to a selected protocol revision and declaration.
+- Rule identities, protocol context, and per-rule validation results in editor
+  diagnostics. Unevaluated and inapplicable rules retain their own statuses.
+
+### Changed
+
+- Retain 0.8 editing and 0.7 to 0.8 migration; use maintained 0.8 validation
+  rules and the pinned RC.1 rules for 0.9 documents.
+- Switch offline JSON completion schemas by document version and use the core
+  validator as the authority for document validation markers.
+
 ## [2.3.0] — 2026-09-10
 
 ### Added

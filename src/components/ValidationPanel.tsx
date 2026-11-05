@@ -6,7 +6,7 @@ import { useDoc } from '../hooks/useDoc';
 import editorPackage from '../../package.json';
 
 export default function ValidationPanel() {
-  const { state } = useDoc();
+  const { state, revealPathRef } = useDoc();
   const { validation } = state;
   const hasContent = state.text.trim().length > 0;
 
@@ -32,7 +32,7 @@ export default function ValidationPanel() {
 
   return (
     <div className="border-t border-zinc-800 bg-zinc-900 text-xs shrink-0">
-      <div className="flex items-center gap-2 px-3 py-1.5">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-1.5">
         <span role="status" data-testid="validation-status" className={`font-medium ${statusColor}`}>
           {statusIcon} {statusText}
         </span>
@@ -41,8 +41,11 @@ export default function ValidationPanel() {
             ⚠ {warnCount} warning{warnCount > 1 ? 's' : ''}
           </span>
         )}
+        {hasContent && validation.selector && (
+          <span className="whitespace-nowrap text-zinc-400">{validation.selector}</span>
+        )}
         <span className="text-zinc-600 ml-auto">{state.format.toUpperCase()}</span>
-        <span className="text-zinc-500">mcptoolkit-editor v{editorPackage.version}</span>
+        <span className="whitespace-nowrap text-zinc-500">mcptoolkit-editor v{editorPackage.version}</span>
         <a
           href="https://github.com/cisco-open/mcptoolkit-editor"
           target="_blank"
@@ -62,6 +65,35 @@ export default function ValidationPanel() {
           </svg>
         </a>
       </div>
+      {hasContent && (validation.results || errorCount + warnCount > 0) && (
+        <details className="border-t border-zinc-800 px-3 py-1.5">
+          <summary className="cursor-pointer text-zinc-400">Validation details</summary>
+          <div className="max-h-48 space-y-2 overflow-auto py-2">
+            {[...validation.errors, ...validation.warnings].map((issue, index) => (
+              <div key={index} className="break-words">
+                <button type="button" className="break-all text-left text-sky-300 underline" onClick={() => revealPathRef.current?.(issue.path)}>{issue.path}</button>
+                <p>{issue.message}</p>
+                <p className="break-all text-zinc-400">{issue.rule}{issue.protocolVersions?.length ? ` | ${issue.protocolVersions.join(', ')}` : ''}</p>
+              </div>
+            ))}
+            {validation.results && (
+              <table className="w-full text-left">
+                <caption className="pb-2 text-left text-zinc-400">Rule results</caption>
+                <thead><tr><th className="pr-3">Rule</th><th className="pr-3">Protocol</th><th>Status</th></tr></thead>
+                <tbody>{validation.results.map((result, index) => (
+                  <tr key={index}>
+                    <td className="break-all py-0.5 pr-3">{result.rule}</td>
+                    <td className="pr-3">{result.protocolVersion ?? ''}</td>
+                    <td className={result.status === 'passed' ? 'text-green-400' : result.status === 'failed' ? 'text-red-400' : 'text-zinc-400'}>
+                      {result.status}{result.reason ? ` (${result.reason})` : ''}
+                    </td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            )}
+          </div>
+        </details>
+      )}
     </div>
   );
 }

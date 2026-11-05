@@ -9,15 +9,18 @@ A web-based editor for [MCP Description](#the-mcp-description-mcpdesc-format) do
 
 ## Version Support
 
-> **Current: `main` / 2.x / MCP Description 0.8**
+> **Current: `main` / 2.x / MCP Description 0.8 + 0.9 RC.1 preview**
 >
-> Documents authored for MCP Description 0.7 are automatically migrated
-> one-way to 0.8 when opened. For native 0.7 support, use the maintained
+> Documents authored for MCP Description 0.7 require confirmation to migrate
+> one-way to 0.8 when opened. Migration from 0.8 to 0.9 RC.1 is optional and
+> explicitly reviewed. For native 0.7 support, use the maintained
 > [`v1/main` branch](https://github.com/cisco-open/mcptoolkit-editor/tree/v1/main)
 > and the latest 1.x release.
 
 - **Monaco Editor** — JSON Schema-driven autocomplete, inline squiggles, folding, and syntax highlighting for JSON and YAML
-- **Real-time validation** — CSP-safe structural and semantic validation against MCP Description `0.8.0`
+- **Real-time validation** — CSP-safe structural and semantic validation for MCP Description `0.8.0` and pinned `0.9.0-rc.1`, with rule-linked diagnostics and per-rule results
+- **Reviewed RC migration** — core conversion with explicit blocker fixes and a JSON Patch report; RC schema declarations are always retained
+- **Native MCP projection** — inspect and export tools, resources, resource templates, or prompts for one protocol revision
 - **Cards preview** — collapsible server, transport, security, capability, and named example views, including protocol-scoped Effective Protocol Views
 - **Click-to-navigate** — click any type bubble in the preview to jump to its source in the editor
 - **Markdown preview** — Handlebars-rendered documentation, ready to copy-paste or export
@@ -102,7 +105,33 @@ http://localhost:5173/?url=https%3A%2F%2Fexample.com%2Fserver.mcpdesc.yaml
 
 - The **Validation panel** at the bottom shows schema errors and semantic warnings in real time.
 - The **Cards tab** renders a structured, interactive preview — click any type badge to jump to its definition in the editor.
-- The **Markdown tab** renders the document as human-readable documentation.
+- The **Native MCP tab** on 0.9 documents projects MCP values for a selected
+  protocol revision and declaration kind. Projection errors are shown without
+  substituting the source document; export is disabled until projection succeeds.
+- **Validation details** retains rule IDs, protocol context, and each rule's
+  reported status. `not-applicable` and `not-evaluated` are not passes.
+
+### Migrate to 0.9 RC.1
+
+Open a valid 0.8 document and choose **Migrate to 0.9 RC.1**. Review the
+diagnostics and proposed patch before choosing **Apply migration**. Blocked
+conversions leave the source unchanged. Only explicitly selected fixes remove
+properties or move custom client requirements into `experimental`; ambiguous
+URIs, malformed templates, and fractional integer values require source edits.
+Metadata is never moved into `_meta` or `x-*` automatically.
+
+Migration preserves JSON or YAML format and field ordering, and always emits:
+
+```yaml
+$schema: https://mcpdesc.org/schema/mcp-description/0.9.0-rc.1.json
+mcpdesc: 0.9.0
+```
+
+RC.1 is not the final 0.9 release. Schema-declaration removal will only be
+considered when final 0.9 support is added. Existing 0.8 examples remain valid
+and can be used to try conversion. The editor vendors the pinned RC completion
+schema; maintainers can refresh it with `npm run sync:rc-schema`, which verifies
+the installed validator's schema hash and identifier before copying it.
 
 ### Export
 
@@ -127,12 +156,10 @@ mcpcontract dump \
 ```
 
 > **Canonical source:** the MCP Description specification, versioned schemas, and
-> full governance live in the
-> [mcptoolkit-contract](https://github.com/cisco-open/mcptoolkit-contract)
-> repository (`spec/` and `schemas/mcp-description/`). This editor targets
-> **`0.8.0`** from that source. It accepts valid `0.7.0`
-> documents on import, paste, or restore and migrates them one-way to the
-> stable 0.8 document shape; earlier versions are unsupported.
+> full governance are published at [mcpdesc.org](https://mcpdesc.org).
+> This editor supports stable **`0.8.0`** and preview **`0.9.0-rc.1`** rules.
+> Valid `0.7.0` documents can be migrated one-way to stable 0.8, then explicitly
+> converted to 0.9 RC.1; earlier versions are unsupported.
 
 ## Build and deploy
 

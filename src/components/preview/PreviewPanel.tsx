@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { useDoc } from '../../hooks/useDoc';
 import CardView from './CardView';
+import NativeProjection from './NativeProjection';
 
 const DEFAULT_ZOOM = 1.1;
 const MIN_ZOOM = 0.7;
@@ -14,6 +15,7 @@ const ZOOM_STEP = 0.1;
 export default function PreviewPanel() {
   const { state, effectiveDoc, resolvedDoc } = useDoc();
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
+  const [view, setView] = useState<'cards' | 'native'>('cards');
   const hasContent = state.text.trim().length > 0;
 
   const fontBtnClass =
@@ -61,10 +63,17 @@ export default function PreviewPanel() {
     );
   }
 
+  const native = view === 'native' && state.doc.mcpdesc === '0.9.0';
+
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header bar with zoom controls */}
-      <div className="flex items-center justify-end border-b border-gray-200 bg-gray-50 px-2 shrink-0">
+      <div className="flex flex-wrap items-center justify-end gap-2 border-b border-gray-200 bg-gray-50 px-2 shrink-0">
+        <div role="tablist" aria-label="Preview view" className="mr-auto flex text-xs text-gray-700">
+          <button type="button" role="tab" aria-selected={!native} className={`border-b-2 px-2 py-2 ${!native ? 'border-blue-600' : 'border-transparent'}`} onClick={() => setView('cards')}>Cards</button>
+          <button type="button" role="tab" aria-selected={native} disabled={state.doc.mcpdesc !== '0.9.0'} className={`border-b-2 px-2 py-2 disabled:opacity-40 ${native ? 'border-blue-600' : 'border-transparent'}`} onClick={() => setView('native')}>Native MCP</button>
+        </div>
+        {!native && (
         <div className="flex items-center gap-1 py-1">
           <button
             className={fontBtnClass}
@@ -88,12 +97,13 @@ export default function PreviewPanel() {
             +
           </button>
         </div>
+        )}
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-4" style={{ zoom }}>
+      {native ? <NativeProjection /> : <div className="flex-1 overflow-auto p-4" style={{ zoom }}>
         <CardView doc={resolvedDoc ?? effectiveDoc ?? state.doc} validation={state.validation} />
-      </div>
+      </div>}
     </div>
   );
 }

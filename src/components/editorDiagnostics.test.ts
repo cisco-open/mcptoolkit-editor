@@ -26,4 +26,12 @@ describe('editor diagnostics', () => {
     expect(result.byLine.size).toBe(0);
     expect(result.unmapped).toEqual(['⚠ /security: Unused scheme']);
   });
+
+  it('includes interoperable rule identity and protocol context', () => {
+    const result = groupEditorIssues([{
+      severity: 'warning', path: '/tools/0', message: 'Native projection mismatch',
+      rule: 'mcp.tool.input-schema', protocolVersions: ['2025-11-25'],
+    }], () => 4);
+    expect(result.byLine.get(4)?.warnings[0]).toContain('[mcp.tool.input-schema | 2025-11-25]');
+  });
 });

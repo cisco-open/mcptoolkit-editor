@@ -1,6 +1,9 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Toolbar from '../components/Toolbar';
+import ConversionDialog from '../components/ConversionDialog';
+import { parse } from 'yaml';
+import httpExample from '../../examples/features/http-server.yaml?raw';
 import ValidationPanel from '../components/ValidationPanel';
 import PreviewPanel from '../components/preview/PreviewPanel';
 import { defaultExample, examples } from '../examples';
@@ -37,10 +40,19 @@ describe('document startup', () => {
   beforeEach(() => {
     localStorage.clear();
     history.replaceState({}, '', '/');
+    Object.defineProperties(HTMLDialogElement.prototype, {
+      showModal: { configurable: true, value: function (this: HTMLDialogElement) { this.open = true; } },
+      close: { configurable: true, value: function (this: HTMLDialogElement) { this.open = false; } },
+    });
   });
 
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
+    Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
   });
 
   it('loads and selects a URL example instead of saved content', () => {
@@ -233,5 +245,113 @@ describe('document startup', () => {
     await act(async () => vi.advanceTimersByTime(300));
     expect(screen.getByTestId('has-document').textContent).toBe('true');
     vi.useRealTimers();
+  });
+
+  it('reviews migration without changing the source and retains the RC schema after Apply', async () => {
+    vi.useFakeTimers();
+    render(<DocProvider><Toolbar onImport={() => {}} /><ConversionDialog /><CurrentText /></DocProvider>);
+    fireEvent.click(screen.getByRole('button', { name: 'Migrate to 0.9 RC.1' }));
+    expect(screen.getByTestId('current-text').textContent).toBe(defaultExample);
+    expect(screen.getByLabelText('Conversion patch').textContent).toContain('/$schema');
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByTestId('current-text').textContent).toBe(defaultExample);
+    fireEvent.click(screen.getByRole('button', { name: 'Migrate to 0.9 RC.1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply migration' }));
+    await act(async () => vi.advanceTimersByTime(300));
+    const migrated = parse(screen.getByTestId('current-text').textContent!);
+    expect(migrated.mcpdesc).toBe('0.9.0');
+    expect(migrated.$schema).toBe('https://mcpdesc.org/schema/mcp-description/0.9.0-rc.1.json');
+    expect(screen.queryByRole('button', { name: 'Migrate to 0.9 RC.1' })).toBeNull();
+  });
+
+  it.each(['yaml', 'json'] as const)('preserves HTTP example field ordering when converting %s', (format) => {
+    const original = parse(httpExample);
+    const source = format === 'yaml' ? httpExample : JSON.stringify(original, null, 2);
+    localStorage.setItem('mcptoolkit-editor-content', source);
+    render(<DocProvider><Toolbar onImport={() => {}} /><ConversionDialog /><CurrentText /></DocProvider>);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Migrate to 0.9 RC.1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply migration' }));
+
+    const text = screen.getByTestId('current-text').textContent!;
+    const converted = format === 'yaml' ? parse(text) : JSON.parse(text);
+    const expected = {
+      ...original,
+      $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.1.json',
+      mcpdesc: '0.9.0',
+    };
+    expect(JSON.stringify(converted)).toBe(JSON.stringify(expected));
+  });
+
+  it('requires an author-selected fix before applying a blocked conversion', () => {
+    const source = JSON.stringify({
+      mcpdesc: '0.8.0', info: { name: 'inspect', version: '1' }, protocolVersions: ['2025-11-25'],
+      tools: [{ name: 'inspect', inputSchema: { type: 'object' }, annotations: { 'x-tier': 'gold' } }],
+    });
+    localStorage.setItem('mcptoolkit-editor-content', source);
+    render(<DocProvider><Toolbar onImport={() => {}} /><ConversionDialog /><CurrentText /></DocProvider>);
+    fireEvent.click(screen.getByRole('button', { name: 'Migrate to 0.9 RC.1' }));
+    expect(screen.getByRole('button', { name: 'Apply migration' })).toHaveProperty('disabled', true);
+    fireEvent.change(screen.getByRole('combobox', { name: 'Fix /tools/0/annotations/x-tier' }), {
+      target: { value: 'remove-property' },
+    });
+    expect(screen.getByRole('button', { name: 'Apply migration' })).toHaveProperty('disabled', false);
+    expect(screen.getByTestId('current-text').textContent).toBe(source);
+    fireEvent.click(screen.getByRole('button', { name: 'Apply migration' }));
+    expect(parse(screen.getByTestId('current-text').textContent!).tools[0].annotations).toEqual({});
+  });
+
+  it('converts the latest source even before debounced parsing has run', () => {
+    vi.useFakeTimers();
+    function ImmediateEdit() {
+      const { setText } = useDoc();
+      return <button onClick={() => setText(JSON.stringify({
+        mcpdesc: '0.8.0', info: { name: 'newest-source', version: '1' }, protocolVersions: ['2025-11-25'],
+      }))}>Replace source</button>;
+    }
+    render(<DocProvider><Toolbar onImport={() => {}} /><ConversionDialog /><ImmediateEdit /><CurrentText /></DocProvider>);
+    fireEvent.click(screen.getByRole('button', { name: 'Replace source' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Migrate to 0.9 RC.1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply migration' }));
+    const text = screen.getByTestId('current-text').textContent!;
+    expect(text.startsWith('{')).toBe(true);
+    expect(JSON.parse(text).info.name).toBe('newest-source');
+  });
+
+  it('previews and exports native MCP values with protocol scoping and without description-only fields', async () => {
+    const blobs: Blob[] = [];
+    vi.stubGlobal('URL', class extends URL {
+      static createObjectURL(blob: Blob) { blobs.push(blob); return 'blob:native-test'; }
+      static revokeObjectURL = vi.fn();
+    });
+    const filenames: string[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      filenames.push(this.download);
+    });
+    localStorage.setItem('mcptoolkit-editor-content', JSON.stringify({
+      mcpdesc: '0.9.0', $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.1.json',
+      info: { name: 'inspect', version: '1' }, protocolVersions: ['2025-11-25', '2026-07-28'],
+      tools: [
+        { name: 'inspect', inputSchema: { type: 'object' }, 'x-tier': 'gold', _meta: { tier: 'gold' } },
+        { name: 'new-tool', inputSchema: { type: 'object' }, protocolVersions: ['2026-07-28'] },
+      ],
+    }));
+    render(<DocProvider><PreviewPanel /><CurrentText /></DocProvider>);
+    fireEvent.click(screen.getByRole('tab', { name: 'Native MCP' }));
+    const nativeValues = () => JSON.parse(screen.getByLabelText('Native MCP JSON').textContent!);
+    expect(nativeValues()).toEqual([{ name: 'inspect', inputSchema: { type: 'object' }, _meta: { tier: 'gold' } }]);
+    fireEvent.change(screen.getByRole('combobox', { name: 'Native protocol version' }), { target: { value: '2026-07-28' } });
+    expect(nativeValues()).toHaveLength(2);
+    fireEvent.change(screen.getByRole('combobox', { name: 'Native declaration' }), { target: { value: 'new-tool' } });
+    expect(nativeValues()).toEqual({ name: 'new-tool', inputSchema: { type: 'object' } });
+    expect(screen.getByTestId('current-text').textContent).toContain('x-tier');
+    fireEvent.click(screen.getByRole('button', { name: 'Export native JSON' }));
+    expect(filenames).toEqual(['mcp-tool-2026-07-28.json']);
+    const exported = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.readAsText(blobs[0]);
+    });
+    expect(JSON.parse(exported)).toEqual(nativeValues());
   });
 });

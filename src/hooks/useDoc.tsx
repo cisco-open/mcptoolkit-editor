@@ -15,6 +15,7 @@ import {
   useMemo,
   useRef,
   useCallback,
+  useState,
   type ReactNode,
 } from 'react';
 import {
@@ -23,8 +24,11 @@ import {
   serializeMcpDescription,
   type JsonValue,
   type McpDescriptionMigrationReport,
+  type McpDescriptionConversionResult,
+  type McpDescriptionConversionFix,
 } from '@mcpdesc/core';
 import { parseMcpDescriptionSource } from '@mcpdesc/core/documents';
+import { stringify as stringifyYaml } from 'yaml';
 import { resolveMcpDescriptionComponentReferences } from '@mcpdesc/core/components';
 import type { SupportedProtocolVersion } from '@mcpdesc/validator/browser';
 import {
@@ -42,12 +46,23 @@ import {
   type ExampleEntry,
 } from '../examples';
 import { replaceEditorUrlSource } from '../editorUrl';
+import { convertToReleaseCandidate } from '../core/conversion';
+import { documentSelector } from '../core/validator';
 
 // ============================================================================
 // State shape
 // ============================================================================
 
 export type DocFormat = 'json' | 'yaml';
+
+export interface ConversionReview {
+  sourceText: string;
+  source: McpDescDocument;
+  format: DocFormat;
+  initialResult: McpDescriptionConversionResult;
+  result: McpDescriptionConversionResult;
+  fixes: readonly McpDescriptionConversionFix[];
+}
 
 export type MigrationState =
   | { status: 'idle' }
@@ -210,6 +225,11 @@ interface DocContextValue {
   setSelectedProtocolVersion: (protocolVersion: SupportedProtocolVersion | null) => void;
   confirmMigration: () => void;
   cancelMigration: () => void;
+  conversion: ConversionReview | null;
+  requestConversion: () => void;
+  reviewConversionFixes: (fixes: readonly McpDescriptionConversionFix[]) => void;
+  applyConversion: () => void;
+  cancelConversion: () => void;
   effectiveDoc: McpDescDocument | null;
   /** Effective document with local `$componentRef` values substituted; null when resolution fails. */
   resolvedDoc: McpDescDocument | null;
@@ -235,6 +255,8 @@ const DEBOUNCE_MS = 300;
 
 export function DocProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, createInitialState);
+  const [conversionReview, setConversionReview] = useState<ConversionReview | null>(null);
+  const conversion = conversionReview?.sourceText === state.text ? conversionReview : null;
   const validatorRef = useRef<McpDescValidator | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const migrationRef = useRef<MigrationState>(state.migration);
@@ -412,10 +434,34 @@ export function DocProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_SELECTED_PROTOCOL_VERSION', protocolVersion }),
     [],
   );
+  const requestConversion = () => {
+    const parsed = parseMcpDescriptionSource(state.text);
+    if (!parsed.ok || typeof parsed.value !== 'object' || parsed.value === null
+      || Array.isArray(parsed.value) || parsed.value.mcpdesc !== '0.8.0') return;
+    const source = parsed.value as McpDescDocument;
+    const result = convertToReleaseCandidate(source);
+    setConversionReview({
+      sourceText: state.text, source, format: parsed.format,
+      initialResult: result, result, fixes: [],
+    });
+  };
+  const reviewConversionFixes = (fixes: readonly McpDescriptionConversionFix[]) => {
+    if (!conversion) return;
+    setConversionReview({
+      ...conversion, fixes, result: convertToReleaseCandidate(conversion.source, fixes),
+    });
+  };
+  const applyConversion = () => {
+    if (!conversion?.result.ok) return;
+    setText(conversion.format === 'yaml'
+      ? stringifyYaml(conversion.result.value, { lineWidth: 0 })
+      : `${JSON.stringify(conversion.result.value, null, 2)}\n`);
+    setConversionReview(null);
+  };
   const effectiveDoc = useMemo(() => {
     if (!state.doc || !state.selectedProtocolVersion) return state.doc;
     const projection = projectEffectiveProtocolView(state.doc, {
-      specification: MCPDESC_SPECIFICATION,
+      selector: documentSelector(state.doc),
       protocolVersion: state.selectedProtocolVersion,
     });
     return projection.ok ? projection.value as McpDescDocument : state.doc;
@@ -425,7 +471,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
   const resolution = useMemo(
     () => (effectiveDoc
       ? effectiveDoc.components
-        ? resolveMcpDescriptionComponentReferences(effectiveDoc, { specification: MCPDESC_SPECIFICATION })
+        ? resolveMcpDescriptionComponentReferences(effectiveDoc, { selector: documentSelector(effectiveDoc) })
         : { ok: true as const, value: effectiveDoc }
       : null),
     [effectiveDoc],
@@ -440,6 +486,11 @@ export function DocProvider({ children }: { children: ReactNode }) {
       importText,
       confirmMigration,
       cancelMigration,
+      conversion,
+      requestConversion,
+      reviewConversionFixes,
+      applyConversion,
+      cancelConversion: () => setConversionReview(null),
       setSelectedProtocolVersion,
       effectiveDoc,
       resolvedDoc,

@@ -22,6 +22,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
+### Added
+
+- MCP Description 0.9 RC.1 validation through the shared browser-safe
+  validator adapter, including rule identities and protocol-scoped diagnostics.
+  Card rendering and the viewer API are unchanged.
+
+### Changed
+
+- Use the maintained 0.8 validation rules for existing documents and pin
+  `0.9.0-rc.1` rules for documents with `mcpdesc: 0.9.0`.
+
 ## [2.2.0] — 2026-09-09
 
 ### Changed

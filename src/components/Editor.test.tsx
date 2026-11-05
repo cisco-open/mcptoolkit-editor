@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => {
     state: {
       documentLoadRevision: 0,
       format: 'yaml',
+      doc: null as { mcpdesc: string } | null,
       text: '',
       validation: { errors: [], warnings: [] },
     },
@@ -55,6 +56,7 @@ vi.mock('@monaco-editor/react', async () => {
 describe('Editor document loading', () => {
   afterEach(() => {
     mocks.docContext.state.documentLoadRevision = 0;
+    mocks.docContext.state.doc = null;
     vi.clearAllMocks();
   });
 
@@ -68,5 +70,20 @@ describe('Editor document loading', () => {
 
     expect(mocks.editorInstance.setScrollTop).toHaveBeenCalledOnce();
     expect(mocks.editorInstance.setScrollTop).toHaveBeenCalledWith(0);
+  });
+
+  it('switches completion schemas without a conflicting built-in schema validator', () => {
+    const view = render(<Editor />);
+    mocks.docContext.state.doc = { mcpdesc: '0.9.0' };
+    view.rerender(<Editor />);
+    expect(mocks.monacoInstance.languages.json.jsonDefaults.setDiagnosticsOptions).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        schemaValidation: 'ignore',
+        enableSchemaRequest: false,
+        schemas: expect.arrayContaining([expect.objectContaining({
+          uri: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.1.json', fileMatch: ['*'],
+        })]),
+      }),
+    );
   });
 });

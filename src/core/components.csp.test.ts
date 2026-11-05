@@ -30,6 +30,9 @@ describe('strict CSP', () => {
     try {
       const { parseMcpDescriptionSource } = await import('@mcpdesc/core/documents');
       const { resolveMcpDescriptionComponentReferences } = await import('@mcpdesc/core/components');
+      const { projectMcpNativeValue } = await import('@mcpdesc/core');
+      const { convertToReleaseCandidate } = await import('./conversion');
+      const { McpDescValidator } = await import('./validator');
 
       const parsed = parseMcpDescriptionSource(fixture);
       expect(parsed.ok).toBe(true);
@@ -39,6 +42,16 @@ describe('strict CSP', () => {
         specification: '0.8.0',
       });
       expect(result.ok).toBe(true);
+      const converted = convertToReleaseCandidate(parsed.value);
+      expect(converted.ok).toBe(true);
+      if (!converted.ok) return;
+      expect(new McpDescValidator().validateDocument(converted.value).valid).toBe(true);
+      const native = projectMcpNativeValue(converted.value, {
+        selector: '0.9.0-rc.1',
+        protocolVersion: (converted.value.protocolVersions as ['2025-11-25'])[0],
+        kind: 'tool',
+      });
+      expect(native.ok).toBe(true);
     } finally {
       globalThis.Function = realFunction;
       globalThis.eval = realEval;

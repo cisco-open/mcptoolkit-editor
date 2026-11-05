@@ -16,7 +16,8 @@ export function groupEditorIssues(
 
   for (const issue of issues) {
     const line = resolveLine(issue);
-    const label = `${issue.severity === 'error' ? '✕' : '⚠'} ${issue.path}: ${issue.message}`;
+    const context = [issue.rule, issue.protocolVersions?.join(', ')].filter(Boolean).join(' | ');
+    const label = `${issue.severity === 'error' ? '✕' : '⚠'} ${issue.path}: ${issue.message}${context ? ` [${context}]` : ''}`;
     if (line === 0) {
       unmapped.push(label);
       continue;

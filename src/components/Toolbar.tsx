@@ -37,7 +37,7 @@ export default function Toolbar({
   titleUrlTarget = '_self',
   titleLinkAppearance = 'plain',
 }: ToolbarProps) {
-  const { state, loadExample, setText, resolvedDoc } = useDoc();
+  const { state, loadExample, setText, resolvedDoc, requestConversion } = useDoc();
   const linkUrl = safeTitleUrl(titleUrl);
 
   const handleExampleChange = useCallback(
@@ -92,7 +92,7 @@ export default function Toolbar({
   const btnClass = 'px-2 py-1 text-xs rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors cursor-pointer';
 
   return (
-    <header className="flex items-center gap-2 px-3 py-1.5 bg-zinc-950 border-b border-zinc-800 shrink-0">
+    <header className="flex flex-wrap items-center gap-2 px-3 py-1.5 bg-zinc-950 border-b border-zinc-800 shrink-0">
       {/* Brand */}
       {linkUrl ? (
         <a
@@ -142,6 +142,9 @@ export default function Toolbar({
       </button>
 
       {/* Spacer */}
+      {state.doc?.mcpdesc === '0.8.0' && (
+        <button className={btnClass} onClick={requestConversion}>Migrate to 0.9 RC.1</button>
+      )}
       <div className="flex-1" />
 
       {/* Export */}

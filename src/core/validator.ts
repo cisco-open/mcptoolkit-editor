@@ -6,13 +6,22 @@ import {
   validateMcpDescription,
   type McpDescriptionDiagnostic,
 } from '@mcpdesc/validator/browser';
-import { V0_8_SCHEMA_URI, V0_8_SPECIFICATION } from '@mcpdesc/core';
+import { V0_8_SCHEMA_URI, V0_8_SPECIFICATION, V0_9_RC_1_SCHEMA_URI, V0_9_RC_1_SPECIFICATION } from '@mcpdesc/core';
 import validateMcpDesc07 from './validator.generated.js';
 import type { ValidationIssue, ValidationResult } from './types';
 import mcpdescSchema from './mcpdesc-schema.json';
+import rcSchema from './mcpdesc-schema-0.9.0-rc.1.json';
 
 export const MCPDESC_SPECIFICATION = V0_8_SPECIFICATION;
 export const MCPDESC_SCHEMA_URI = V0_8_SCHEMA_URI;
+export const MCPDESC_RC_SPECIFICATION = V0_9_RC_1_SPECIFICATION;
+export const MCPDESC_RC_SCHEMA_URI = V0_9_RC_1_SCHEMA_URI;
+
+export function documentSelector(data: unknown) {
+  return typeof data === 'object' && data !== null && 'mcpdesc' in data && data.mcpdesc === '0.9.0'
+    ? MCPDESC_RC_SPECIFICATION
+    : undefined;
+}
 
 export function isValidMcpDesc07(data: unknown): boolean {
   return validateMcpDesc07(data) as boolean;
@@ -32,10 +41,10 @@ function toPointer(path: readonly (string | number)[]): string {
 
 type SchemaNode = Record<string, unknown>;
 
-function dereference(schema: SchemaNode): SchemaNode {
+function dereference(schema: SchemaNode, root: SchemaNode): SchemaNode {
   const ref = schema.$ref;
   if (typeof ref !== 'string' || !ref.startsWith('#/')) return schema;
-  let value: unknown = mcpdescSchema;
+  let value: unknown = root;
   for (const segment of ref.slice(2).split('/')) {
     if (typeof value !== 'object' || value === null) return schema;
     value = (value as Record<string, unknown>)[segment.replace(/~1/g, '/').replace(/~0/g, '~')];
@@ -43,17 +52,17 @@ function dereference(schema: SchemaNode): SchemaNode {
   return typeof value === 'object' && value !== null ? value as SchemaNode : schema;
 }
 
-function enumValuesAtPath(path: readonly (string | number)[]): unknown[] | undefined {
-  let schema: SchemaNode = mcpdescSchema as SchemaNode;
+function enumValuesAtPath(path: readonly (string | number)[], root: SchemaNode): unknown[] | undefined {
+  let schema: SchemaNode = root;
   for (const segment of path) {
-    schema = dereference(schema);
+    schema = dereference(schema, root);
     const next = typeof segment === 'number' || /^\d+$/.test(String(segment))
       ? schema.items
       : (schema.properties as Record<string, unknown> | undefined)?.[segment];
     if (typeof next !== 'object' || next === null) return undefined;
     schema = next as SchemaNode;
   }
-  const values = dereference(schema).enum;
+  const values = dereference(schema, root).enum;
   return Array.isArray(values) ? values : undefined;
 }
 
@@ -62,33 +71,36 @@ function formatAllowedValues(values: unknown[]): string {
   return ` Allowed values: ${displayed}${values.length > 10 ? ', ...' : ''}.`;
 }
 
-function toIssue(diagnostic: McpDescriptionDiagnostic): ValidationIssue {
-  const values = enumValuesAtPath(diagnostic.path);
+function toIssue(diagnostic: McpDescriptionDiagnostic, schema: SchemaNode): ValidationIssue {
+  const values = enumValuesAtPath(diagnostic.path, schema);
   return {
     path: toPointer(diagnostic.path),
-    message: `${diagnostic.message}${values ? formatAllowedValues(values) : ''}`,
+    message: `${diagnostic.message ?? diagnostic.rule ?? diagnostic.code ?? 'Validation finding'}${values ? formatAllowedValues(values) : ''}`,
     keyword: diagnostic.code,
+    rule: diagnostic.rule,
+    protocolVersions: diagnostic.protocolVersions,
   };
 }
 
-/** Browser-safe adapter for MCP Description 0.8.0. */
+/** Browser-safe adapter for stable 0.8 and pinned 0.9 RC.1 validation. */
 export class McpDescValidator {
   loadSchema(_schema?: Record<string, unknown>): void {
     void _schema;
-    // The stable 0.8.0 snapshot is supplied by @mcpdesc/validator.
   }
 
   validateDocument(data: unknown): ValidationResult {
     const result = validateMcpDescription(data, {
-      specification: MCPDESC_SPECIFICATION,
+      selector: documentSelector(data),
     });
     const errors: ValidationIssue[] = [];
     const warnings: ValidationIssue[] = [];
 
     for (const diagnostic of result.diagnostics) {
-      (diagnostic.severity === 'error' ? errors : warnings).push(toIssue(diagnostic));
+      (diagnostic.severity === 'error' ? errors : warnings).push(toIssue(
+        diagnostic, result.selector === MCPDESC_RC_SPECIFICATION ? rcSchema : mcpdescSchema,
+      ));
     }
 
-    return { valid: result.valid, errors, warnings };
+    return { valid: result.valid, errors, warnings, selector: result.selector, results: result.results };
   }
 }

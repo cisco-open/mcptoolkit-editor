@@ -40,20 +40,20 @@ export default function SplitPane({ left, right, defaultSplit = 50 }: SplitPaneP
   }, []);
 
   return (
-    <div ref={containerRef} className="flex flex-1 overflow-hidden">
+    <div ref={containerRef} className="flex min-h-0 flex-1 flex-col overflow-hidden sm:flex-row">
       {/* Left pane */}
-      <div style={{ flex: split }} className="min-w-0 overflow-hidden">
+      <div style={{ flex: split }} className="min-h-0 min-w-0 overflow-hidden">
         {left}
       </div>
 
       {/* Divider */}
       <div
-        className="w-1 cursor-col-resize bg-zinc-800 hover:bg-blue-600 transition-colors shrink-0"
+        className="hidden w-1 cursor-col-resize bg-zinc-800 hover:bg-blue-600 transition-colors shrink-0 sm:block"
         onMouseDown={onMouseDown}
       />
 
       {/* Right pane */}
-      <div style={{ flex: 100 - split }} className="min-w-0 overflow-hidden">
+      <div style={{ flex: 100 - split }} className="min-h-0 min-w-0 overflow-hidden">
         {right}
       </div>
     </div>

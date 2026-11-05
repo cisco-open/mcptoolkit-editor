@@ -24,6 +24,7 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "sync:badge": "node scripts/sync-badge.mjs",
+    "sync:rc-schema": "node scripts/sync-rc-schema.mjs",
     "sync:version": "node scripts/align-editor-dist-version.mjs",
     "verify:versions": "node scripts/align-editor-dist-version.mjs --check",
     "release:prepare": "node scripts/prepare-release.mjs",
@@ -32,8 +33,8 @@
     "viewer": "npm run build --workspace=packages/mcptoolkit-viewer && echo '\n🚀 MCP Toolkit Viewer available at:\n   http://localhost:8888/demo/viewer.html?style=light\n' && python3 -m http.server 8888 -b 127.0.0.1"
   },
   "dependencies": {
-    "@mcpdesc/core": "0.11.0",
-    "@mcpdesc/validator": "0.12.0",
+    "@mcpdesc/core": "0.13.0-rc.5",
+    "@mcpdesc/validator": "0.14.0-rc.5",
     "@monaco-editor/react": "^4.7.0",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",

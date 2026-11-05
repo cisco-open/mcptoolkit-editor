@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import type { McpDescriptionRuleResult, McpDescriptionSelector } from '@mcpdesc/validator/browser';
+
 export type McpProtocolVersion =
   | '2024-11-05'
   | '2025-03-26'
@@ -220,12 +222,16 @@ export interface ValidationResult {
   valid: boolean;
   errors: ValidationIssue[];
   warnings: ValidationIssue[];
+  selector?: McpDescriptionSelector | null;
+  results?: readonly McpDescriptionRuleResult[];
 }
 
 export interface ValidationIssue {
   path: string;
   message: string;
   keyword?: string;
+  rule?: string;
+  protocolVersions?: readonly McpProtocolVersion[];
   params?: Record<string, unknown>;
   line?: number;
   column?: number;
