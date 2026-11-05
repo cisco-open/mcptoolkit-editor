@@ -42,4 +42,16 @@ describe('McpDescCardView component references', () => {
     expect(referencedHtml.innerHTML).toBe(inlineMarkup);
   });
 
+  it('only renders host collection and entry actions when explicitly provided', () => {
+    const { doc } = resolved(inlineSource);
+    const view = render(<McpDescCardView doc={doc} />);
+    expect(view.queryByRole('button', { name: /^Host action/ })).toBeNull();
+    view.rerender(<McpDescCardView doc={doc} renderAction={({ section, identifier }) => (
+      <button aria-label={`Host action ${section} ${identifier ?? 'collection'}`}>Export</button>
+    )} />);
+    expect(view.getByRole('button', { name: 'Host action tools collection' })).toBeTruthy();
+    expect(view.getByRole('button', { name: `Host action tools ${doc.tools![0].name}` })).toBeTruthy();
+    cleanup();
+  });
+
 });

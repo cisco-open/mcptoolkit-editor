@@ -104,10 +104,7 @@ http://localhost:5173/?url=https%3A%2F%2Fexample.com%2Fserver.mcpdesc.yaml
 ### Validate and preview
 
 - The **Validation panel** at the bottom shows schema errors and semantic warnings in real time.
-- The **Cards tab** renders a structured, interactive preview — click any type badge to jump to its definition in the editor.
-- The **Native MCP tab** on 0.9 documents projects MCP values for a selected
-  protocol revision and declaration kind. Projection errors are shown without
-  substituting the source document; export is disabled until projection succeeds.
+- The **card preview** renders a structured, interactive view — click any type badge to jump to its definition in the editor.
 - **Validation details** retains rule IDs, protocol context, and each rule's
   reported status. `not-applicable` and `not-evaluated` are not passes.
 
@@ -135,7 +132,31 @@ the installed validator's schema hash and identifier before copying it.
 
 ### Export
 
-Click **Export** to download the document as `.mcpdesc.json`, `.mcpdesc.yaml`, or `.md`.
+Open **Export** and choose **YAML**, **JSON**, or **Markdown** to download the
+document as `.mcpdesc.yaml`, `.mcpdesc.json`, or `.md`.
+
+For 0.9 documents, **Export > Native MCP** offers tools, resources, resource
+templates, and prompts. Choose a protocol revision and either all declarations
+or an individual entry, review any diagnostics or the optional JSON preview,
+then download. A single applicable revision is selected automatically; multiple
+revisions require a choice unless the card preview already selects one. Export
+selection does not change the preview's protocol selection. Capabilities remain
+unavailable until core supports native capability projection.
+
+Download icons beside section headings and individual entries open the same
+native export dialog with the collection or entry preselected. Collections
+produce arrays; individual declarations produce objects. Projection failures
+disable download rather than substituting source data. Source documents are
+never modified by export.
+
+Native filenames include the server, collection or entry, and protocol revision:
+
+```text
+chess-coach.mcp.tools.2025-11-25.json
+chess-coach.mcp.tool.analyze_game.2025-11-25.json
+```
+
+Identifiers, including resource URIs, are sanitized for filenames.
 
 
 

@@ -26,7 +26,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 - MCP Description 0.9 RC.1 validation through the shared browser-safe
   validator adapter, including rule identities and protocol-scoped diagnostics.
-  Card rendering and the viewer API are unchanged.
+  Default card rendering and the script-tag viewer API are unchanged.
+- Optional `renderAction` callback for host-provided collection and declaration
+  actions in the React card view, with exported `CardActionTarget` and
+  `CardActionRenderer` types. No actions appear unless supplied by the host.
 
 ### Changed
 

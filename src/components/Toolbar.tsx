@@ -8,6 +8,8 @@ import { examples, exampleGroups } from '../examples';
 import { stringify as yamlStringify } from 'yaml';
 import { McpDescRenderer } from '../core/renderer';
 import { mcpdescMarkdownTemplate } from '../core/template';
+import ExportMenu from './ExportMenu';
+import { downloadFile } from '../nativeExport';
 
 const renderer = new McpDescRenderer();
 
@@ -48,36 +50,26 @@ export default function Toolbar({
     [loadExample],
   );
 
-  const download = useCallback((content: string, filename: string, mime: string) => {
-    const blob = new Blob([content], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, []);
-
   const baseFilename = useMemo(() => {
     return state.doc?.info?.name ?? 'mcpdesc';
   }, [state.doc]);
 
   const handleExportJSON = useCallback(() => {
     if (!state.doc) return;
-    download(JSON.stringify(state.doc, null, 2), `${baseFilename}.mcpdesc.json`, 'application/json');
-  }, [state.doc, download, baseFilename]);
+    downloadFile(JSON.stringify(state.doc, null, 2), `${baseFilename}.mcpdesc.json`);
+  }, [state.doc, baseFilename]);
 
   const handleExportYAML = useCallback(() => {
     if (!state.doc) return;
-    download(yamlStringify(state.doc), `${baseFilename}.mcpdesc.yaml`, 'text/yaml');
-  }, [state.doc, download, baseFilename]);
+    downloadFile(yamlStringify(state.doc), `${baseFilename}.mcpdesc.yaml`, 'text/yaml');
+  }, [state.doc, baseFilename]);
 
   const handleExportMarkdown = useCallback(() => {
     if (!state.doc) return;
     // Markdown is a rendering, so components are substituted; JSON/YAML export keeps the source.
     const md = renderer.render(resolvedDoc ?? state.doc, mcpdescMarkdownTemplate);
-    download(md, `${baseFilename}.md`, 'text/markdown');
-  }, [state.doc, resolvedDoc, download, baseFilename]);
+    downloadFile(md, `${baseFilename}.md`, 'text/markdown');
+  }, [state.doc, resolvedDoc, baseFilename]);
 
   const handleFormatJSON = useCallback(() => {
     if (!state.doc) return;
@@ -148,15 +140,7 @@ export default function Toolbar({
       <div className="flex-1" />
 
       {/* Export */}
-      <button className={btnClass} onClick={handleExportJSON} disabled={!state.doc}>
-        Export JSON
-      </button>
-      <button className={btnClass} onClick={handleExportYAML} disabled={!state.doc}>
-        Export YAML
-      </button>
-      <button className={btnClass} onClick={handleExportMarkdown} disabled={!state.doc}>
-        Export Markdown
-      </button>
+      <ExportMenu onJSON={handleExportJSON} onYAML={handleExportYAML} onMarkdown={handleExportMarkdown} />
     </header>
   );
 }

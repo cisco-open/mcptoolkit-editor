@@ -23,6 +23,14 @@ export type BadgeRenderer = (
 export type ExampleDisplayMode = 'hidden' | 'names' | 'details';
 export type ProtocolVersionProjectionMode = 'enabled' | 'disabled';
 
+export interface CardActionTarget {
+  section: 'tools' | 'resources' | 'resourceTemplates' | 'prompts';
+  identifier?: string;
+  index?: number;
+}
+
+export type CardActionRenderer = (target: CardActionTarget) => React.ReactNode;
+
 export interface ExampleSelection {
   path: string;
   section: string;
@@ -112,13 +120,14 @@ function Tag({ value }: { value: string }) {
   return <Badge color="bg-indigo-100 text-indigo-700">{value}</Badge>;
 }
 
-function Section({ title, count, children, defaultOpen = true }: {
-  title: string; count?: number; children: React.ReactNode; defaultOpen?: boolean;
+function Section({ title, count, children, defaultOpen = true, action }: {
+  title: string; count?: number; children: React.ReactNode; defaultOpen?: boolean; action?: React.ReactNode;
 }) {
   return (
     <details open={defaultOpen} className="mb-4">
       <summary className="cursor-pointer select-none font-semibold text-sm text-gray-700 hover:text-gray-900 py-1">
         {title}{count !== undefined && <span className="ml-1 text-gray-400">({count})</span>}
+        {action && <span className="ml-2 inline-flex items-center gap-1 align-middle">{action}</span>}
       </summary>
       <div className="pl-2 pt-1">{children}</div>
     </details>
@@ -655,10 +664,11 @@ function CapabilitiesCard({ doc, defaultOpen, selectedProtocolVersion }: {
   );
 }
 
-function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect }: {
+function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect, renderAction }: {
   doc: McpDescDocument; errorPaths: Set<string>; defaultOpen: boolean; badge: BadgeRenderer; disabledTags: Set<string>;
   sourceDoc?: McpDescDocument; selectedProtocolVersion?: McpDescDocument['protocolVersions'][number] | null;
   exampleDisplay: ExampleDisplayMode; onExampleSelect?: (selection: ExampleSelection) => void;
+  renderAction?: CardActionRenderer;
 }) {
   if (!doc.tools?.length) return null;
   const visible = doc.tools.filter((t, i) => {
@@ -668,7 +678,7 @@ function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaul
   });
   if (!visible.length) return null;
   return (
-    <Section title="Tools" count={visible.length} defaultOpen={defaultOpen}>
+    <Section title="Tools" count={visible.length} defaultOpen={defaultOpen} action={renderAction?.({ section: 'tools' })}>
       {visible.map((tool) => {
         const toolIndex = doc.tools?.indexOf(tool) ?? -1;
         const sourceTool = selectedProtocolVersion
@@ -686,6 +696,7 @@ function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaul
             <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
               {badge('tool', 'tools', tool.name, undefined, { index: toolIndex })}
               <span className="font-mono text-amber-600">{tool.name}</span>
+              {renderAction?.({ section: 'tools', identifier: tool.name, index: toolIndex })}
               {tool.title && <span className="text-gray-500">{tool.title}</span>}
               {tool.deprecated && <Badge color="bg-red-100 text-red-700">deprecated</Badge>}
               <span className="flex-1" />
@@ -758,9 +769,10 @@ function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaul
   );
 }
 
-function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect }: {
+function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect, renderAction }: {
   doc: McpDescDocument; errorPaths: Set<string>; defaultOpen: boolean; badge: BadgeRenderer; disabledTags: Set<string>;
   exampleDisplay: ExampleDisplayMode; onExampleSelect?: (selection: ExampleSelection) => void;
+  renderAction?: CardActionRenderer;
 }) {
   const resources = (doc.resources ?? []).filter((r, i) => {
     if (errorPaths.has(`/resources/${i}`)) return false;
@@ -775,13 +787,17 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exam
   const total = resources.length + templates.length;
   if (!total) return null;
   return (
-    <Section title="Resources" count={total} defaultOpen={defaultOpen}>
+    <Section title="Resources" count={total} defaultOpen={defaultOpen} action={renderAction && <>
+      {resources.length > 0 && renderAction({ section: 'resources' })}
+      {templates.length > 0 && <span className="inline-flex items-center gap-1 text-xs font-normal text-gray-500">Templates {renderAction({ section: 'resourceTemplates' })}</span>}
+    </>}>
       {resources.map((r) => {
         const resourceIndex = doc.resources?.indexOf(r) ?? -1;
         return <details key={r.uri} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
           <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
             {badge('resource', 'resources', r.uri, undefined, { index: resourceIndex })}
             <span className="font-mono text-teal-600">{r.uri}</span>
+            {renderAction?.({ section: 'resources', identifier: r.uri, index: resourceIndex })}
             <span className="flex-1" />
             {r.tags?.map((t) => <Tag key={t} value={t} />)}
           </summary>
@@ -808,6 +824,7 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exam
           <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
             {badge('resource', 'resourceTemplates', rt.uriTemplate, undefined, { index: templateIndex })}
             <span className="font-mono text-teal-600">{rt.uriTemplate}</span>
+            {renderAction?.({ section: 'resourceTemplates', identifier: rt.uriTemplate, index: templateIndex })}
             <span className="flex-1" />
             {rt.tags?.map((t) => <Tag key={t} value={t} />)}
           </summary>
@@ -833,9 +850,10 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exam
   );
 }
 
-function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect }: {
+function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect, renderAction }: {
   doc: McpDescDocument; errorPaths: Set<string>; defaultOpen: boolean; badge: BadgeRenderer; disabledTags: Set<string>;
   exampleDisplay: ExampleDisplayMode; onExampleSelect?: (selection: ExampleSelection) => void;
+  renderAction?: CardActionRenderer;
 }) {
   if (!doc.prompts?.length) return null;
   const visible = doc.prompts.filter((p, i) => {
@@ -845,13 +863,14 @@ function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampl
   });
   if (!visible.length) return null;
   return (
-    <Section title="Prompts" count={visible.length} defaultOpen={defaultOpen}>
+    <Section title="Prompts" count={visible.length} defaultOpen={defaultOpen} action={renderAction?.({ section: 'prompts' })}>
       {visible.map((p) => {
         const promptIndex = doc.prompts?.indexOf(p) ?? -1;
         return <details key={p.name} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
           <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
             {badge('prompt', 'prompts', p.name, undefined, { index: promptIndex })}
             <span className="font-mono text-fuchsia-600">{p.name}</span>
+            {renderAction?.({ section: 'prompts', identifier: p.name, index: promptIndex })}
             {p.title && <span className="text-gray-500">{p.title}</span>}
             <span className="flex-1" />
             {p.tags?.map((t) => <Tag key={t} value={t} />)}
@@ -975,6 +994,7 @@ export interface McpDescCardViewProps {
   defaultOpen?: boolean;
   /** Custom badge renderer — receives (children, section, value, color). Defaults to a static TypeBadge. */
   renderBadge?: BadgeRenderer;
+  renderAction?: CardActionRenderer;
   /** How operation examples are rendered (default: hidden). */
   exampleDisplay?: ExampleDisplayMode;
   /** Receives the exact JSON pointer when a named example is selected. */
@@ -989,7 +1009,7 @@ export interface McpDescCardViewProps {
   onProtocolVersionSelect?: (protocolVersion: McpDescDocument['protocolVersions'][number] | null) => void;
 }
 
-export function McpDescCardView({ doc, sourceDoc, validation, defaultOpen = true, renderBadge, exampleDisplay = 'hidden', onExampleSelect, protocolVersionProjectionMode = 'disabled', protocolVersionOptions, selectedProtocolVersion, onProtocolVersionSelect }: McpDescCardViewProps) {
+export function McpDescCardView({ doc, sourceDoc, validation, defaultOpen = true, renderBadge, renderAction, exampleDisplay = 'hidden', onExampleSelect, protocolVersionProjectionMode = 'disabled', protocolVersionOptions, selectedProtocolVersion, onProtocolVersionSelect }: McpDescCardViewProps) {
   const [disabledTags, setDisabledTags] = useState<Set<string>>(new Set());
   const protocolVersionGroupName = useId();
 
@@ -1032,9 +1052,9 @@ export function McpDescCardView({ doc, sourceDoc, validation, defaultOpen = true
       <TransportsCard doc={doc} defaultOpen={defaultOpen} badge={badge} />
       <SecurityCard doc={doc} defaultOpen={defaultOpen} badge={badge} />
       <TagFilterBar tags={doc.tags} disabledTags={disabledTags} onToggle={toggleTag} />
-      <ToolsCard doc={doc} sourceDoc={sourceDoc} selectedProtocolVersion={selectedProtocolVersion} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
-      <ResourcesCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
-      <PromptsCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
+      <ToolsCard doc={doc} sourceDoc={sourceDoc} selectedProtocolVersion={selectedProtocolVersion} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} renderAction={renderAction} />
+      <ResourcesCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} renderAction={renderAction} />
+      <PromptsCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} renderAction={renderAction} />
       <TagsCard doc={doc} defaultOpen={defaultOpen} />
     </div>
   );

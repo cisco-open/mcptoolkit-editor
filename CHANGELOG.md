@@ -59,6 +59,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   rules and the pinned RC.1 rules for 0.9 documents.
 - Switch offline JSON completion schemas by document version and use the core
   validator as the authority for document validation markers.
+- Consolidate document exports into one keyboard-accessible Export menu with a
+  Native MCP submenu. Replace the Cards/Native MCP preview tabs with a permanent
+  card preview and a protocol-aware native export dialog.
+- Add native export icons to collection headings and individual declarations,
+  using server-, kind-, entry-, and revision-specific filenames. Keep native
+  capabilities export disabled until core supports it.
 
 ## [2.3.0] — 2026-09-10
 

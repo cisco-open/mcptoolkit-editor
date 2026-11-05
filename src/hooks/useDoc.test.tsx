@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Toolbar from '../components/Toolbar';
 import ConversionDialog from '../components/ConversionDialog';
+import NativeExportDialog from '../components/NativeExportDialog';
 import { parse } from 'yaml';
 import httpExample from '../../examples/features/http-server.yaml?raw';
 import ValidationPanel from '../components/ValidationPanel';
@@ -12,6 +13,19 @@ import { DocProvider, useDoc } from './useDoc';
 function CurrentText() {
   const { state } = useDoc();
   return <output data-testid="current-text">{state.text}</output>;
+}
+
+function captureDownloads() {
+  const blobs: Blob[] = [];
+  const filenames: string[] = [];
+  vi.stubGlobal('URL', class extends URL {
+    static createObjectURL(blob: Blob) { blobs.push(blob); return 'blob:export-test'; }
+    static revokeObjectURL = vi.fn();
+  });
+  vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+    filenames.push(this.download);
+  });
+  return { blobs, filenames };
 }
 
 function EditDocument() {
@@ -319,15 +333,7 @@ describe('document startup', () => {
   });
 
   it('previews and exports native MCP values with protocol scoping and without description-only fields', async () => {
-    const blobs: Blob[] = [];
-    vi.stubGlobal('URL', class extends URL {
-      static createObjectURL(blob: Blob) { blobs.push(blob); return 'blob:native-test'; }
-      static revokeObjectURL = vi.fn();
-    });
-    const filenames: string[] = [];
-    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
-      filenames.push(this.download);
-    });
+    const { blobs, filenames } = captureDownloads();
     localStorage.setItem('mcptoolkit-editor-content', JSON.stringify({
       mcpdesc: '0.9.0', $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.1.json',
       info: { name: 'inspect', version: '1' }, protocolVersions: ['2025-11-25', '2026-07-28'],
@@ -336,8 +342,14 @@ describe('document startup', () => {
         { name: 'new-tool', inputSchema: { type: 'object' }, protocolVersions: ['2026-07-28'] },
       ],
     }));
-    render(<DocProvider><PreviewPanel /><CurrentText /></DocProvider>);
-    fireEvent.click(screen.getByRole('tab', { name: 'Native MCP' }));
+    render(<DocProvider><Toolbar onImport={() => {}} /><PreviewPanel /><NativeExportDialog /><CurrentText /></DocProvider>);
+    expect(screen.queryByRole('tab')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Export' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Native MCP' }));
+    expect(screen.getByRole('menuitem', { name: 'Capabilities' })).toHaveProperty('disabled', true);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Tools' }));
+    expect(screen.getByRole('button', { name: 'Download JSON' })).toHaveProperty('disabled', true);
+    fireEvent.change(screen.getByRole('combobox', { name: 'Native protocol version' }), { target: { value: '2025-11-25' } });
     const nativeValues = () => JSON.parse(screen.getByLabelText('Native MCP JSON').textContent!);
     expect(nativeValues()).toEqual([{ name: 'inspect', inputSchema: { type: 'object' }, _meta: { tier: 'gold' } }]);
     fireEvent.change(screen.getByRole('combobox', { name: 'Native protocol version' }), { target: { value: '2026-07-28' } });
@@ -345,13 +357,102 @@ describe('document startup', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Native declaration' }), { target: { value: 'new-tool' } });
     expect(nativeValues()).toEqual({ name: 'new-tool', inputSchema: { type: 'object' } });
     expect(screen.getByTestId('current-text').textContent).toContain('x-tier');
-    fireEvent.click(screen.getByRole('button', { name: 'Export native JSON' }));
-    expect(filenames).toEqual(['mcp-tool-2026-07-28.json']);
+    const expected = nativeValues();
+    fireEvent.click(screen.getByRole('button', { name: 'Download JSON' }));
+    expect(filenames).toEqual(['inspect.mcp.tool.new-tool.2026-07-28.json']);
     const exported = await new Promise<string>((resolve) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
       reader.readAsText(blobs[0]);
     });
-    expect(JSON.parse(exported)).toEqual(nativeValues());
+    expect(JSON.parse(exported)).toEqual(expected);
+  });
+
+  it('keeps document exports behind one keyboard-accessible menu', () => {
+    const { filenames, blobs } = captureDownloads();
+    render(<DocProvider><Toolbar onImport={() => {}} /></DocProvider>);
+    const trigger = screen.getByRole('button', { name: 'Export' });
+    fireEvent.keyDown(trigger, { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'YAML' }));
+    expect(screen.getByRole('menuitem', { name: 'Native MCP' })).toHaveProperty('disabled', true);
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'JSON' }));
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+    for (const format of ['YAML', 'JSON', 'Markdown']) {
+      fireEvent.click(trigger);
+      fireEvent.click(screen.getByRole('menuitem', { name: format }));
+      expect(screen.queryByRole('menu')).toBeNull();
+    }
+    const name = parse(defaultExample).info.name;
+    expect(filenames).toEqual([`${name}.mcpdesc.yaml`, `${name}.mcpdesc.json`, `${name}.md`]);
+    expect(blobs.map((blob) => blob.type)).toEqual(['text/yaml', 'application/json', 'text/markdown']);
+    fireEvent.click(trigger);
+    fireEvent.pointerDown(document.body);
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+
+  it.each([
+    { label: 'Tools', identifier: 'analyze_game', collection: 'tools', kind: 'tool' },
+    { label: 'Resources', identifier: 'chess://leaderboard/classical', collection: 'resources', kind: 'resource' },
+    { label: 'Resource Templates', identifier: 'chess://games/{game_id}', collection: 'resourceTemplates', kind: 'resourceTemplate' },
+    { label: 'Prompts', identifier: 'game_summary', collection: 'prompts', kind: 'prompt' },
+  ])('opens collection and individual native exports from $label without collapsing cards', ({ label, identifier, collection, kind }) => {
+    const doc = parse(httpExample);
+    doc.mcpdesc = '0.9.0';
+    doc.$schema = 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.1.json';
+    localStorage.setItem('mcptoolkit-editor-content', JSON.stringify(doc));
+    render(<DocProvider><PreviewPanel /><NativeExportDialog /></DocProvider>);
+    const collectionAction = screen.getByRole('button', { name: `Export native ${label}`, exact: true });
+    const section = collectionAction.closest('details')!;
+    expect(section.open).toBe(true);
+    fireEvent.click(collectionAction);
+    expect(section.open).toBe(true);
+    expect(JSON.parse(screen.getByLabelText('Native MCP JSON').textContent!)).toHaveLength(doc[collection].length);
+    expect(screen.getByLabelText('Export filename').textContent).toBe(`chess-coach.mcp.${collection}.2025-11-25.json`);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    const entryAction = screen.getByRole('button', { name: `Export native ${identifier}`, exact: true });
+    const entry = entryAction.closest('details')!;
+    fireEvent.click(entryAction);
+    expect(entry.open).toBe(true);
+    expect(screen.getByRole('combobox', { name: 'Native declaration' })).toHaveProperty('value', identifier);
+    const value = JSON.parse(screen.getByLabelText('Native MCP JSON').textContent!);
+    expect(Array.isArray(value)).toBe(false);
+    expect(screen.getByLabelText('Export filename').textContent).toContain(`.mcp.${kind}.`);
+  });
+
+  it('uses the clicked declaration variant rather than another entry with the same name', () => {
+    localStorage.setItem('mcptoolkit-editor-content', JSON.stringify({
+      mcpdesc: '0.9.0', info: { name: 'scoped', version: '1' }, protocolVersions: ['2025-11-25', '2026-07-28'],
+      tools: [
+        { name: 'inspect', protocolVersions: ['2025-11-25'], inputSchema: { type: 'object' }, description: 'Old variant' },
+        { name: 'inspect', protocolVersions: ['2026-07-28'], inputSchema: { type: 'object' }, description: 'New variant' },
+      ],
+    }));
+    render(<DocProvider><PreviewPanel /><NativeExportDialog /></DocProvider>);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Export native inspect', exact: true })[1]);
+    expect(screen.getByRole('combobox', { name: 'Native protocol version' })).toHaveProperty('value', '2026-07-28');
+    expect(JSON.parse(screen.getByLabelText('Native MCP JSON').textContent!).description).toBe('New variant');
+  });
+
+  it('blocks native export when projection fails and retains diagnostic navigation', () => {
+    localStorage.setItem('mcptoolkit-editor-content', JSON.stringify({
+      mcpdesc: '0.9.0', info: { name: 'invalid-native', version: '1' }, protocolVersions: ['2025-11-25'],
+      tools: [{ name: 'inspect', inputSchema: { type: 'object', properties: { flag: true } } }],
+    }));
+    render(<DocProvider><Toolbar onImport={() => {}} /><NativeExportDialog /></DocProvider>);
+    fireEvent.click(screen.getByRole('button', { name: 'Export' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Native MCP' }));
+    fireEvent.keyDown(screen.getByRole('menuitem', { name: 'Native MCP' }), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Tools' }));
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowLeft' });
+    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Native MCP' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Native MCP' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Tools' }));
+    expect(screen.getByRole('button', { name: 'Download JSON' })).toHaveProperty('disabled', true);
+    expect(screen.queryByLabelText('Native MCP JSON')).toBeNull();
+    expect(screen.getAllByRole('button', { name: '/tools/0/inputSchema/properties/flag' }).length).toBeGreaterThan(0);
   });
 });

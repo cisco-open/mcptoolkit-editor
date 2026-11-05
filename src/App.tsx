@@ -11,6 +11,7 @@ import ValidationPanel from './components/ValidationPanel';
 import SplitPane from './components/SplitPane';
 import MigrationDialog from './components/MigrationDialog';
 import ConversionDialog from './components/ConversionDialog';
+import NativeExportDialog from './components/NativeExportDialog';
 import MigrationStatus from './components/MigrationStatus';
 import ImportDialog from './components/ImportDialog';
 import { getImportUrlFromSearch } from './importDocument';
@@ -90,6 +91,7 @@ export default function App({ options = {} }: AppProps) {
         <ValidationPanel />
         <MigrationDialog />
         <ConversionDialog />
+        <NativeExportDialog />
         <ImportDialog
           open={importOpen}
           initialUrl={initialImportUrl}

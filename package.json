@@ -39,6 +39,7 @@
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "handlebars": "^4.7.8",
+    "lucide-react": "^1.69.0",
     "marked": "^17.0.4",
     "monaco-editor": "^0.52.2",
     "react": "^18.3.1",

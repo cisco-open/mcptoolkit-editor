@@ -7,6 +7,9 @@ import { McpDescCardView } from '../../../packages/mcptoolkit-viewer/src/McpDesc
 import type { BadgeRenderer } from '../../../packages/mcptoolkit-viewer/src/McpDescCardView';
 import type { McpDescDocument, ValidationResult } from '../../core/types';
 import { sourceItemPath } from './navigation';
+import { Download } from 'lucide-react';
+import type { CardActionRenderer } from '../../../packages/mcptoolkit-viewer/src/McpDescCardView';
+import { nativeExportKinds } from '../../nativeExport';
 
 /** Clickable type bubble that navigates the editor to the item definition */
 function NavBubble({ children, section, value, path, color = 'bg-gray-200 text-gray-500' }: {
@@ -30,7 +33,24 @@ function NavBubble({ children, section, value, path, color = 'bg-gray-200 text-g
 }
 
 export default function CardView({ doc, validation }: { doc: McpDescDocument; validation?: ValidationResult }) {
-  const { state, setSelectedProtocolVersion, revealPathRef } = useDoc();
+  const { state, setSelectedProtocolVersion, revealPathRef, requestNativeExport } = useDoc();
+  const renderExportAction: CardActionRenderer = ({ section, identifier, index }) => {
+    if (state.doc?.mcpdesc !== '0.9.0') return null;
+    const config = nativeExportKinds.find(({ collection }) => collection === section)!;
+    const label = identifier === undefined ? `Export native ${config.label}` : `Export native ${identifier}`;
+    return (
+      <button type="button" title={label} aria-label={label}
+        className="inline-flex size-6 shrink-0 items-center justify-center rounded text-gray-500 hover:bg-gray-200 hover:text-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const path = identifier === undefined ? null : sourceItemPath(state.doc, section, identifier, index, state.selectedProtocolVersion);
+          const sourceIndex = path ? Number(path.split('/')[2]) : -1;
+          const source = state.doc?.[section]?.[sourceIndex];
+          requestNativeExport({ kind: config.kind, identifier, protocolVersions: source?.protocolVersions });
+        }}><Download size={14} aria-hidden="true" /></button>
+    );
+  };
   const navBadgeRenderer: BadgeRenderer = (children, section, value, color, context) => (
     <NavBubble
       section={section}
@@ -53,6 +73,7 @@ export default function CardView({ doc, validation }: { doc: McpDescDocument; va
       sourceDoc={state.doc ?? undefined}
       validation={validation}
       renderBadge={navBadgeRenderer}
+      renderAction={state.doc?.mcpdesc === '0.9.0' ? renderExportAction : undefined}
       exampleDisplay="names"
       onExampleSelect={({ path }) => revealPathRef.current?.(path)}
       protocolVersionProjectionMode="enabled"

@@ -48,6 +48,7 @@ import {
 import { replaceEditorUrlSource } from '../editorUrl';
 import { convertToReleaseCandidate } from '../core/conversion';
 import { documentSelector } from '../core/validator';
+import type { NativeExportRequest } from '../nativeExport';
 
 // ============================================================================
 // State shape
@@ -230,6 +231,9 @@ interface DocContextValue {
   reviewConversionFixes: (fixes: readonly McpDescriptionConversionFix[]) => void;
   applyConversion: () => void;
   cancelConversion: () => void;
+  nativeExport: (NativeExportRequest & { doc: McpDescDocument; sourceText: string }) | null;
+  requestNativeExport: (request: NativeExportRequest) => void;
+  closeNativeExport: () => void;
   effectiveDoc: McpDescDocument | null;
   /** Effective document with local `$componentRef` values substituted; null when resolution fails. */
   resolvedDoc: McpDescDocument | null;
@@ -257,6 +261,8 @@ export function DocProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, createInitialState);
   const [conversionReview, setConversionReview] = useState<ConversionReview | null>(null);
   const conversion = conversionReview?.sourceText === state.text ? conversionReview : null;
+  const [nativeExportReview, setNativeExportReview] = useState<(NativeExportRequest & { doc: McpDescDocument; sourceText: string }) | null>(null);
+  const nativeExport = nativeExportReview?.sourceText === state.text ? nativeExportReview : null;
   const validatorRef = useRef<McpDescValidator | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const migrationRef = useRef<MigrationState>(state.migration);
@@ -458,6 +464,12 @@ export function DocProvider({ children }: { children: ReactNode }) {
       : `${JSON.stringify(conversion.result.value, null, 2)}\n`);
     setConversionReview(null);
   };
+  const requestNativeExport = (request: NativeExportRequest) => {
+    const parsed = parseMcpDescriptionSource(state.text);
+    if (!parsed.ok || typeof parsed.value !== 'object' || parsed.value === null
+      || Array.isArray(parsed.value) || parsed.value.mcpdesc !== '0.9.0') return;
+    setNativeExportReview({ ...request, doc: parsed.value as McpDescDocument, sourceText: state.text });
+  };
   const effectiveDoc = useMemo(() => {
     if (!state.doc || !state.selectedProtocolVersion) return state.doc;
     const projection = projectEffectiveProtocolView(state.doc, {
@@ -491,6 +503,9 @@ export function DocProvider({ children }: { children: ReactNode }) {
       reviewConversionFixes,
       applyConversion,
       cancelConversion: () => setConversionReview(null),
+      nativeExport,
+      requestNativeExport,
+      closeNativeExport: () => setNativeExportReview(null),
       setSelectedProtocolVersion,
       effectiveDoc,
       resolvedDoc,
