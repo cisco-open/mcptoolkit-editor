@@ -47,7 +47,7 @@ function SortHeader({ column, sort, onSort }: {
 }
 
 function ruleDocumentationUrl(selector: string | null | undefined, rule: string): string | undefined {
-  if (selector !== '0.9.0-rc.1') return undefined;
+  if (selector !== ruleMetadata.selector) return undefined;
   const match = /^([a-z][a-z0-9-]*)\.([a-z0-9.-]+)$/.exec(rule);
   return match ? `https://mcpdesc.org/docs/rules/${selector}/${match[1]}/${match[2].replace(/\./g, '-')}/` : undefined;
 }

@@ -1,7 +1,6 @@
 import {
   convertMcpDescriptionVersion,
-  V0_9_RC_1_SCHEMA_URI,
-  V0_9_RC_1_SPECIFICATION,
+  V0_9_RC_2_SCHEMA_URI,
   type CoreDiagnostic,
   type McpDescriptionConversionFix,
   type McpDescriptionConversionFixKind,
@@ -15,14 +14,13 @@ export function convertToReleaseCandidate(
   const result = convertMcpDescriptionVersion(document, {
     from: '0.8.0',
     to: '0.9.0',
-    selector: V0_9_RC_1_SPECIFICATION,
     fixes,
   });
-  if (!result.ok || result.value.$schema === V0_9_RC_1_SCHEMA_URI) return result;
+  if (!result.ok || result.value.$schema === V0_9_RC_2_SCHEMA_URI) return result;
   return {
     ...result,
-    value: { ...result.value, $schema: V0_9_RC_1_SCHEMA_URI },
-    patch: [...result.patch, { op: 'add', path: '/$schema', value: V0_9_RC_1_SCHEMA_URI }],
+    value: { ...result.value, $schema: V0_9_RC_2_SCHEMA_URI },
+    patch: [...result.patch, { op: 'add', path: '/$schema', value: V0_9_RC_2_SCHEMA_URI }],
   };
 }
 

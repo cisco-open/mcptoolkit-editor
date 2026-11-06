@@ -6,13 +6,13 @@ A web-based editor for [MCP Description](#the-mcp-description-mcpdesc-format) do
 [![Status: release](https://img.shields.io/badge/status-2.3.0-brightgreen.svg)](CHANGELOG.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![mcpdesc: 0.8](https://img.shields.io/badge/mcpdesc-0.8-blue.svg)](https://mcpdesc.org)
-[![mcpdesc: 0.9](https://img.shields.io/badge/mcpdesc-0.9.0-RC.1-orange.svg)](https://mcpdesc.org)
+[![mcpdesc: 0.9](https://img.shields.io/badge/mcpdesc-0.9.0-RC.2-orange.svg)](https://mcpdesc.org)
 
 ## Version Support
 
-> **Current: `main` / 2.x / MCP Description 0.8 + 0.9 RC.1 preview**
+> **Current: `main` / 2.x / MCP Description 0.8 + 0.9 RC.2 preview**
 >
-> Migration from 0.8 to 0.9 RC.1 is optional and executed after user confirmation.
+> Migration from 0.8 to 0.9 RC.2 is optional and executed after user confirmation.
 >
 > Documents authored for MCP Description 0.7 require confirmation to migrate
 > one-way to 0.8 when loaded in the editor.
@@ -20,7 +20,7 @@ A web-based editor for [MCP Description](#the-mcp-description-mcpdesc-format) do
 > [`v1/main` branch](https://github.com/cisco-open/mcptoolkit-editor/tree/v1/main).
 
 - **Monaco Editor** — JSON Schema-driven autocomplete, inline squiggles, folding, and syntax highlighting for JSON and YAML
-- **Real-time validation** — CSP-safe structural and semantic validation for MCP Description `0.8.0` and pinned `0.9.0-rc.1`, with rule-linked diagnostics and per-rule results
+- **Real-time validation** — CSP-safe structural and semantic validation using the maintained `0.8.0` and `0.9.0-rc.2` defaults, with rule-linked diagnostics and per-rule results
 - **Reviewed RC migration** — core conversion with explicit blocker fixes and a JSON Patch report; RC schema declarations are always retained
 - **Native MCP projection** — inspect and export tools, resources, resource templates, or prompts for one protocol revision
 - **Cards preview** — collapsible server, transport, security, capability, and named example views, including protocol-scoped Effective Protocol Views
@@ -116,7 +116,7 @@ http://localhost:5173/?url=https%3A%2F%2Fexample.com%2Fserver.mcpdesc.yaml
 - Expand the disclosure beside the validation status to inspect rule results.
   Status checkboxes default to **Passed**, **Failed**, and **Warning**, support multiple selections, and
   disable statuses with no results. Click **Rule Identifier**, **Rule Title**,
-  **Protocol**, or **Status** to toggle ascending/descending sorting. RC.1 rule
+  **Protocol**, or **Status** to toggle ascending/descending sorting. RC.2 rule
   titles come from the pinned published catalog, and rows link to their versioned
   documentation on mcpdesc.org. `not-applicable` and `not-evaluated` remain
   distinct statuses, never passes. Delegated checks and checks marked
@@ -132,10 +132,14 @@ Diagnostics follow the common fields in the
 rule identity, severity, and path, plus optional messages, producer codes, and
 protocol versions. The editor normalizes paths into clickable JSON pointers;
 parser diagnostics need not identify a rule.
+The installed validator selects RC.2 for `mcpdesc: 0.9.0`, including documents
+that declare the earlier RC.1 schema URI; validation does not rewrite the
+authored declaration. RC.2 reports focused transport-field diagnostics, while
+the maintained 0.8 rules retain their existing diagnostics.
 
-### Migrate to 0.9 RC.1
+### Migrate to 0.9 RC.2
 
-Open a valid 0.8 document and choose **Migrate to 0.9 RC.1**. Review the
+Open a valid 0.8 document and choose **Migrate to 0.9 RC.2**. Review the
 diagnostics and proposed patch before choosing **Apply migration**. Blocked
 conversions leave the source unchanged. Only explicitly selected fixes remove
 properties or move custom client requirements into `experimental`; ambiguous
@@ -145,11 +149,11 @@ Metadata is never moved into `_meta` or `x-*` automatically.
 Migration preserves JSON or YAML format and field ordering, and always emits:
 
 ```yaml
-$schema: https://mcpdesc.org/schema/mcp-description/0.9.0-rc.1.json
+$schema: https://mcpdesc.org/schema/mcp-description/0.9.0-rc.2.json
 mcpdesc: 0.9.0
 ```
 
-RC.1 is not the final 0.9 release. Schema-declaration removal will only be
+RC.2 is not the final 0.9 release. Schema-declaration removal will only be
 considered when final 0.9 support is added. Existing 0.8 examples remain valid
 and can be used to try conversion.
 
@@ -171,6 +175,8 @@ native export dialog with the collection or entry preselected. Collections
 produce arrays; individual declarations produce objects. Projection failures
 disable download rather than substituting source data. Source documents are
 never modified by export.
+Native output uses the core's document-oriented field order; arrays, embedded
+schemas, and `_meta` retain their original ordering.
 
 Native filenames include the server, collection or entry, and protocol revision:
 

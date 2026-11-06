@@ -81,7 +81,7 @@ describe('Editor document loading', () => {
         schemaValidation: 'ignore',
         enableSchemaRequest: false,
         schemas: expect.arrayContaining([expect.objectContaining({
-          uri: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.1.json', fileMatch: ['*'],
+          uri: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.2.json', fileMatch: ['*'],
         })]),
       }),
     );

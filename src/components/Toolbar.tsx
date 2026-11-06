@@ -135,7 +135,7 @@ export default function Toolbar({
 
       {/* Spacer */}
       {state.doc?.mcpdesc === '0.8.0' && (
-        <button className={btnClass} onClick={requestConversion}>Migrate to 0.9 RC.1</button>
+        <button className={btnClass} onClick={requestConversion}>Migrate to 0.9 RC.2</button>
       )}
       <div className="flex-1" />
 

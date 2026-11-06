@@ -38,17 +38,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 - Anchor validation markers and finding navigation to property keys instead of
   the following block value in YAML and multiline JSON documents.
+- Report focused RC.2 transport-field errors without unrelated alternative-branch
+  failures, while retaining independent findings.
 - Preserve original field ordering, including nested fields, when applying
-  0.8 to 0.9 RC.1 conversion to YAML or JSON documents instead of alphabetically
+  0.8 to 0.9 RC.2 conversion to YAML or JSON documents instead of alphabetically
   sorting keys during serialization.
 
 ### Added
 
-- Preview support for MCP Description `0.9.0-rc.1`, pinned to
-  `@mcpdesc/core@0.13.0-rc.5` and `@mcpdesc/validator@0.14.0-rc.5`.
-- Explicit 0.8 to 0.9 RC.1 migration with blocker review, author-selected
+- Preview support for MCP Description `0.9.0-rc.2`, pinned to
+  `@mcpdesc/core@0.13.0-rc.6` and `@mcpdesc/validator@0.14.0-rc.6`.
+- Explicit 0.8 to 0.9 RC.2 migration with blocker review, author-selected
   fixes, a downloadable report and JSON Patch. Migrated documents always
-  retain `$schema: https://mcpdesc.org/schema/mcp-description/0.9.0-rc.1.json`
+  retain `$schema: https://mcpdesc.org/schema/mcp-description/0.9.0-rc.2.json`
   and use `mcpdesc: 0.9.0`; dropping the schema awaits final-release support.
 - Native MCP preview and JSON export for tools, resources, resource templates,
   and prompts, scoped to a selected protocol revision and declaration.
@@ -61,7 +63,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   panel with expandable rule findings and standalone parsing diagnostics. Hide
   delegated and operation-only checks while retaining genuinely unevaluated rules.
 - Retain 0.8 editing and 0.7 to 0.8 migration; use maintained 0.8 validation
-  rules and the pinned RC.1 rules for 0.9 documents.
+  rules and the RC.2 default for 0.9 documents, including RC.1 schema declarations.
+- Order native MCP JSON using core's document-oriented presentation profile,
+  without reordering arrays, embedded schemas, or metadata.
 - Switch offline JSON completion schemas by document version and use the core
   validator as the authority for document validation markers.
 - Consolidate document exports into one keyboard-accessible Export menu with a
@@ -72,12 +76,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   capabilities export disabled until core supports it.
 - Condense validation into a status-line disclosure with an explicit Selector
   label. Add multi-select status filters (Passed only by default), sortable
-  rule/protocol/status columns, and versioned RC.1 rule documentation links.
+  rule/protocol/status columns, and versioned RC.2 rule documentation links.
 - Separate diagnostics from the rule table: show errors first and show warnings
   only when no errors remain, with source navigation retained.
 - Show only one bottom-panel body at a time. Render diagnostics as sortable
   tables with search and protocol filters, and add authoritative short rule
-  titles from the hash-verified RC.1 catalog to the rule table.
+  titles from the hash-verified RC.2 catalog to the rule table.
 - Reserve a five-row table viewport by default, with a draggable and keyboard-
   accessible resize separator and bounded decrease/reset/increase text controls.
 

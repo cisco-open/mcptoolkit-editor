@@ -9,7 +9,7 @@ const source = {
   protocolVersions: ['2025-11-25'],
 };
 
-describe('RC.1 conversion', () => {
+describe('RC.2 conversion', () => {
   it.each([undefined, 'https://mcpdesc.org/schema/mcp-description/0.8.0.json'])(
     'always declares the RC schema (source schema: %s)', ($schema) => {
       const document = { ...source, ...($schema ? { $schema } : {}) };
@@ -82,7 +82,7 @@ describe('RC.1 conversion', () => {
     });
     expect(converted.ok).toBe(true);
     if (!converted.ok) return;
-    const result = projectMcpNativeValue(converted.value, { selector: '0.9.0-rc.1', protocolVersion: '2025-11-25', kind });
+    const result = projectMcpNativeValue(converted.value, { selector: '0.9.0-rc.2', protocolVersion: '2025-11-25', kind });
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.value).toEqual([expected]);
   });
@@ -97,7 +97,7 @@ describe('RC.1 conversion', () => {
     expect(validation.warnings).toContainEqual(expect.objectContaining({
       keyword: 'tool-schema-mcp-type-mismatch', protocolVersions: ['2025-11-25'],
     }));
-    const result = projectMcpNativeValue(document, { selector: '0.9.0-rc.1', protocolVersion: '2025-11-25', kind: 'tool' });
+    const result = projectMcpNativeValue(document, { selector: '0.9.0-rc.2', protocolVersion: '2025-11-25', kind: 'tool' });
     expect(result.ok).toBe(false);
     expect(result.diagnostics).toContainEqual(expect.objectContaining({ code: 'projection-postcondition-failed' }));
   });

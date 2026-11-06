@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { McpDescriptionConversionFixKind } from '@mcpdesc/core';
 import { conversionFixes } from '../core/conversion';
+import { MCPDESC_RC_SPECIFICATION } from '../core/validator';
 import { useDoc } from '../hooks/useDoc';
 
 export default function ConversionDialog() {
@@ -20,11 +21,11 @@ export default function ConversionDialog() {
 
   const downloadReport = () => {
     const url = URL.createObjectURL(new Blob([JSON.stringify({
-      selector: '0.9.0-rc.1', ...result, fixes,
+      selector: MCPDESC_RC_SPECIFICATION, ...result, fixes,
     }, null, 2)], { type: 'application/json' }));
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'mcpdesc-0.9.0-rc.1-conversion.json';
+    link.download = 'mcpdesc-0.9.0-rc.2-conversion.json';
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -36,8 +37,8 @@ export default function ConversionDialog() {
       onCancel={(event) => { event.preventDefault(); cancelConversion(); }}
       className="m-auto max-h-[85vh] w-[calc(100%-2rem)] max-w-2xl overflow-auto border border-zinc-700 bg-zinc-900 p-5 text-zinc-100 shadow-2xl backdrop:bg-black/65"
     >
-      <h2 id="conversion-title" className="text-base font-semibold">Migrate to MCP Description 0.9.0 RC.1</h2>
-      <p className="mt-2 text-sm text-amber-300">Release candidate: 0.9.0 with the explicit 0.9.0-rc.1 schema declaration.</p>
+      <h2 id="conversion-title" className="text-base font-semibold">Migrate to MCP Description 0.9.0 RC.2</h2>
+      <p className="mt-2 text-sm text-amber-300">Release candidate: 0.9.0 with the explicit 0.9.0-rc.2 schema declaration.</p>
       <div className="mt-4 space-y-3 text-xs">
         {initialResult.diagnostics.filter((diagnostic) => conversionFixes(diagnostic).length > 0).map((diagnostic) => {
           const key = JSON.stringify(diagnostic.path);

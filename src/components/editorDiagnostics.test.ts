@@ -40,7 +40,7 @@ describe('editor diagnostics', () => {
 
   it.each([
     ['0.8.0', '0.8.0'],
-    ['0.9.0', '0.9.0-rc.1'],
+    ['0.9.0', '0.9.0-rc.2'],
   ])('maps a misspelled transport key to line 9 for %s', (version, schemaVersion) => {
     const source = `$schema: https://mcpdesc.org/schema/mcp-description/${schemaVersion}.json
 mcpdesc: ${version}
@@ -66,5 +66,27 @@ transport:
     expect([...result.byLine.keys()]).toEqual([9]);
     expect(result.byLine.get(9)?.errors[0]).toContain('/transport:');
     expect(result.unmapped).toEqual([]);
+  });
+
+  it('anchors the focused RC.2 transport typo on the misspelled field', () => {
+    const source = `mcpdesc: 0.9.0
+info:
+  name: chess-rating-server
+  version: 1.0.0
+protocolVersions: [2025-11-25]
+transports:
+  - type: stdio
+    command: chess-rating
+    arg:
+      - serve
+`;
+    const validation = new McpDescValidator().validateDocument(parse(source));
+    expect(validation.errors).toHaveLength(1);
+    const issue = { ...validation.errors[0], severity: 'error' as const };
+    const grouped = groupEditorIssues([issue], item => sourcePathToLine(source, item.path));
+    expect([...grouped.byLine.keys()]).toEqual([9]);
+    expect(grouped.byLine.get(9)?.errors[0]).toContain('/transports/0/arg');
+    expect(grouped.byLine.get(9)?.errors[0]).toContain('[mcpdesc.transport.members]');
+    expect(grouped.unmapped).toEqual([]);
   });
 });

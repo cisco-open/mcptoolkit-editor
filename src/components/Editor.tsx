@@ -8,7 +8,7 @@ import { type editor } from 'monaco-editor';
 import { useDoc } from '../hooks/useDoc';
 import { MCPDESC_SCHEMA_URI } from '../core';
 import mcpdescSchema from '../core/mcpdesc-schema.json';
-import rcSchema from '../core/mcpdesc-schema-0.9.0-rc.1.json';
+import rcSchema from '../core/mcpdesc-schema-0.9.0-rc.2.json';
 import { MCPDESC_RC_SCHEMA_URI } from '../core/validator';
 import { sourcePathToLine } from './preview/navigation';
 import { findComponentDefinitionLine, pathToLine as componentPathToLine } from './componentNavigation';

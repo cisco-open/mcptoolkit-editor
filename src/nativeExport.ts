@@ -1,6 +1,5 @@
 import { projectMcpNativeValue, type McpNativeKind } from '@mcpdesc/core';
 import type { McpDescDocument, McpProtocolVersion } from './core/types';
-import { MCPDESC_RC_SPECIFICATION } from './core/validator';
 
 export const nativeExportKinds = [
   { kind: 'tool', collection: 'tools', identity: 'name', label: 'Tools' },
@@ -29,8 +28,7 @@ export function nativeExportFilename(server: string, request: NativeExportReques
 
 export function projectNativeExport(doc: McpDescDocument, request: NativeExportRequest, protocolVersion: McpProtocolVersion) {
   return projectMcpNativeValue(doc, {
-    selector: MCPDESC_RC_SPECIFICATION, protocolVersion,
-    kind: request.kind, identifier: request.identifier,
+    protocolVersion, kind: request.kind, identifier: request.identifier, keyOrder: 'document',
   });
 }
 

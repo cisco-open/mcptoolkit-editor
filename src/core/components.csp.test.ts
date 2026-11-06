@@ -46,10 +46,15 @@ describe('strict CSP', () => {
       expect(converted.ok).toBe(true);
       if (!converted.ok) return;
       expect(new McpDescValidator().validateDocument(converted.value).valid).toBe(true);
+      const invalid = new McpDescValidator().validateDocument({
+        ...converted.value, transports: [{ type: 'stdio', command: 'server', arg: ['serve'] }],
+      });
+      expect(invalid.errors).toHaveLength(1);
+      expect(invalid.errors[0].path).toBe('/transports/0/arg');
       const native = projectMcpNativeValue(converted.value, {
-        selector: '0.9.0-rc.1',
         protocolVersion: (converted.value.protocolVersions as ['2025-11-25'])[0],
         kind: 'tool',
+        keyOrder: 'document',
       });
       expect(native.ok).toBe(true);
     } finally {

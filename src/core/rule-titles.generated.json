@@ -1,7 +1,7 @@
 {
-  "selector": "0.9.0-rc.1",
-  "manifestUrl": "https://mcpdesc.org/validation/catalogs/0.9.0-rc.1/manifest.json",
-  "catalogSha256": "e9a69286d3844c8ba581ae43cedb3f7ea9569e048ad300ab02ebd45ecc7710ef",
+  "selector": "0.9.0-rc.2",
+  "manifestUrl": "https://mcpdesc.org/validation/catalogs/0.9.0-rc.2/manifest.json",
+  "catalogSha256": "a35b1f82e59d4b6b0dae2bae30bbb55f563f801fa296868acb7680ec8e0d9174",
   "titles": {
     "json-schema.tool-schema.valid": "Validate embedded Tool schemas in their dialect",
     "mcp.annotations.last-modified.protocol-version": "Use lastModified only where MCP defines it",

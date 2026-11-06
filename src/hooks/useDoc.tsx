@@ -47,7 +47,6 @@ import {
 } from '../examples';
 import { replaceEditorUrlSource } from '../editorUrl';
 import { convertToReleaseCandidate } from '../core/conversion';
-import { documentSelector } from '../core/validator';
 import type { NativeExportRequest } from '../nativeExport';
 
 // ============================================================================
@@ -431,7 +430,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const text = serializeMcpDescription(result.value as JsonValue, { format: migration.format });
+    const text = serializeMcpDescription(result.value as JsonValue, { format: migration.format, keyOrder: 'sorted' });
     dispatch({ type: 'MIGRATION_SUCCEEDED', text, report: result.report });
     replaceEditorUrlSource({ type: 'document' });
   }, []);
@@ -473,7 +472,6 @@ export function DocProvider({ children }: { children: ReactNode }) {
   const effectiveDoc = useMemo(() => {
     if (!state.doc || !state.selectedProtocolVersion) return state.doc;
     const projection = projectEffectiveProtocolView(state.doc, {
-      selector: documentSelector(state.doc),
       protocolVersion: state.selectedProtocolVersion,
     });
     return projection.ok ? projection.value as McpDescDocument : state.doc;
@@ -483,7 +481,7 @@ export function DocProvider({ children }: { children: ReactNode }) {
   const resolution = useMemo(
     () => (effectiveDoc
       ? effectiveDoc.components
-        ? resolveMcpDescriptionComponentReferences(effectiveDoc, { selector: documentSelector(effectiveDoc) })
+        ? resolveMcpDescriptionComponentReferences(effectiveDoc)
         : { ok: true as const, value: effectiveDoc }
       : null),
     [effectiveDoc],

@@ -33,16 +33,15 @@ extend its nearby tests rather than introducing a second implementation.
 - Active validation comes from the external browser-safe validator. Monaco's
   local schemas supply completion; its schema validation is disabled to avoid
   contradictory errors. Do not add a competing AJV validator to the UI.
-- Stable 0.8 documents follow the validator's maintained default selector;
-  `mcpdesc: 0.9.0` explicitly selects `0.9.0-rc.1`. Do not treat unknown format
+- Documents follow the validator's maintained default selector: 0.8 uses the
+  maintained revision and `mcpdesc: 0.9.0` uses RC.2. Do not treat unknown format
   versions as 0.8 or silently migrate documents during export.
-- RC conversion must emit `mcpdesc: 0.9.0` and retain the explicit RC.1 `$schema`
+- RC conversion must emit `mcpdesc: 0.9.0` and retain the explicit RC.2 `$schema`
   until final-release support is deliberately introduced. Apply blocker fixes
   only with author consent; never guess moves into `_meta` or `x-*`.
 - Convert the latest raw source, not a stale debounced parse. Conversion must
-  preserve field order; the installed core canonical serializer sorts keys, so
-  do not replace the current order-preserving serialization without checking
-  the library API and regression tests.
+  preserve field order; use explicit serialization policies and regression tests
+  when changing source serialization.
 - Keep authored source separate from derived views. Project the Effective
   Protocol View before resolving component references. JSON/YAML exports keep
   authored references; Markdown uses the resolved view. Native projection uses
@@ -63,8 +62,8 @@ extend its nearby tests rather than introducing a second implementation.
 | Asset | Purpose and update path |
 | --- | --- |
 | [src/core/mcpdesc-schema.json](src/core/mcpdesc-schema.json) | Vendored 0.8 schema for completion and allowed-value hints; not the active validation implementation. |
-| [src/core/mcpdesc-schema-0.9.0-rc.1.json](src/core/mcpdesc-schema-0.9.0-rc.1.json) | Refresh with `npm run sync:rc-schema` from the exact installed validator snapshot; the script checks its hash and schema identity. |
-| [src/core/rule-titles.generated.json](src/core/rule-titles.generated.json) | Refresh with `npm run sync:rule-titles`; the pinned RC.1 manifest supplies the catalog digest and rule count. Keep catalog-derived titles out of handwritten UI maps. |
+| [src/core/mcpdesc-schema-0.9.0-rc.2.json](src/core/mcpdesc-schema-0.9.0-rc.2.json) | Refresh with `npm run sync:rc-schema` from the exact installed validator snapshot; the script checks its hash and schema identity. |
+| [src/core/rule-titles.generated.json](src/core/rule-titles.generated.json) | Refresh with `npm run sync:rule-titles`; the pinned RC.2 manifest supplies the catalog digest and rule count. Keep catalog-derived titles out of handwritten UI maps. |
 | [src/core/validator.generated.js](src/core/validator.generated.js) and [src/core/validator.generated.d.ts](src/core/validator.generated.d.ts) | Committed 0.7 validator used only to gate legacy migration. Preserve this format boundary. |
 
 The sync commands are explicit maintenance steps, not dev/build hooks. Commit

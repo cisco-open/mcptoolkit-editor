@@ -6,22 +6,16 @@ import {
   validateMcpDescription,
   type McpDescriptionDiagnostic,
 } from '@mcpdesc/validator/browser';
-import { V0_8_SCHEMA_URI, V0_8_SPECIFICATION, V0_9_RC_1_SCHEMA_URI, V0_9_RC_1_SPECIFICATION } from '@mcpdesc/core';
+import { V0_8_SCHEMA_URI, V0_8_SPECIFICATION, V0_9_RC_2_SCHEMA_URI, V0_9_RC_2_SPECIFICATION } from '@mcpdesc/core';
 import validateMcpDesc07 from './validator.generated.js';
 import type { ValidationIssue, ValidationResult } from './types';
 import mcpdescSchema from './mcpdesc-schema.json';
-import rcSchema from './mcpdesc-schema-0.9.0-rc.1.json';
+import rcSchema from './mcpdesc-schema-0.9.0-rc.2.json';
 
 export const MCPDESC_SPECIFICATION = V0_8_SPECIFICATION;
 export const MCPDESC_SCHEMA_URI = V0_8_SCHEMA_URI;
-export const MCPDESC_RC_SPECIFICATION = V0_9_RC_1_SPECIFICATION;
-export const MCPDESC_RC_SCHEMA_URI = V0_9_RC_1_SCHEMA_URI;
-
-export function documentSelector(data: unknown) {
-  return typeof data === 'object' && data !== null && 'mcpdesc' in data && data.mcpdesc === '0.9.0'
-    ? MCPDESC_RC_SPECIFICATION
-    : undefined;
-}
+export const MCPDESC_RC_SPECIFICATION = V0_9_RC_2_SPECIFICATION;
+export const MCPDESC_RC_SCHEMA_URI = V0_9_RC_2_SCHEMA_URI;
 
 export function isValidMcpDesc07(data: unknown): boolean {
   return validateMcpDesc07(data) as boolean;
@@ -82,16 +76,14 @@ function toIssue(diagnostic: McpDescriptionDiagnostic, schema: SchemaNode): Vali
   };
 }
 
-/** Browser-safe adapter for stable 0.8 and pinned 0.9 RC.1 validation. */
+/** Browser-safe adapter using the validator's maintained format defaults. */
 export class McpDescValidator {
   loadSchema(_schema?: Record<string, unknown>): void {
     void _schema;
   }
 
   validateDocument(data: unknown): ValidationResult {
-    const result = validateMcpDescription(data, {
-      selector: documentSelector(data),
-    });
+    const result = validateMcpDescription(data);
     const errors: ValidationIssue[] = [];
     const warnings: ValidationIssue[] = [];
 
