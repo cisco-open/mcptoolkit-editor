@@ -49,18 +49,26 @@ describe('ValidationPanel', () => {
     expect(screen.queryByRole('table')).toBeNull();
   });
 
-  it('defaults to Passed, allows multiple statuses, and disables statuses with no results', () => {
+  it('defaults to passed and findings, allows multiple statuses, and omits operation checks', () => {
+    context.state.validation.results = [
+      ...context.state.validation.results ?? [],
+      { rule: 'mcpdesc.serialization.conforming', status: 'delegated' },
+      { rule: 'mcp.tool.schema-keywords.preserve', status: 'not-evaluated', reason: 'operation' },
+    ];
     render(<ValidationPanel />);
     expandRules();
-    expect(screen.getByRole('checkbox', { name: 'Passed' })).toHaveProperty('checked', true);
-    for (const label of ['Failed', 'Warning', 'Not applicable', 'Not evaluated', 'Delegated']) {
+    for (const label of ['Passed', 'Failed', 'Warning']) {
+      expect(screen.getByRole('checkbox', { name: label })).toHaveProperty('checked', true);
+    }
+    for (const label of ['Not applicable', 'Not evaluated']) {
       expect(screen.getByRole('checkbox', { name: label })).toHaveProperty('checked', false);
     }
-    expect(screen.getByRole('checkbox', { name: 'Delegated' })).toHaveProperty('disabled', true);
-    expect(rulesInOrder()).toEqual(['mcp.annotations.last-modified.protocol-version', 'mcp.tool-annotations.members']);
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Failed' }));
+    expect(screen.queryByRole('checkbox', { name: 'Delegated' })).toBeNull();
+    expect(screen.queryByText('mcpdesc.serialization.conforming')).toBeNull();
+    expect(screen.getByRole('checkbox', { name: 'Not evaluated' }).parentElement?.textContent).toContain('(1)');
     fireEvent.click(screen.getByRole('checkbox', { name: 'Not evaluated' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Passed' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Warning' }));
     expect(rulesInOrder()).toEqual(['mcp.resource.uri', 'mcpdesc.document.schema']);
     expect(screen.getByText('(earlier-stage-failed)')).toBeTruthy();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Not applicable' }));
@@ -71,8 +79,8 @@ describe('ValidationPanel', () => {
   it('shows a clear empty filter state without treating unevaluated rules as passed', () => {
     render(<ValidationPanel />);
     expandRules();
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Passed' }));
-    expect(screen.getByText('No rule results match the selected statuses.')).toBeTruthy();
+    for (const name of ['Passed', 'Failed', 'Warning']) fireEvent.click(screen.getByRole('checkbox', { name }));
+    expect(screen.getByText('No validation results match the selected filters.')).toBeTruthy();
     expect(rulesInOrder()).toEqual([]);
   });
 
@@ -80,6 +88,9 @@ describe('ValidationPanel', () => {
     const original = JSON.stringify(context.state.validation.results);
     render(<ValidationPanel />);
     expandRules();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Failed' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Warning' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sort by Rule Identifier' }));
     fireEvent.click(screen.getByRole('button', { name: 'Sort by Rule Identifier' }));
     expect(rulesInOrder()).toEqual(['mcp.tool-annotations.members', 'mcp.annotations.last-modified.protocol-version']);
     expect(screen.getByRole('columnheader', { name: 'Rule Identifier' }).getAttribute('aria-sort')).toBe('descending');
@@ -107,35 +118,41 @@ describe('ValidationPanel', () => {
     expect(screen.queryByRole('link', { name: /^Open documentation/ })).toBeNull();
   });
 
-  it('shows errors separately and hides warnings until all errors are resolved', () => {
+  it('shows errors, warnings, and passed rules together with expandable diagnostic details', () => {
     context.state.validation.errors = [{ path: '/resources/0/uri', message: 'A resource URI needs a scheme', rule: 'mcp.resource.uri' }];
-    context.state.validation.warnings = [{ path: '/tools/0', message: 'Native projection mismatch' }];
-    const view = render(<ValidationPanel />);
-    expect(screen.getByRole('region', { name: 'Validation errors' })).toBeTruthy();
-    expect(screen.getByText('A resource URI needs a scheme')).toBeTruthy();
+    context.state.validation.warnings = [
+      { path: '/tools/0', message: 'Native projection mismatch', rule: 'mcp.tool.schema.native-shape' },
+      { path: '/resources/0', message: 'Review resource', rule: 'mcp.resource.uri' },
+    ];
+    render(<ValidationPanel />);
+    expect(screen.getByRole('region', { name: 'Validation rules' })).toBeTruthy();
+    expect(screen.getByTestId('validation-status').textContent).toContain('1 error, 2 warnings');
+    expect(screen.getByText('mcp.tool-annotations.members')).toBeTruthy();
+    expect(screen.queryByText('A resource URI needs a scheme')).toBeNull();
     expect(screen.queryByText('Native projection mismatch')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Expand findings for mcp.resource.uri (2025-03-26)' }));
+    expect(screen.getByText('A resource URI needs a scheme')).toBeTruthy();
+    expect(screen.getByText('Review resource')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '/resources/0/uri' }));
     expect(context.revealPathRef.current).toHaveBeenCalledWith('/resources/0/uri');
-    context.state.validation = { ...context.state.validation, errors: [] };
-    view.rerender(<ValidationPanel />);
-    expect(screen.queryByRole('region', { name: 'Validation errors' })).toBeNull();
-    expect(screen.getByRole('region', { name: 'Validation warnings' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Expand findings for mcp.tool.schema.native-shape (2025-11-25)' }));
     expect(screen.getByText('Native projection mismatch')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse findings for mcp.resource.uri (2025-03-26)' }));
+    expect(screen.queryByText('A resource URI needs a scheme')).toBeNull();
   });
 
-  it('replaces expanded rule results with diagnostics instead of displaying both', () => {
+  it('keeps the same filters and disclosure when validation findings change', () => {
     const view = render(<ValidationPanel />);
     expandRules();
     expect(screen.getByRole('table')).toBeTruthy();
     context.state.validation = { ...context.state.validation, errors: [{ path: '/info', message: 'Invalid info' }] };
     view.rerender(<ValidationPanel />);
-    expect(screen.getByRole('region', { name: 'Validation errors' })).toBeTruthy();
-    expect(screen.queryByRole('region', { name: 'Validation rules' })).toBeNull();
-    expect(screen.queryByRole('checkbox', { name: 'Passed' })).toBeNull();
+    expect(screen.getByText('Invalid info')).toBeTruthy();
+    expect(screen.getByRole('checkbox', { name: 'Passed' })).toHaveProperty('checked', true);
     context.state.validation = { ...context.state.validation, errors: [], warnings: [{ path: '/info', message: 'Review info' }] };
     view.rerender(<ValidationPanel />);
-    expect(screen.getByRole('region', { name: 'Validation warnings' })).toBeTruthy();
-    expect(screen.queryByRole('region', { name: 'Validation rules' })).toBeNull();
+    expect(screen.getByText('Review info')).toBeTruthy();
+    expect(screen.queryByText('Invalid info')).toBeNull();
     context.state.validation = { ...context.state.validation, warnings: [] };
     view.rerender(<ValidationPanel />);
     expect(screen.getByRole('region', { name: 'Validation rules' })).toBeTruthy();
@@ -195,30 +212,27 @@ describe('ValidationPanel', () => {
     expect(screen.getByRole('columnheader', { name: 'Rule Title' }).getAttribute('aria-sort')).toBe('descending');
   });
 
-  it('filters diagnostic tables by search and protocol and retains common diagnostic fields', () => {
+  it('searches rules and diagnostic details and filters both by protocol', () => {
     context.state.validation.errors = [
       { path: '/resources/0/uri', message: 'A resource URI needs a scheme', rule: 'mcp.resource.uri', protocolVersions: ['2025-11-25'] },
       { path: '/tools/0', message: 'Tool declaration mismatch', rule: 'mcpdesc.tool.members', protocolVersions: ['2025-03-26'] },
       { path: '/', message: 'Invalid source', keyword: 'parse', line: 2, column: 3 },
     ];
     render(<ValidationPanel />);
-    const table = screen.getByRole('table', { name: 'Validation errors' });
-    expect(within(table).getAllByRole('columnheader').map((header) => header.textContent)).toEqual(['Path', 'Message', 'Rule Identifier', 'Protocol']);
-    expect(screen.queryByRole('checkbox', { name: 'Passed' })).toBeNull();
-    expect(screen.getByText('Not specified')).toBeTruthy();
+    const table = screen.getByRole('table', { name: 'Validation rule results' });
+    expect(screen.getByRole('checkbox', { name: 'Passed' })).toBeTruthy();
     expect(screen.getByTitle('Invalid source (parse)')).toBeTruthy();
     expect(screen.getByRole('button', { name: '/ (line 2, column 3)' })).toBeTruthy();
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Search diagnostics' }), { target: { value: 'SCHEME' } });
-    expect(within(table).getAllByRole('row')).toHaveLength(2);
-    fireEvent.change(screen.getByRole('combobox', { name: 'Filter diagnostic protocol' }), { target: { value: '2025-03-26' } });
-    expect(screen.getByText('No diagnostics match the selected filters.')).toBeTruthy();
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Search diagnostics' }), { target: { value: '' } });
-    expect(within(table).getAllByRole('row')).toHaveLength(2);
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search validation' }), { target: { value: 'SCHEME' } });
+    expect(within(table).getAllByRole('row')).toHaveLength(3);
+    fireEvent.change(screen.getByRole('combobox', { name: 'Filter validation protocol' }), { target: { value: '2025-03-26' } });
+    expect(screen.getByText('No validation results match the selected filters.')).toBeTruthy();
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search validation' }), { target: { value: '' } });
     expect(screen.getByText('Tool declaration mismatch')).toBeTruthy();
-    fireEvent.change(screen.getByRole('combobox', { name: 'Filter diagnostic protocol' }), { target: { value: 'unscoped' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Filter validation protocol' }), { target: { value: 'unscoped' } });
     expect(screen.getByText('Invalid source')).toBeTruthy();
-    expect(within(table).getAllByRole('row')).toHaveLength(2);
-    fireEvent.click(screen.getByRole('button', { name: 'Collapse validation errors' }));
+    expect(within(table).getAllByRole('row')).toHaveLength(3);
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse validation rules' }));
     expect(screen.queryByRole('table')).toBeNull();
     expect(screen.queryByRole('separator')).toBeNull();
   });
@@ -226,7 +240,7 @@ describe('ValidationPanel', () => {
   it('handles parse errors without rule results and empty documents without stale diagnostics', () => {
     context.state.validation = { valid: false, errors: [{ path: '/', message: 'Invalid YAML' }], warnings: [] };
     const view = render(<ValidationPanel />);
-    expect(screen.getByRole('button', { name: 'Collapse validation errors' })).toHaveProperty('disabled', false);
+    expect(screen.getByRole('button', { name: 'Collapse validation rules' })).toHaveProperty('disabled', false);
     expect(screen.getByText('Invalid YAML')).toBeTruthy();
     context.state.text = ' ';
     view.rerender(<ValidationPanel />);

@@ -104,20 +104,24 @@ http://localhost:5173/?url=https%3A%2F%2Fexample.com%2Fserver.mcpdesc.yaml
 
 ### Validate and preview
 
-- The **Validation panel** has one table at a time: errors, otherwise warnings,
-  otherwise rule results. Diagnostic tables have sortable Path, Message, Rule
-  Identifier, and Protocol columns, with search and protocol filters. Paths
-  navigate to the source; full messages and producer codes remain available in
-  tooltips. Parser locations include line and column when reported. The compact
-  header explicitly labels the active **Selector**.
+- The **Validation panel** combines rule results, errors, and warnings in one
+  table, with shared search and protocol filters. Expand a rule's findings to
+  read diagnostic messages, severity, paths, and producer codes; paths navigate
+  to the source. Parsing errors and findings without a matching rule result
+  appear as standalone rows with details visible, including parser line and
+  column when reported. The compact header labels the active **Selector** and
+  counts both errors and warnings. Failed rules sort first by default, followed
+  by warnings and passed checks.
 - The **card preview** renders a structured, interactive view — click any type badge to jump to its definition in the editor.
 - Expand the disclosure beside the validation status to inspect rule results.
-  Status checkboxes default to **Passed** only, support multiple selections, and
+  Status checkboxes default to **Passed**, **Failed**, and **Warning**, support multiple selections, and
   disable statuses with no results. Click **Rule Identifier**, **Rule Title**,
   **Protocol**, or **Status** to toggle ascending/descending sorting. RC.1 rule
   titles come from the pinned published catalog, and rows link to their versioned
   documentation on mcpdesc.org. `not-applicable` and `not-evaluated` remain
-  distinct statuses, never passes.
+  distinct statuses, never passes. Delegated checks and checks marked
+  `not-evaluated` with reason `operation` are omitted because they belong to
+  serialization, projection, or other operations rather than document validation.
 - Expanded tables reserve a five-row viewport by default, even with fewer
   results. Drag the horizontal separator to resize, or focus it and use the
   arrow keys; double-click resets the default. The text-size controls decrease,
@@ -329,5 +333,3 @@ version alignment, and tag-driven publication are covered in the
 ## License
 
 This software is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
-
-

@@ -55,6 +55,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ### Changed
 
+- Unify validation rules, errors, and warnings in one searchable, protocol-filtered
+  panel with expandable rule findings and standalone parsing diagnostics. Hide
+  delegated and operation-only checks while retaining genuinely unevaluated rules.
 - Retain 0.8 editing and 0.7 to 0.8 migration; use maintained 0.8 validation
   rules and the pinned RC.1 rules for 0.9 documents.
 - Switch offline JSON completion schemas by document version and use the core
