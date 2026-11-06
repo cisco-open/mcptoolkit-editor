@@ -70,6 +70,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   rule/protocol/status columns, and versioned RC.1 rule documentation links.
 - Separate diagnostics from the rule table: show errors first and show warnings
   only when no errors remain, with source navigation retained.
+- Show only one bottom-panel body at a time. Render diagnostics as sortable
+  tables with search and protocol filters, and add authoritative short rule
+  titles from the hash-verified RC.1 catalog to the rule table.
+- Reserve a five-row table viewport by default, with a draggable and keyboard-
+  accessible resize separator and bounded decrease/reset/increase text controls.
 
 ## [2.3.0] — 2026-09-10
 

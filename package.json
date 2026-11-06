@@ -25,6 +25,7 @@
     "lint": "eslint .",
     "sync:badge": "node scripts/sync-badge.mjs",
     "sync:rc-schema": "node scripts/sync-rc-schema.mjs",
+    "sync:rule-titles": "node scripts/sync-rule-titles.mjs",
     "sync:version": "node scripts/align-editor-dist-version.mjs",
     "verify:versions": "node scripts/align-editor-dist-version.mjs --check",
     "release:prepare": "node scripts/prepare-release.mjs",
