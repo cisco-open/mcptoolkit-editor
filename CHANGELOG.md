@@ -36,6 +36,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ### Fixed
 
+- Anchor validation markers and finding navigation to property keys instead of
+  the following block value in YAML and multiline JSON documents.
 - Preserve original field ordering, including nested fields, when applying
   0.8 to 0.9 RC.1 conversion to YAML or JSON documents instead of alphabetically
   sorting keys during serialization.

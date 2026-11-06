@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { parse } from 'yaml';
+import { McpDescValidator } from '../core/validator';
+import { sourcePathToLine } from './preview/navigation';
 import { groupEditorIssues, type EditorIssue } from './editorDiagnostics';
 
 describe('editor diagnostics', () => {
@@ -33,5 +36,35 @@ describe('editor diagnostics', () => {
       rule: 'mcp.tool.input-schema', protocolVersions: ['2025-11-25'],
     }], () => 4);
     expect(result.byLine.get(4)?.warnings[0]).toContain('[mcp.tool.input-schema | 2025-11-25]');
+  });
+
+  it.each([
+    ['0.8.0', '0.8.0'],
+    ['0.9.0', '0.9.0-rc.1'],
+  ])('maps a misspelled transport key to line 9 for %s', (version, schemaVersion) => {
+    const source = `$schema: https://mcpdesc.org/schema/mcp-description/${schemaVersion}.json
+mcpdesc: ${version}
+info:
+  name: chess-rating-server
+  title: Chess Rating MCP Server
+  version: 1.0.0
+protocolVersions:
+  - 2025-11-25
+transport:
+  - args:
+      - serve
+    command: chess-rating
+    type: stdio
+`;
+    const validation = new McpDescValidator().validateDocument(parse(source));
+    const transportIssues = validation.errors.filter(issue => issue.path === '/transport');
+    expect(transportIssues.length).toBeGreaterThan(0);
+    const result = groupEditorIssues(
+      transportIssues.map(issue => ({ ...issue, severity: 'error' })),
+      issue => sourcePathToLine(source, issue.path),
+    );
+    expect([...result.byLine.keys()]).toEqual([9]);
+    expect(result.byLine.get(9)?.errors[0]).toContain('/transport:');
+    expect(result.unmapped).toEqual([]);
   });
 });
