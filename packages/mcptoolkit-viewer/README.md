@@ -4,6 +4,10 @@ Interactive card view for [MCP Description](https://github.com/anthropics/model-
 
 ![alt text](screenshot.png)
 
+Renders and validates `mcpdesc: 0.9.0` documents (currently RC.3). Other
+versions show an unsupported-version message; migrate 0.8 documents with the
+editor, or use viewer 2.2.0 to render them.
+
 ## Quick Start — Script Tag
 
 ```html

@@ -9,7 +9,6 @@ import Editor from './components/Editor';
 import PreviewPanel from './components/preview/PreviewPanel';
 import ValidationPanel from './components/ValidationPanel';
 import SplitPane from './components/SplitPane';
-import MigrationDialog from './components/MigrationDialog';
 import ConversionDialog from './components/ConversionDialog';
 import NativeExportDialog from './components/NativeExportDialog';
 import MigrationStatus from './components/MigrationStatus';
@@ -89,7 +88,6 @@ export default function App({ options = {} }: AppProps) {
           defaultSplit={50}
         />
         <ValidationPanel />
-        <MigrationDialog />
         <ConversionDialog />
         <NativeExportDialog />
         <ImportDialog

@@ -61,7 +61,7 @@ export default function ExportMenu({ onJSON, onYAML, onMarkdown }: {
           <div className="my-1 border-t border-zinc-700" role="separator" />
           <button
             ref={nativeTriggerRef} type="button" role="menuitem" aria-haspopup="menu" aria-expanded={nativeOpen}
-            disabled={state.doc?.mcpdesc !== '0.9.0'} title={state.doc?.mcpdesc !== '0.9.0' ? 'Requires MCP Description 0.9 RC.2' : undefined}
+            disabled={state.doc?.mcpdesc !== '0.9.0'} title={state.doc?.mcpdesc !== '0.9.0' ? 'Requires MCP Description 0.9.0' : undefined}
             className={itemClass} onClick={() => setNativeOpen(!nativeOpen)}
             onKeyDown={(event) => { if (event.key === 'ArrowRight') { event.preventDefault(); setNativeOpen(true); } }}
           >Native MCP<ChevronRight size={14} className="ml-auto" aria-hidden="true" /></button>

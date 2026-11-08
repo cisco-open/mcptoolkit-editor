@@ -46,7 +46,8 @@ sections:
         file: features/full-featured.yaml
 
   # SECTION
-  - label: "Official Servers"
+  # Kept at MCP Description 0.8.0 to demonstrate migration to 0.9.0.
+  - label: "Official Servers (0.8 – migration demo)"
     entries:
       - label: Cisco DevNet
         id: devnet

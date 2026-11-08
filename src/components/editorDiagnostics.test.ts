@@ -38,12 +38,9 @@ describe('editor diagnostics', () => {
     expect(result.byLine.get(4)?.warnings[0]).toContain('[mcp.tool.input-schema | 2025-11-25]');
   });
 
-  it.each([
-    ['0.8.0', '0.8.0'],
-    ['0.9.0', '0.9.0-rc.2'],
-  ])('maps a misspelled transport key to line 9 for %s', (version, schemaVersion) => {
-    const source = `$schema: https://mcpdesc.org/schema/mcp-description/${schemaVersion}.json
-mcpdesc: ${version}
+  it('maps a misspelled top-level key to its own line', () => {
+    const source = `$schema: https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json
+mcpdesc: 0.9.0
 info:
   name: chess-rating-server
   title: Chess Rating MCP Server
@@ -64,11 +61,11 @@ transport:
       issue => sourcePathToLine(source, issue.path),
     );
     expect([...result.byLine.keys()]).toEqual([9]);
-    expect(result.byLine.get(9)?.errors[0]).toContain('/transport:');
+    expect(result.byLine.get(9)?.errors[0]).toContain('/transport: Unexpected member "transport".');
     expect(result.unmapped).toEqual([]);
   });
 
-  it('anchors the focused RC.2 transport typo on the misspelled field', () => {
+  it('anchors the focused transport typo on the misspelled field with a readable message', () => {
     const source = `mcpdesc: 0.9.0
 info:
   name: chess-rating-server
@@ -85,8 +82,34 @@ transports:
     const issue = { ...validation.errors[0], severity: 'error' as const };
     const grouped = groupEditorIssues([issue], item => sourcePathToLine(source, item.path));
     expect([...grouped.byLine.keys()]).toEqual([9]);
-    expect(grouped.byLine.get(9)?.errors[0]).toContain('/transports/0/arg');
+    expect(grouped.byLine.get(9)?.errors[0]).toContain('/transports/0/arg: Unexpected member "arg" for type "stdio".');
     expect(grouped.byLine.get(9)?.errors[0]).toContain('[mcpdesc.transport.members]');
     expect(grouped.unmapped).toEqual([]);
+  });
+
+  it('keeps a missing discriminator on the transport it belongs to', () => {
+    const source = `mcpdesc: 0.9.0
+info:
+  name: chess-coach
+  version: 2.1.0
+protocolVersions:
+  - 2025-11-25
+transports:
+  - typ: streamable-http
+    url: https://chess-coach.example.com/mcp
+security:
+  - bearer: []
+`;
+    const validation = new McpDescValidator().validateDocument(parse(source));
+    const transportIssues = validation.errors.filter(issue => issue.path.startsWith('/transports'));
+    const grouped = groupEditorIssues(
+      transportIssues.map(issue => ({ ...issue, severity: 'error' as const })),
+      item => sourcePathToLine(source, item.path, { nearestAncestor: true }),
+    );
+    expect([...grouped.byLine.keys()]).toEqual([8]);
+    expect(grouped.byLine.get(8)?.errors).toEqual([
+      expect.stringContaining('/transports/0: Missing required member "type". Allowed values: "streamable-http", "stdio", "sse".'),
+      expect.stringContaining('/transports/0/typ: Unexpected member "typ".'),
+    ]);
   });
 });

@@ -1,26 +1,32 @@
 import {
   convertMcpDescriptionVersion,
-  V0_9_RC_2_SCHEMA_URI,
   type CoreDiagnostic,
   type McpDescriptionConversionFix,
   type McpDescriptionConversionFixKind,
   type McpDescriptionConversionResult,
 } from '@mcpdesc/core';
+import { MCPDESC_SCHEMA_URI, MCPDESC_SPECIFICATION } from './validator';
 
-export function convertToReleaseCandidate(
+/**
+ * Convert a 0.8 document to the 0.9.0 snapshot the editor validates. The result
+ * always declares the snapshot's `$schema` so it keeps its meaning after 0.9.0
+ * becomes final; core only rewrites a `$schema` the source already declares.
+ */
+export function convertTo09(
   document: unknown,
   fixes: readonly McpDescriptionConversionFix[] = [],
 ): McpDescriptionConversionResult {
   const result = convertMcpDescriptionVersion(document, {
     from: '0.8.0',
     to: '0.9.0',
+    selector: MCPDESC_SPECIFICATION,
     fixes,
   });
-  if (!result.ok || result.value.$schema === V0_9_RC_2_SCHEMA_URI) return result;
+  if (!result.ok || result.value.$schema === MCPDESC_SCHEMA_URI) return result;
   return {
     ...result,
-    value: { ...result.value, $schema: V0_9_RC_2_SCHEMA_URI },
-    patch: [...result.patch, { op: 'add', path: '/$schema', value: V0_9_RC_2_SCHEMA_URI }],
+    value: { $schema: MCPDESC_SCHEMA_URI, ...result.value },
+    patch: [...result.patch, { op: 'add', path: '/$schema', value: MCPDESC_SCHEMA_URI }],
   };
 }
 

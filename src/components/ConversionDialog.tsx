@@ -1,8 +1,11 @@
 import { useEffect, useRef } from 'react';
 import type { McpDescriptionConversionFixKind } from '@mcpdesc/core';
 import { conversionFixes } from '../core/conversion';
-import { MCPDESC_RC_SPECIFICATION } from '../core/validator';
+import { diagnosticMessage } from '../core/diagnosticMessage';
+import { MCPDESC_SPECIFICATION, toPointer } from '../core/validator';
 import { useDoc } from '../hooks/useDoc';
+
+const SPECIFICATION_LABEL = MCPDESC_SPECIFICATION.replace(/^0\.9\.0-rc\.(\d+)$/, '0.9.0 (RC.$1)');
 
 export default function ConversionDialog() {
   const { conversion, reviewConversionFixes, applyConversion, cancelConversion, revealPathRef } = useDoc();
@@ -17,15 +20,20 @@ export default function ConversionDialog() {
   }, [open]);
 
   if (!conversion) return null;
-  const { result, initialResult, fixes } = conversion;
+  const { result, initialResult, fixes, sourceFindings } = conversion;
+  const reveal = (pointer: string) => {
+    cancelConversion();
+    revealPathRef.current?.(pointer);
+  };
 
   const downloadReport = () => {
     const url = URL.createObjectURL(new Blob([JSON.stringify({
-      selector: MCPDESC_RC_SPECIFICATION, ...result, fixes,
+      source: '0.8.0', selector: MCPDESC_SPECIFICATION, ...result, fixes,
+      ...(sourceFindings.length > 0 ? { sourceFindings } : {}),
     }, null, 2)], { type: 'application/json' }));
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'mcpdesc-0.9.0-rc.2-conversion.json';
+    link.download = `mcpdesc-${MCPDESC_SPECIFICATION}-migration.json`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -37,8 +45,12 @@ export default function ConversionDialog() {
       onCancel={(event) => { event.preventDefault(); cancelConversion(); }}
       className="m-auto max-h-[85vh] w-[calc(100%-2rem)] max-w-2xl overflow-auto border border-zinc-700 bg-zinc-900 p-5 text-zinc-100 shadow-2xl backdrop:bg-black/65"
     >
-      <h2 id="conversion-title" className="text-base font-semibold">Migrate to MCP Description 0.9.0 RC.2</h2>
-      <p className="mt-2 text-sm text-amber-300">Release candidate: 0.9.0 with the explicit 0.9.0-rc.2 schema declaration.</p>
+      <h2 id="conversion-title" className="text-base font-semibold">Migrate to MCP Description {SPECIFICATION_LABEL}</h2>
+      <p className="mt-2 text-sm text-zinc-300">
+        This document declares MCP Description 0.8.0, which this editor no longer edits or validates.
+        Review the changes below, then apply the migration to continue editing.
+      </p>
+      <p className="mt-1 text-xs text-amber-300">The result declares mcpdesc 0.9.0 with the explicit {MCPDESC_SPECIFICATION} schema.</p>
       <div className="mt-4 space-y-3 text-xs">
         {initialResult.diagnostics.filter((diagnostic) => conversionFixes(diagnostic).length > 0).map((diagnostic) => {
           const key = JSON.stringify(diagnostic.path);
@@ -64,14 +76,28 @@ export default function ConversionDialog() {
             </label>
           );
         })}
+        {sourceFindings.length > 0 && (
+          <section aria-labelledby="conversion-source-findings" className="space-y-2">
+            <h3 id="conversion-source-findings" className="text-sm font-medium text-red-300">
+              Fix {sourceFindings.length === 1 ? 'this 0.8.0 problem' : `these ${sourceFindings.length} 0.8.0 problems`} before migrating
+            </h3>
+            <ul className="space-y-2">
+              {sourceFindings.map((finding, index) => (
+                <li key={index} className="text-red-300">
+                  <button type="button" className="break-all text-left underline" onClick={() => reveal(finding.path)}>
+                    {finding.path}
+                  </button>
+                  <p className="break-words">{diagnosticMessage(finding)}</p>
+                  {finding.rule && <p className="break-all text-zinc-400">{finding.rule}</p>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         {result.diagnostics.map((diagnostic, index) => (
           <div key={index} className={diagnostic.severity === 'error' ? 'text-red-300' : 'text-amber-300'}>
-            <button type="button" className="break-all text-left underline" onClick={() => {
-              const pointer = diagnostic.path.map((part) => String(part).replace(/~/g, '~0').replace(/\//g, '~1')).join('/');
-              cancelConversion();
-              revealPathRef.current?.(`/${pointer}`);
-            }}>
-              /{diagnostic.path.join('/')}
+            <button type="button" className="break-all text-left underline" onClick={() => reveal(toPointer(diagnostic.path))}>
+              {toPointer(diagnostic.path)}
             </button>
             <p className="break-words">{diagnostic.message ?? diagnostic.rule}</p>
             <p className="break-all text-zinc-400">{diagnostic.rule}</p>

@@ -72,17 +72,15 @@ describe('Editor document loading', () => {
     expect(mocks.editorInstance.setScrollTop).toHaveBeenCalledWith(0);
   });
 
-  it('switches completion schemas without a conflicting built-in schema validator', () => {
-    const view = render(<Editor />);
-    mocks.docContext.state.doc = { mcpdesc: '0.9.0' };
-    view.rerender(<Editor />);
+  it('registers only the RC.3 completion schema without a conflicting built-in schema validator', () => {
+    render(<Editor />);
     expect(mocks.monacoInstance.languages.json.jsonDefaults.setDiagnosticsOptions).toHaveBeenLastCalledWith(
       expect.objectContaining({
         schemaValidation: 'ignore',
         enableSchemaRequest: false,
-        schemas: expect.arrayContaining([expect.objectContaining({
-          uri: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.2.json', fileMatch: ['*'],
-        })]),
+        schemas: [expect.objectContaining({
+          uri: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json', fileMatch: ['*'],
+        })],
       }),
     );
   });

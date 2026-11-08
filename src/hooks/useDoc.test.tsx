@@ -1,9 +1,11 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Toolbar from '../components/Toolbar';
+import MigrationStatus from '../components/MigrationStatus';
 import ConversionDialog from '../components/ConversionDialog';
 import NativeExportDialog from '../components/NativeExportDialog';
 import { parse } from 'yaml';
+import devnetExample from '../../examples/vendors/devnet.mcpdesc.yaml?raw';
 import httpExample from '../../examples/features/http-server.yaml?raw';
 import ValidationPanel from '../components/ValidationPanel';
 import PreviewPanel from '../components/preview/PreviewPanel';
@@ -240,7 +242,7 @@ describe('document startup', () => {
     vi.useRealTimers();
   });
 
-  it('shows and navigates to the single RC.2 transport typo finding', () => {
+  it('shows and navigates to the single transport typo finding', () => {
     const reveal = vi.fn();
     function RegisterReveal() {
       const { revealPathRef } = useDoc();
@@ -259,8 +261,9 @@ transports:
 `);
     render(<DocProvider><RegisterReveal /><ValidationPanel /></DocProvider>);
     expect(screen.getByTestId('validation-status').textContent).toContain('1 error');
-    expect(screen.getByText('Selector: 0.9.0-rc.2')).toBeTruthy();
+    expect(screen.getByText('Selector: 0.9.0-rc.3')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Expand findings for mcpdesc.transport.members' }));
+    expect(screen.getByText(/^Unexpected member "arg" for type "stdio"\./)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '/transports/0/arg' }));
     expect(reveal).toHaveBeenCalledWith('/transports/0/arg');
   });
@@ -286,74 +289,56 @@ transports:
     vi.useRealTimers();
   });
 
-  it.each(['yaml', 'json'] as const)('retains sorted 0.7 migration output in %s', (format) => {
-    const source = {
-      mcpdesc: '0.7.0',
-      info: { version: '1.0.0', name: 'example' },
-      transports: [{ type: 'stdio', command: 'example-server' }],
-      tools: [{ name: 'echo', inputSchema: { type: 'object', properties: { z: { type: 'string' }, a: { type: 'string' } } } }],
-    };
-    function ConfirmLegacyMigration() {
-      const { confirmMigration } = useDoc();
-      return <button onClick={confirmMigration}>Confirm legacy migration</button>;
-    }
-    localStorage.setItem('mcptoolkit-editor-content',
-      format === 'json' ? JSON.stringify(source) : `mcpdesc: 0.7.0
-info:
-  version: 1.0.0
-  name: example
-transports:
-  - type: stdio
-    command: example-server
-tools:
-  - name: echo
-    inputSchema:
-      type: object
-      properties:
-        z: {type: string}
-        a: {type: string}
-`);
-    render(<DocProvider><ConfirmLegacyMigration /><CurrentText /></DocProvider>);
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm legacy migration' }));
-    const text = screen.getByTestId('current-text').textContent!;
-    const result = format === 'json' ? JSON.parse(text) : parse(text);
-    expect(result.mcpdesc).toBe('0.8.0');
-    expect(Object.keys(result)).toEqual([...Object.keys(result)].sort());
-    expect(Object.keys(result.info)).toEqual([...Object.keys(result.info)].sort());
-    expect(Object.keys(result.tools[0].inputSchema.properties)).toEqual(['a', 'z']);
-  });
-
-  it('reviews migration without changing the source and retains the RC schema after Apply', async () => {
+  it('prompts to migrate a saved 0.8.0 document and keeps it unchanged until Apply', async () => {
     vi.useFakeTimers();
-    render(<DocProvider><Toolbar onImport={() => {}} /><ConversionDialog /><CurrentText /></DocProvider>);
-    fireEvent.click(screen.getByRole('button', { name: 'Migrate to 0.9 RC.2' }));
-    expect(screen.getByTestId('current-text').textContent).toBe(defaultExample);
+    localStorage.setItem('mcptoolkit-editor-content', devnetExample);
+    render(<DocProvider><PreviewPanel /><ConversionDialog /><MigrationStatus /><ValidationPanel /><CurrentText /></DocProvider>);
+    expect(screen.getByRole('dialog', { name: 'Migrate to MCP Description 0.9.0 (RC.3)' })).toBeTruthy();
+    expect(screen.getByText('Unsupported version')).toBeTruthy();
+    expect(screen.getByTestId('validation-status').textContent).toContain('1 error');
     expect(screen.getByLabelText('Conversion patch').textContent).toContain('/$schema');
+
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(screen.getByTestId('current-text').textContent).toBe(defaultExample);
-    fireEvent.click(screen.getByRole('button', { name: 'Migrate to 0.9 RC.2' }));
+    await act(async () => vi.advanceTimersByTime(300));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByTestId('current-text').textContent).toBe(devnetExample);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Migrate to 0.9.0' }));
     fireEvent.click(screen.getByRole('button', { name: 'Apply migration' }));
     await act(async () => vi.advanceTimersByTime(300));
     const migrated = parse(screen.getByTestId('current-text').textContent!);
-    expect(migrated.mcpdesc).toBe('0.9.0');
-    expect(migrated.$schema).toBe('https://mcpdesc.org/schema/mcp-description/0.9.0-rc.2.json');
-    expect(screen.queryByRole('button', { name: 'Migrate to 0.9 RC.2' })).toBeNull();
+    expect(migrated).toMatchObject({ mcpdesc: '0.9.0', $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json' });
+    expect(screen.queryByText('Unsupported version')).toBeNull();
+    expect(screen.getByText('Migrated from 0.8.0 to 0.9.0 successfully')).toBeTruthy();
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it.each(['yaml', 'json'] as const)('preserves HTTP example field ordering when converting %s', (format) => {
-    const original = parse(httpExample);
-    const source = format === 'yaml' ? httpExample : JSON.stringify(original, null, 2);
-    localStorage.setItem('mcptoolkit-editor-content', source);
-    render(<DocProvider><Toolbar onImport={() => {}} /><ConversionDialog /><CurrentText /></DocProvider>);
+  it('prompts again when a 0.8.0 document is imported', async () => {
+    vi.useFakeTimers();
+    function ImportLegacy() {
+      const { importText } = useDoc();
+      return <button onClick={() => importText(devnetExample)}>Import legacy</button>;
+    }
+    render(<DocProvider><ImportLegacy /><ConversionDialog /></DocProvider>);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Import legacy' }));
+    await act(async () => vi.advanceTimersByTime(300));
+    expect(screen.getByRole('dialog', { name: /^Migrate to MCP Description 0\.9\.0/ })).toBeTruthy();
+  });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Migrate to 0.9 RC.2' }));
+  it.each(['yaml', 'json'] as const)('preserves vendor example field ordering when migrating %s', (format) => {
+    const original = parse(devnetExample);
+    const source = format === 'yaml' ? devnetExample : JSON.stringify(original, null, 2);
+    localStorage.setItem('mcptoolkit-editor-content', source);
+    render(<DocProvider><ConversionDialog /><CurrentText /></DocProvider>);
+
     fireEvent.click(screen.getByRole('button', { name: 'Apply migration' }));
 
     const text = screen.getByTestId('current-text').textContent!;
     const converted = format === 'yaml' ? parse(text) : JSON.parse(text);
     const expected = {
       ...original,
-      $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.2.json',
+      $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json',
       mcpdesc: '0.9.0',
     };
     expect(JSON.stringify(converted)).toBe(JSON.stringify(expected));
@@ -365,8 +350,7 @@ tools:
       tools: [{ name: 'inspect', inputSchema: { type: 'object' }, annotations: { 'x-tier': 'gold' } }],
     });
     localStorage.setItem('mcptoolkit-editor-content', source);
-    render(<DocProvider><Toolbar onImport={() => {}} /><ConversionDialog /><CurrentText /></DocProvider>);
-    fireEvent.click(screen.getByRole('button', { name: 'Migrate to 0.9 RC.2' }));
+    render(<DocProvider><ConversionDialog /><CurrentText /></DocProvider>);
     expect(screen.getByRole('button', { name: 'Apply migration' })).toHaveProperty('disabled', true);
     fireEvent.change(screen.getByRole('combobox', { name: 'Fix /tools/0/annotations/x-tier' }), {
       target: { value: 'remove-property' },
@@ -377,17 +361,52 @@ tools:
     expect(parse(screen.getByTestId('current-text').textContent!).tools[0].annotations).toEqual({});
   });
 
+  it('lists 0.8.0 problems that prevent migrating an invalid source', () => {
+    const reveal = vi.fn();
+    function RegisterReveal() {
+      const { revealPathRef } = useDoc();
+      revealPathRef.current = reveal;
+      return null;
+    }
+    localStorage.setItem('mcptoolkit-editor-content', `mcpdesc: 0.8.0
+info:
+  name: inspect
+  version: '1'
+protocolVersions: [2025-11-25]
+transports:
+  - type: stdio
+    arg: [serve]
+`);
+    render(<DocProvider><RegisterReveal /><ConversionDialog /></DocProvider>);
+    expect(screen.getByRole('heading', { name: /0\.8\.0 problems? before migrating$/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Apply migration' })).toHaveProperty('disabled', true);
+    fireEvent.click(screen.getAllByRole('button', { name: /^\/transports\/0/ })[0]);
+    expect(reveal).toHaveBeenCalledWith(expect.stringMatching(/^\/transports\/0/));
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('points 0.7.0 documents to the last 0.8 editor release without prompting', () => {
+    localStorage.setItem('mcptoolkit-editor-content', 'mcpdesc: 0.7.0\ninfo:\n  name: legacy\n  version: 1.0.0\n');
+    render(<DocProvider><PreviewPanel /><ConversionDialog /></DocProvider>);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByText(/Use mcptoolkit-editor 2\.2\.2/)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Migrate to 0.9.0' })).toBeNull();
+  });
+
   it('converts the latest source even before debounced parsing has run', () => {
     vi.useFakeTimers();
     function ImmediateEdit() {
-      const { setText } = useDoc();
-      return <button onClick={() => setText(JSON.stringify({
-        mcpdesc: '0.8.0', info: { name: 'newest-source', version: '1' }, protocolVersions: ['2025-11-25'],
-      }))}>Replace source</button>;
+      const { setText, requestConversion } = useDoc();
+      return <>
+        <button onClick={() => setText(JSON.stringify({
+          mcpdesc: '0.8.0', info: { name: 'newest-source', version: '1' }, protocolVersions: ['2025-11-25'],
+        }))}>Replace source</button>
+        <button onClick={requestConversion}>Request migration</button>
+      </>;
     }
-    render(<DocProvider><Toolbar onImport={() => {}} /><ConversionDialog /><ImmediateEdit /><CurrentText /></DocProvider>);
+    render(<DocProvider><ConversionDialog /><ImmediateEdit /><CurrentText /></DocProvider>);
     fireEvent.click(screen.getByRole('button', { name: 'Replace source' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Migrate to 0.9 RC.2' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Request migration' }));
     fireEvent.click(screen.getByRole('button', { name: 'Apply migration' }));
     const text = screen.getByTestId('current-text').textContent!;
     expect(text.startsWith('{')).toBe(true);
@@ -397,7 +416,7 @@ tools:
   it('previews and exports native MCP values with protocol scoping and without description-only fields', async () => {
     const { blobs, filenames } = captureDownloads();
     localStorage.setItem('mcptoolkit-editor-content', JSON.stringify({
-      mcpdesc: '0.9.0', $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.2.json',
+      mcpdesc: '0.9.0', $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json',
       info: { name: 'inspect', version: '1' }, protocolVersions: ['2025-11-25', '2026-07-28'],
       tools: [
         { _meta: { tier: 'gold' }, inputSchema: { type: 'object' }, name: 'inspect', 'x-tier': 'gold' },
@@ -439,7 +458,7 @@ tools:
     const trigger = screen.getByRole('button', { name: 'Export' });
     fireEvent.keyDown(trigger, { key: 'ArrowDown' });
     expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'YAML' }));
-    expect(screen.getByRole('menuitem', { name: 'Native MCP' })).toHaveProperty('disabled', true);
+    expect(screen.getByRole('menuitem', { name: 'Native MCP' })).toHaveProperty('disabled', false);
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
     expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'JSON' }));
     fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
@@ -465,9 +484,7 @@ tools:
     { label: 'Prompts', identifier: 'game_summary', collection: 'prompts', kind: 'prompt' },
   ])('opens collection and individual native exports from $label without collapsing cards', ({ label, identifier, collection, kind }) => {
     const doc = parse(httpExample);
-    doc.mcpdesc = '0.9.0';
-    doc.$schema = 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.2.json';
-    localStorage.setItem('mcptoolkit-editor-content', JSON.stringify(doc));
+    localStorage.setItem('mcptoolkit-editor-content', httpExample);
     render(<DocProvider><PreviewPanel /><NativeExportDialog /></DocProvider>);
     const collectionAction = screen.getByRole('button', { name: `Export native ${label}` });
     const section = collectionAction.closest('details')!;

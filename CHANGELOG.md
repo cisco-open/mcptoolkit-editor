@@ -34,24 +34,41 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
+### Removed
+
+- **Breaking:** editing, validating, and rendering MCP Description 0.8 documents.
+  Use [editor v2.2.2](https://github.com/cisco-open/mcptoolkit-editor/releases/tag/v2.2.2)
+  for native 0.8 support.
+- **Breaking:** 0.7 to 0.8 migration and the committed 0.7 validator. Documents
+  declaring 0.7 or earlier point to editor v2.2.2.
+- The vendored 0.8 completion schema and the unused legacy validator generator.
+
 ### Fixed
 
 - Anchor validation markers and finding navigation to property keys instead of
   the following block value in YAML and multiline JSON documents.
-- Report focused RC.2 transport-field errors without unrelated alternative-branch
-  failures, while retaining independent findings.
-- Preserve original field ordering, including nested fields, when applying
-  0.8 to 0.9 RC.2 conversion to YAML or JSON documents instead of alphabetically
-  sorting keys during serialization.
+- Report one focused finding for each schema-union mistake (for example a
+  misspelled transport field) instead of a finding per failed alternative.
+- Resolve diagnostic locations through the YAML/JSON syntax tree. A finding
+  about a missing member marks the nearest enclosing declaration instead of an
+  unrelated line found by text search.
+- Preserve original field ordering, including nested fields, when migrating
+  YAML or JSON documents instead of alphabetically sorting keys.
 
 ### Added
 
-- Preview support for MCP Description `0.9.0-rc.2`, pinned to
-  `@mcpdesc/core@0.13.0-rc.6` and `@mcpdesc/validator@0.14.0-rc.6`.
-- Explicit 0.8 to 0.9 RC.2 migration with blocker review, author-selected
-  fixes, a downloadable report and JSON Patch. Migrated documents always
-  retain `$schema: https://mcpdesc.org/schema/mcp-description/0.9.0-rc.2.json`
-  and use `mcpdesc: 0.9.0`; dropping the schema awaits final-release support.
+- MCP Description `0.9.0` support at RC.3, pinned to `@mcpdesc/core@0.13.0-rc.7`
+  and `@mcpdesc/validator@0.14.0-rc.8`.
+- Migration review for 0.8 documents. Loading, pasting, or importing a 0.8
+  document opens a review listing 0.8 problems to fix first, blocker fixes the
+  author can select, a JSON Patch, and a downloadable report. Migrated documents
+  use `mcpdesc: 0.9.0` and always declare
+  `$schema: https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json`;
+  dropping the schema awaits final-release support.
+- Plain-language validation messages built from the validator's structured
+  diagnostic detail, naming the selected union variant and allowed members or
+  values. Findings inside component references link to their definition, and
+  the panel expands the raw validator message and detail on request.
 - Native MCP preview and JSON export for tools, resources, resource templates,
   and prompts, scoped to a selected protocol revision and declaration.
 - Rule identities, protocol context, and per-rule validation results in editor
@@ -62,12 +79,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 - Unify validation rules, errors, and warnings in one searchable, protocol-filtered
   panel with expandable rule findings and standalone parsing diagnostics. Hide
   delegated and operation-only checks while retaining genuinely unevaluated rules.
-- Retain 0.8 editing and 0.7 to 0.8 migration; use maintained 0.8 validation
-  rules and the RC.2 default for 0.9 documents, including RC.1 schema declarations.
+- Migrate the bundled feature examples to 0.9.0 RC.3. The Official Servers
+  examples intentionally remain 0.8 to demonstrate migration.
 - Order native MCP JSON using core's document-oriented presentation profile,
   without reordering arrays, embedded schemas, or metadata.
-- Switch offline JSON completion schemas by document version and use the core
-  validator as the authority for document validation markers.
+- Use the RC.3 schema for offline completion and the core validator as the
+  authority for document validation markers.
 - Consolidate document exports into one keyboard-accessible Export menu with a
   Native MCP submenu. Replace the Cards/Native MCP preview tabs with a permanent
   card preview and a protocol-aware native export dialog.
@@ -76,12 +93,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   capabilities export disabled until core supports it.
 - Condense validation into a status-line disclosure with an explicit Selector
   label. Add multi-select status filters (Passed only by default), sortable
-  rule/protocol/status columns, and versioned RC.2 rule documentation links.
+  rule/protocol/status columns, and versioned RC.3 rule documentation links.
 - Separate diagnostics from the rule table: show errors first and show warnings
   only when no errors remain, with source navigation retained.
 - Show only one bottom-panel body at a time. Render diagnostics as sortable
   tables with search and protocol filters, and add authoritative short rule
-  titles from the hash-verified RC.2 catalog to the rule table.
+  titles from the hash-verified RC.3 catalog to the rule table.
 - Reserve a five-row table viewport by default, with a draggable and keyboard-
   accessible resize separator and bounded decrease/reset/increase text controls.
 

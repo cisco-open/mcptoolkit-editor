@@ -2,7 +2,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import type { McpDescriptionRuleResult, McpDescriptionSelector } from '@mcpdesc/validator/browser';
+import type {
+  McpDescriptionDiagnosticDetail,
+  McpDescriptionRuleResult,
+  McpDescriptionSelector,
+} from '@mcpdesc/validator/browser';
+
+export type { McpDescriptionDiagnosticDetail };
 
 export type McpProtocolVersion =
   | '2024-11-05'
@@ -56,7 +62,7 @@ interface ProtocolScoped {
 
 export interface McpDescDocument {
   $schema?: string;
-  mcpdesc: '0.8.0' | string;
+  mcpdesc: '0.9.0' | string;
   info: McpDescInfo;
   protocolVersions: McpProtocolVersion[];
   instructions?: string;
@@ -226,13 +232,24 @@ export interface ValidationResult {
   results?: readonly McpDescriptionRuleResult[];
 }
 
-export interface ValidationIssue {
+/** A location related to a finding, as a JSON pointer into the authored source. */
+export interface ValidationRelatedLocation {
   path: string;
+  relation: 'component-definition' | (string & {});
+}
+
+export interface ValidationIssue {
+  /** JSON pointer to a value or member present in the authored source. */
+  path: string;
+  /** Producer message, kept verbatim; render with `diagnosticMessage` for display. */
   message: string;
+  /** Producer diagnostic code. */
   keyword?: string;
   rule?: string;
   protocolVersions?: readonly McpProtocolVersion[];
-  params?: Record<string, unknown>;
+  /** Structured facts from validation result format 1.4.0. */
+  detail?: McpDescriptionDiagnosticDetail;
+  relatedLocations?: readonly ValidationRelatedLocation[];
   line?: number;
   column?: number;
 }

@@ -6,10 +6,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { McpDescCardView } from './McpDescCardView';
-import type { McpDescDocument } from '@core/types';
+import type { McpDescDocument, McpProtocolVersion } from '@core/types';
 
 const baseDoc = {
-  mcpdesc: '0.8.0',
+  mcpdesc: '0.9.0',
   info: { name: 'chess', version: '2.0.0' },
   protocolVersions: ['2026-07-28'],
   capabilities: [{
@@ -66,7 +66,7 @@ const sourceDoc = {
 describe('McpDescCardView protocol projections', () => {
   it('renders compact custom protocol version controls', () => {
     const onProtocolVersionSelect = vi.fn();
-    const protocolVersionOptions = ['2025-11-25', '2026-07-28'];
+    const protocolVersionOptions: McpProtocolVersion[] = ['2025-11-25', '2026-07-28'];
     const { getByRole } = render(
       <McpDescCardView
         doc={{ ...baseDoc, protocolVersions: protocolVersionOptions }}

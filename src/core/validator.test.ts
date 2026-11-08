@@ -1,99 +1,104 @@
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 import miroExample from '../../examples/vendors/miro.mcpdesc.yaml?raw';
-import { MCPDESC_SCHEMA_URI, MCPDESC_SPECIFICATION, MCPDESC_RC_SCHEMA_URI, McpDescValidator } from './validator';
+import reusableComponents from '../../examples/features/reusable-components.yaml?raw';
+import {
+  LAST_0_8_EDITOR_RELEASE,
+  MCPDESC_SCHEMA_URI,
+  MCPDESC_SPECIFICATION,
+  McpDescValidator,
+  legacySourceFindings,
+  unsupportedFormatMessage,
+} from './validator';
 
-describe('0.8.0 validation', () => {
-  it('preserves pre-standard server extensions as a warning', () => {
-    const result = new McpDescValidator().validateDocument(parse(miroExample));
+const document = {
+  mcpdesc: '0.9.0',
+  info: { name: 'chess-rating-server', version: '1.0.0' },
+  protocolVersions: ['2025-11-25'],
+};
 
-    expect(MCPDESC_SPECIFICATION).toBe('0.8.0');
-    expect(MCPDESC_SCHEMA_URI).toBe(
-      'https://mcpdesc.org/schema/mcp-description/0.8.0.json',
-    );
-    expect(result.valid).toBe(true);
-    expect(result.errors).toEqual([]);
-    expect(result.warnings).toContainEqual(expect.objectContaining({
-      keyword: 'extensions-not-supported-by-version',
-      path: '/capabilities/0/extensions',
+describe('0.9.0 validation', () => {
+  it('uses the RC.3 default selector and its explicit schema identity', () => {
+    expect(MCPDESC_SPECIFICATION).toBe('0.9.0-rc.3');
+    expect(MCPDESC_SCHEMA_URI).toBe('https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json');
+    const result = new McpDescValidator().validateDocument({
+      ...document, $schema: MCPDESC_SCHEMA_URI,
+      transports: [{ type: 'stdio', command: 'chess-rating', args: ['serve'] }],
+    });
+    expect(result).toMatchObject({ valid: true, errors: [], selector: '0.9.0-rc.3' });
+    expect(result.results).toContainEqual(expect.objectContaining({ rule: 'mcpdesc.transport.members', status: 'passed' }));
+  });
+
+  it('reports one focused finding for a misspelled stdio member with structured detail', () => {
+    const result = new McpDescValidator().validateDocument({
+      ...document, transports: [{ type: 'stdio', command: 'chess-rating', arg: ['serve'] }],
+    });
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toMatchObject({
+      path: '/transports/0/arg',
+      rule: 'mcpdesc.transport.members',
+      keyword: 'schema-validation',
+      detail: {
+        kind: 'unexpected-member', member: 'arg',
+        selector: { member: 'type', value: 'stdio' },
+        allowedMembers: expect.arrayContaining(['args', 'command']),
+      },
+    });
+  });
+
+  it('locates a missing discriminator at the enclosing object', () => {
+    const result = new McpDescValidator().validateDocument({
+      ...document, transports: [{ typ: 'streamable-http', url: 'https://example.com/mcp' }],
+    });
+    expect(result.errors.map(({ path, detail }) => [path, detail?.kind, detail?.member])).toEqual([
+      ['/transports/0', 'missing-member', 'type'],
+      ['/transports/0/typ', 'unexpected-member', 'typ'],
+    ]);
+  });
+
+  it('carries component definitions as related locations', () => {
+    const doc = parse(reusableComponents);
+    doc.components.schemas.SearchRequest.type = 'array';
+    const result = new McpDescValidator().validateDocument(doc);
+    expect(result.errors).toContainEqual(expect.objectContaining({
+      path: '/tools/0/inputSchema',
+      relatedLocations: [{ path: '/components/schemas/SearchRequest/type', relation: 'component-definition' }],
     }));
   });
 });
 
-describe('0.9.0 RC.2 validation', () => {
-  const document = {
-    mcpdesc: '0.9.0',
-    info: { name: 'chess-rating-server', version: '1.0.0' },
-    protocolVersions: ['2025-11-25'],
-  };
+describe('unsupported format versions', () => {
+  it('reports a 0.8.0 document once at /mcpdesc instead of validating it', () => {
+    const result = new McpDescValidator().validateDocument(parse(miroExample));
+    expect(result).toMatchObject({ valid: false, warnings: [], selector: null });
+    expect(result.errors).toEqual([expect.objectContaining({
+      path: '/mcpdesc', keyword: 'unsupported-format-version',
+      message: expect.stringContaining('Migrate the document to 0.9.0'),
+    })]);
+    expect(result.results).toBeUndefined();
+  });
 
-  it('uses RC.2 and preserves rule results and version-scoped diagnostics', () => {
+  it('rejects a 0.8 schema identity when mcpdesc is absent', () => {
+    const result = new McpDescValidator().validateDocument({
+      info: document.info, $schema: 'https://mcpdesc.org/schema/mcp-description/0.8.0.json',
+    });
+    expect(result.errors).toEqual([expect.objectContaining({ path: '/', keyword: 'unsupported-format-version' })]);
+  });
+
+  it('points 0.7 and earlier documents to the last 0.8 editor release', () => {
+    expect(LAST_0_8_EDITOR_RELEASE.version).toBe('2.2.2');
+    for (const version of ['0.7.0', '0.6.1']) {
+      expect(unsupportedFormatMessage(version)).toContain(LAST_0_8_EDITOR_RELEASE.url);
+    }
+    expect(unsupportedFormatMessage('1.0.0')).toContain('Unsupported mcpdesc value "1.0.0"');
+    expect(unsupportedFormatMessage('0.9.0')).toBeNull();
+  });
+
+  it('lists 0.8 source problems that block migration', () => {
     const doc = parse(miroExample);
-    doc.mcpdesc = '0.9.0';
-    doc.$schema = MCPDESC_RC_SCHEMA_URI;
-    doc.tools = [{ name: 'inspect', inputSchema: { type: 'object' }, annotations: { audience: ['user'] } }];
-    const result = new McpDescValidator().validateDocument(doc);
-
-    expect(result.selector).toBe('0.9.0-rc.2');
-    expect(result.valid).toBe(false);
-    expect(result.errors).toContainEqual(expect.objectContaining({
-      path: '/tools/0/annotations/audience',
-      rule: 'mcp.tool-annotations.members',
-    }));
-    expect(result.results).toEqual(expect.arrayContaining([
-      expect.objectContaining({ rule: 'mcp.tool-annotations.members', status: 'failed' }),
-    ]));
-  });
-
-  it.each([
-    undefined,
-    MCPDESC_RC_SCHEMA_URI,
-    'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.1.json',
-  ])('uses the RC.2 default with schema %s and reports only the typo', ($schema) => {
-    const result = new McpDescValidator().validateDocument({
-      ...document, ...($schema ? { $schema } : {}),
-      transports: [{ type: 'stdio', command: 'chess-rating', arg: ['serve'] }],
-    });
-    expect(result.selector).toBe('0.9.0-rc.2');
-    expect(result.valid).toBe(false);
-    expect(result.errors).toHaveLength(1);
-    expect(result.errors[0]).toMatchObject({
-      path: '/transports/0/arg', rule: 'mcpdesc.transport.members',
-      keyword: 'schema-validation',
-    });
-    expect(result.results).toContainEqual(expect.objectContaining({
-      rule: 'mcpdesc.transport.members', status: 'failed',
-    }));
-  });
-
-  it.each([
-    [{ type: 'stdio', command: 42, arg: ['serve'] }, ['/transports/0/arg', '/transports/0/command']],
-    [{ type: 'stdio', arg: ['serve'] }, ['/transports/0/command', '/transports/0/arg']],
-    [{ type: 'stdi', command: 'chess-rating', arg: ['serve'] }, ['/transports/0/type']],
-    [{ command: 'chess-rating', arg: ['serve'] }, ['/transports/0/type']],
-  ])('keeps actionable findings for %j', (transport, paths) => {
-    const result = new McpDescValidator().validateDocument({ ...document, transports: [transport] });
-    expect(result.valid).toBe(false);
-    expect(result.errors.map(({ path }) => path)).toEqual(paths);
-    expect(result.errors.every(({ rule }) => rule === 'mcpdesc.transport.members')).toBe(true);
-  });
-
-  it('accepts args and does not silently select a format for unknown versions', () => {
-    const validator = new McpDescValidator();
-    expect(validator.validateDocument({
-      ...document, transports: [{ type: 'stdio', command: 'chess-rating', args: ['serve'] }],
-    }).valid).toBe(true);
-    const unknown = validator.validateDocument({ ...document, mcpdesc: '1.0.0' });
-    expect(unknown.valid).toBe(false);
-    expect(unknown.errors).toContainEqual(expect.objectContaining({ keyword: 'unsupported-format-version' }));
-  });
-
-  it('keeps the existing 0.8 transport diagnostics', () => {
-    const result = new McpDescValidator().validateDocument({
-      ...document, mcpdesc: '0.8.0',
-      transports: [{ type: 'stdio', command: 'chess-rating', arg: ['serve'] }],
-    });
-    expect(result.selector).toBe('0.8.0-rev.20261021');
-    expect(result.errors).toHaveLength(10);
+    expect(legacySourceFindings(doc)).toEqual([]);
+    doc.transports = [{ type: 'stdio', arg: ['serve'] }];
+    expect(legacySourceFindings(doc).length).toBeGreaterThan(0);
+    expect(legacySourceFindings(doc).every(({ path }) => path.startsWith('/transports/0'))).toBe(true);
   });
 });

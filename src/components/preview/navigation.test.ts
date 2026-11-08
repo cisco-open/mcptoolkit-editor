@@ -8,7 +8,7 @@ import miroExample from '../../../examples/vendors/miro.mcpdesc.yaml?raw';
 import { sourceItemPath, sourcePathToLine } from './navigation';
 
 const doc = {
-  mcpdesc: '0.8.0',
+  mcpdesc: '0.9.0',
   info: { name: 'chess', version: '2.0.0' },
   protocolVersions: ['2025-11-25', '2026-07-28'],
   tools: [
@@ -47,7 +47,7 @@ describe('sourcePathToLine', () => {
     expect(sourcePathToLine(source, '/tools/2/name')).toBe(8);
   });
 
-  it('locates the Miro pre-standard extensions warning', () => {
+  it('locates a nested capability member in a vendor document', () => {
     expect(sourcePathToLine(miroExample, '/capabilities/0/extensions')).toBe(23);
   });
 
@@ -79,5 +79,12 @@ describe('sourcePathToLine', () => {
     expect(sourcePathToLine(source, '/transport')).toBe(0);
     expect(sourcePathToLine(source, '/tools/9')).toBe(0);
     expect(sourcePathToLine('tools: [', '/tools')).toBe(0);
+  });
+
+  it('anchors absent paths to their closest existing ancestor on request', () => {
+    expect(sourcePathToLine(source, '/tools/1/annotations/title', { nearestAncestor: true })).toBe(4);
+    expect(sourcePathToLine(source, '/tools/1/protocolVersions/5', { nearestAncestor: true })).toBe(5);
+    expect(sourcePathToLine(source, '/transport', { nearestAncestor: true })).toBe(1);
+    expect(sourcePathToLine('tools: [', '/tools', { nearestAncestor: true })).toBe(0);
   });
 });

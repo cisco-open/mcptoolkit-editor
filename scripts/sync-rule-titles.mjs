@@ -1,7 +1,9 @@
 import { createHash } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
+import { defaultSpecifications } from '@mcpdesc/validator';
 
-const selector = '0.9.0-rc.2';
+// Follow the validator's maintained 0.9.0 default (an approved RC until 0.9.0 is final).
+const selector = defaultSpecifications['0.9.0'].selector;
 const manifestUrl = `https://mcpdesc.org/validation/catalogs/${selector}/manifest.json`;
 async function fetchBytes(url) {
   const response = await fetch(url);
@@ -10,7 +12,7 @@ async function fetchBytes(url) {
 }
 const manifest = JSON.parse((await fetchBytes(manifestUrl)).toString());
 if (manifest.snapshot !== selector || manifest.source.tag !== `v${selector}`) {
-  throw new Error('Rule catalog manifest does not match the pinned RC.2 snapshot');
+  throw new Error(`Rule catalog manifest does not match the ${selector} snapshot`);
 }
 const bytes = await fetchBytes(manifest.catalog.url);
 if (createHash('sha256').update(bytes).digest('hex') !== manifest.catalog.sha256) {

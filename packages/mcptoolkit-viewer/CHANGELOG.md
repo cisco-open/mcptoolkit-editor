@@ -24,17 +24,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ### Added
 
-- MCP Description 0.9 RC.2 validation through the shared browser-safe
-  validator adapter, including rule identities and protocol-scoped diagnostics.
-  Default card rendering and the script-tag viewer API are unchanged.
+- MCP Description 0.9.0 (RC.3) validation through the shared browser-safe
+  validator adapter, including rule identities, protocol-scoped diagnostics, and
+  plain-language messages built from structured diagnostic detail.
 - Optional `renderAction` callback for host-provided collection and declaration
   actions in the React card view, with exported `CardActionTarget` and
   `CardActionRenderer` types. No actions appear unless supplied by the host.
 
 ### Changed
 
-- Use the maintained 0.8 validation rules for existing documents and the
-  validator's `0.9.0-rc.2` default for documents with `mcpdesc: 0.9.0`.
+- **Breaking:** render and validate only `mcpdesc: 0.9.0` documents, following
+  the validator's default selector (currently RC.3). Other versions show an
+  unsupported-version message instead of cards. Use viewer 2.2.0 for 0.8.
+
+### Removed
+
+- **Breaking:** the bundled 0.8 schema and its internal loader.
 
 ## [2.2.0] — 2026-09-09
 

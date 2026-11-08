@@ -12,8 +12,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { McpDescValidator } from '@core/validator';
-import mcpdescSchema from '@core/mcpdesc-schema.json';
+import { McpDescValidator, unsupportedFormatMessage } from '@core/validator';
 import { McpDescCardView } from './McpDescCardView';
 import { parseYaml } from './parseYaml';
 import { ValidationPanel } from './ValidationPanel';
@@ -21,9 +20,8 @@ import type { McpToolkitViewerOptions, McpToolkitViewerInstance } from './types'
 import type { McpDescDocument, ValidationResult } from '@core/types';
 import './styles.css';
 
-// Shared validator instance — schema loaded once
+// Shared validator instance; validates MCP Description 0.9.0 only.
 const validator = new McpDescValidator();
-validator.loadSchema(mcpdescSchema as Record<string, unknown>);
 
 /** Parse a raw string as JSON or YAML, returning the document object */
 function parseSpec(raw: string): McpDescDocument {
@@ -100,6 +98,15 @@ function App({ initialDoc, initialError, options, controlRef }: AppProps) {
     return (
       <div className={`p-4 ${bgClass} min-h-[100px]`}>
         <div className="text-gray-400 text-sm">Loading...</div>
+      </div>
+    );
+  }
+
+  const unsupported = unsupportedFormatMessage(doc.mcpdesc);
+  if (unsupported) {
+    return (
+      <div className={`p-4 ${bgClass} min-h-[100px]`}>
+        <div role="alert" className="text-red-600 text-sm">{unsupported}</div>
       </div>
     );
   }

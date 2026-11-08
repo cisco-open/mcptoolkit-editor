@@ -13,15 +13,16 @@ extend its nearby tests rather than introducing a second implementation.
 | --- | --- |
 | Source text, parsing, validation scheduling, saved content, protocol selection | [src/hooks/useDoc.tsx](src/hooks/useDoc.tsx). React Context and reducer own document state; parse/validate is debounced at 300ms. |
 | Validation policy, selectors, diagnostic normalization | [src/core/validator.ts](src/core/validator.ts), [src/core/types.ts](src/core/types.ts). Delegate structural/semantic checks to `@mcpdesc/validator/browser`. |
-| Legacy migration or RC conversion | [src/core/conversion.ts](src/core/conversion.ts), [src/hooks/useDoc.tsx](src/hooks/useDoc.tsx), [src/components/MigrationDialog.tsx](src/components/MigrationDialog.tsx), [src/components/MigrationStatus.tsx](src/components/MigrationStatus.tsx), [src/components/ConversionDialog.tsx](src/components/ConversionDialog.tsx). Core performs transformations; the editor owns consent, review, and source replacement. |
-| Monaco behavior and source navigation | [src/components/Editor.tsx](src/components/Editor.tsx), [src/components/editorDiagnostics.ts](src/components/editorDiagnostics.ts), [src/components/componentNavigation.ts](src/components/componentNavigation.ts), [src/components/preview/navigation.ts](src/components/preview/navigation.ts). |
+| Diagnostic wording | [src/core/diagnosticMessage.ts](src/core/diagnosticMessage.ts). Format the validator's structured `detail`; fall back to the raw message for unknown kinds. Shared by markers, gutter labels, and both validation panels. |
+| Unsupported versions and 0.8 to 0.9.0 migration | [src/core/validator.ts](src/core/validator.ts) (`unsupportedFormatMessage`, `legacySourceFindings`), [src/core/conversion.ts](src/core/conversion.ts), [src/hooks/useDoc.tsx](src/hooks/useDoc.tsx), [src/components/ConversionDialog.tsx](src/components/ConversionDialog.tsx), [src/components/MigrationStatus.tsx](src/components/MigrationStatus.tsx). Core performs transformations; the editor owns consent, review, and source replacement. |
+| Monaco behavior and source navigation | [src/components/Editor.tsx](src/components/Editor.tsx), [src/components/editorDiagnostics.ts](src/components/editorDiagnostics.ts), [src/components/componentNavigation.ts](src/components/componentNavigation.ts), [src/components/preview/navigation.ts](src/components/preview/navigation.ts). Diagnostic paths resolve through the YAML/JSON AST (`sourcePathToLine`); do not add text-search heuristics for diagnostic locations. |
 | Validation table presentation, filtering, sorting, sizing | [src/components/ValidationPanel.tsx](src/components/ValidationPanel.tsx). Consume validator output; do not implement validation rules here. |
 | Document import, examples, and source URLs | [src/components/ImportDialog.tsx](src/components/ImportDialog.tsx), [src/importDocument.ts](src/importDocument.ts), [src/editorUrl.ts](src/editorUrl.ts). |
 | Document and native export | [src/components/Toolbar.tsx](src/components/Toolbar.tsx), [src/components/ExportMenu.tsx](src/components/ExportMenu.tsx), [src/components/NativeExportDialog.tsx](src/components/NativeExportDialog.tsx), [src/nativeExport.ts](src/nativeExport.ts). Keep projection, filenames, and downloads shared across entry points. |
 | Preview layout and editor-specific card actions | [src/components/preview/PreviewPanel.tsx](src/components/preview/PreviewPanel.tsx), [src/components/preview/CardView.tsx](src/components/preview/CardView.tsx), [src/components/SplitPane.tsx](src/components/SplitPane.tsx). Cards are the permanent preview, not one of several tabs. |
 | Shared card rendering or viewer API | [packages/mcptoolkit-viewer/src/McpDescCardView.tsx](packages/mcptoolkit-viewer/src/McpDescCardView.tsx), [packages/mcptoolkit-viewer/src/react.ts](packages/mcptoolkit-viewer/src/react.ts), [packages/mcptoolkit-viewer/src/index.tsx](packages/mcptoolkit-viewer/src/index.tsx). Editor integration uses optional host callbacks; standalone defaults must remain usable. |
 | Markdown output | [src/core/renderer.ts](src/core/renderer.ts), [src/core/template.ts](src/core/template.ts). Markdown is an export, not an active preview tab. |
-| Bundled examples | [examples/config.yaml](examples/config.yaml), YAML documents under [examples/features](examples/features/) and [examples/vendors](examples/vendors/), loader [src/examples/index.ts](src/examples/index.ts). Add a file and config entry; do not hardcode document strings in the loader. |
+| Bundled examples | [examples/config.yaml](examples/config.yaml), YAML documents under [examples/features](examples/features/) and [examples/vendors](examples/vendors/), loader [src/examples/index.ts](src/examples/index.ts). Add a file and config entry; do not hardcode document strings in the loader. Feature examples are 0.9.0; vendor examples intentionally stay 0.8 to exercise migration until 0.9.0 is final. |
 | App composition and embedded editor options | [src/App.tsx](src/App.tsx), [src/main.tsx](src/main.tsx), [src/editorOptions.ts](src/editorOptions.ts), [demo/editor.html](demo/editor.html). |
 
 ## Invariants
@@ -33,12 +34,14 @@ extend its nearby tests rather than introducing a second implementation.
 - Active validation comes from the external browser-safe validator. Monaco's
   local schemas supply completion; its schema validation is disabled to avoid
   contradictory errors. Do not add a competing AJV validator to the UI.
-- Documents follow the validator's maintained default selector: 0.8 uses the
-  maintained revision and `mcpdesc: 0.9.0` uses RC.2. Do not treat unknown format
-  versions as 0.8 or silently migrate documents during export.
-- RC conversion must emit `mcpdesc: 0.9.0` and retain the explicit RC.2 `$schema`
-  until final-release support is deliberately introduced. Apply blocker fixes
-  only with author consent; never guess moves into `_meta` or `x-*`.
+- The editor and viewer edit, validate, and render only `mcpdesc: 0.9.0`, which
+  follows the validator's default selector (currently RC.3). Every other version
+  is reported once at `/mcpdesc` and never passed to the validator, which still
+  accepts 0.8. 0.8 documents are offered migration; 0.7 and earlier point to the
+  last 2.x editor release. Never silently migrate documents during load or export.
+- Migration must emit `mcpdesc: 0.9.0` and an explicit RC.3 `$schema` (added
+  when absent) until final-release support is deliberately introduced. Apply
+  blocker fixes only with author consent; never guess moves into `_meta` or `x-*`.
 - Convert the latest raw source, not a stale debounced parse. Conversion must
   preserve field order; use explicit serialization policies and regression tests
   when changing source serialization.
@@ -61,20 +64,12 @@ extend its nearby tests rather than introducing a second implementation.
 
 | Asset | Purpose and update path |
 | --- | --- |
-| [src/core/mcpdesc-schema.json](src/core/mcpdesc-schema.json) | Vendored 0.8 schema for completion and allowed-value hints; not the active validation implementation. |
-| [src/core/mcpdesc-schema-0.9.0-rc.2.json](src/core/mcpdesc-schema-0.9.0-rc.2.json) | Refresh with `npm run sync:rc-schema` from the exact installed validator snapshot; the script checks its hash and schema identity. |
-| [src/core/rule-titles.generated.json](src/core/rule-titles.generated.json) | Refresh with `npm run sync:rule-titles`; the pinned RC.2 manifest supplies the catalog digest and rule count. Keep catalog-derived titles out of handwritten UI maps. |
-| [src/core/validator.generated.js](src/core/validator.generated.js) and [src/core/validator.generated.d.ts](src/core/validator.generated.d.ts) | Committed 0.7 validator used only to gate legacy migration. Preserve this format boundary. |
+| [src/core/mcpdesc-schema.json](src/core/mcpdesc-schema.json) | 0.9.0 RC.3 schema for Monaco completion and allowed-value hints; not the active validation implementation. Refresh with `npm run sync:schema` from the exact installed validator snapshot; the script checks its hash and schema identity. |
+| [src/core/rule-titles.generated.json](src/core/rule-titles.generated.json) | Refresh with `npm run sync:rule-titles`; the pinned RC.3 manifest supplies the catalog digest and rule count. Keep catalog-derived titles out of handwritten UI maps. |
 
 The sync commands are explicit maintenance steps, not dev/build hooks. Commit
 their generated outputs with dependency or snapshot updates, and keep selectors,
 schema identities, title metadata, and [src/core/types.ts](src/core/types.ts) aligned.
-
-**Legacy generator warning:** [scripts/build-validator.mjs](scripts/build-validator.mjs)
-is not wired into the current npm scripts or Vite build. Its comments still
-describe obsolete hooks, and it reads the current 0.8 schema. Running it as-is
-would overwrite the 0.7 migration validator with the wrong format. Verify the
-intended legacy input and migration tests before changing that artifact.
 
 ## Verification
 

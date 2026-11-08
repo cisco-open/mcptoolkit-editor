@@ -12,7 +12,7 @@ const MAX_ZOOM = 2.0;
 const ZOOM_STEP = 0.1;
 
 export default function PreviewPanel() {
-  const { state, effectiveDoc, resolvedDoc } = useDoc();
+  const { state, effectiveDoc, resolvedDoc, requestConversion } = useDoc();
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const hasContent = state.text.trim().length > 0;
 
@@ -27,16 +27,21 @@ export default function PreviewPanel() {
     );
   }
 
-  if (
-    state.migration.status === 'confirmation-required'
-    || state.migration.status === 'cancelled'
-    || state.migration.status === 'failed'
-  ) {
+  if (state.migration.status === 'unsupported') {
     return (
       <div className="flex items-center justify-center h-full bg-white text-gray-500 text-sm px-4">
         <div className="max-w-md text-center">
           <p className="font-medium text-gray-800 mb-2">Unsupported version</p>
-          <p>This MCP Description 0.7 document must be migrated to 0.8 before it can be previewed.</p>
+          <p className="break-words">{state.migration.message}</p>
+          {state.migration.migratable && (
+            <button
+              type="button"
+              className="mt-3 rounded bg-blue-600 px-3 py-1.5 text-white hover:bg-blue-700"
+              onClick={requestConversion}
+            >
+              Migrate to 0.9.0
+            </button>
+          )}
         </div>
       </div>
     );

@@ -23,7 +23,7 @@ describe('ValidationPanel', () => {
   beforeEach(() => {
     context.state.text = 'mcpdesc: 0.9.0';
     context.state.validation = {
-      valid: true, errors: [], warnings: [], selector: '0.9.0-rc.2',
+      valid: true, errors: [], warnings: [], selector: '0.9.0-rc.3',
       results: [
         { rule: 'mcp.tool-annotations.members', protocolVersion: '2024-11-05', status: 'passed' },
         { rule: 'mcp.annotations.last-modified.protocol-version', protocolVersion: '2025-11-25', status: 'passed' },
@@ -40,7 +40,7 @@ describe('ValidationPanel', () => {
   it('uses one compact disclosure beside the status and labels the selector', () => {
     render(<ValidationPanel />);
     expect(screen.getByTestId('validation-status').textContent).toBe('✓ Valid');
-    expect(screen.getByText('Selector: 0.9.0-rc.2')).toBeTruthy();
+    expect(screen.getByText('Selector: 0.9.0-rc.3')).toBeTruthy();
     expect(screen.queryByText('Validation details')).toBeNull();
     expect(screen.queryByRole('table')).toBeNull();
     expandRules();
@@ -102,18 +102,18 @@ describe('ValidationPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sort by Status' }));
     expect(rulesInOrder()[0]).toBe('mcp.resource.uri');
     fireEvent.click(screen.getByRole('button', { name: 'Sort by Status' }));
-    expect(rulesInOrder().at(-1)).toBe('mcp.resource.uri');
+    expect(rulesInOrder().slice(-1)[0]).toBe('mcp.resource.uri');
     expect(JSON.stringify(context.state.validation.results)).toBe(original);
   });
 
-  it('links RC.2 rules to versioned documentation without inventing catalogs for 0.8', () => {
+  it('links rules to versioned documentation only for the catalog selector', () => {
     const view = render(<ValidationPanel />);
     expandRules();
     const link = screen.getByRole('link', { name: 'Open documentation for mcp.annotations.last-modified.protocol-version' });
-    expect(link.getAttribute('href')).toBe('https://mcpdesc.org/docs/rules/0.9.0-rc.2/mcp/annotations-last-modified-protocol-version/');
+    expect(link.getAttribute('href')).toBe('https://mcpdesc.org/docs/rules/0.9.0-rc.3/mcp/annotations-last-modified-protocol-version/');
     expect(link.getAttribute('target')).toBe('_blank');
     expect(link.getAttribute('rel')).toBe('noopener noreferrer');
-    context.state.validation = { ...context.state.validation, selector: '0.8.0-rev.20261021' };
+    context.state.validation = { ...context.state.validation, selector: null };
     view.rerender(<ValidationPanel />);
     expect(screen.queryByRole('link', { name: /^Open documentation/ })).toBeNull();
   });
@@ -221,7 +221,7 @@ describe('ValidationPanel', () => {
     render(<ValidationPanel />);
     const table = screen.getByRole('table', { name: 'Validation rule results' });
     expect(screen.getByRole('checkbox', { name: 'Passed' })).toBeTruthy();
-    expect(screen.getByTitle('Invalid source (parse)')).toBeTruthy();
+    expect(screen.queryByText('Validator details')).toBeNull();
     expect(screen.getByRole('button', { name: '/ (line 2, column 3)' })).toBeTruthy();
     fireEvent.change(screen.getByRole('searchbox', { name: 'Search validation' }), { target: { value: 'SCHEME' } });
     expect(within(table).getAllByRole('row')).toHaveLength(3);
@@ -235,6 +235,34 @@ describe('ValidationPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Collapse validation rules' }));
     expect(screen.queryByRole('table')).toBeNull();
     expect(screen.queryByRole('separator')).toBeNull();
+  });
+
+  it('renders structured detail as a readable message with validator details and component links', () => {
+    context.state.validation = {
+      valid: false, selector: '0.9.0-rc.3', warnings: [],
+      errors: [{
+        path: '/transports/0/arg', rule: 'mcpdesc.transport.members', keyword: 'schema-validation',
+        message: 'does not validate against 0.9.0: /transports/0 must NOT have additional properties',
+        detail: {
+          kind: 'unexpected-member', member: 'arg', allowedMembers: ['args', 'command'],
+          selector: { member: 'type', value: 'stdio' },
+        },
+        relatedLocations: [{ path: '/components/schemas/Transport', relation: 'component-definition' }],
+      }],
+      results: [{ rule: 'mcpdesc.transport.members', status: 'failed' }],
+    };
+    render(<ValidationPanel />);
+    fireEvent.click(screen.getByRole('button', { name: 'Expand findings for mcpdesc.transport.members' }));
+    expect(screen.getByText('Unexpected member "arg" for type "stdio". Allowed members: args, command.')).toBeTruthy();
+    expect(screen.getByText('schema-validation')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '/components/schemas/Transport' }));
+    expect(context.revealPathRef.current).toHaveBeenCalledWith('/components/schemas/Transport');
+    const details = screen.getByText('Validator details').closest('details')!;
+    expect(details.open).toBe(false);
+    expect(within(details).getByText(/must NOT have additional properties/)).toBeTruthy();
+    expect(within(details).getByText(/"kind":"unexpected-member"/)).toBeTruthy();
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search validation' }), { target: { value: 'additional properties' } });
+    expect(screen.getByText(/Unexpected member "arg"/)).toBeTruthy();
   });
 
   it('handles parse errors without rule results and empty documents without stale diagnostics', () => {

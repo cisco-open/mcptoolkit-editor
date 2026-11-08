@@ -8,7 +8,7 @@ afterEach(cleanup);
 describe('McpDescCardView description security', () => {
   it('sanitizes active HTML while preserving safe Markdown', () => {
     const doc = {
-      mcpdesc: '0.8.0',
+      mcpdesc: '0.9.0',
       info: {
         name: 'untrusted-description',
         version: '1.0.0',

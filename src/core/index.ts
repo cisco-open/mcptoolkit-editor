@@ -3,13 +3,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export {
-  getMcpDesc07ValidationErrors,
-  isValidMcpDesc07,
+  MCPDESC_FORMAT_VERSION,
   MCPDESC_SCHEMA_URI,
   MCPDESC_SPECIFICATION,
+  LAST_0_8_EDITOR_RELEASE,
   McpDescValidator,
+  legacySourceFindings,
+  toPointer,
+  unsupportedFormatMessage,
 } from './validator';
 export { McpDescRenderer } from './renderer';
+export { diagnosticMessage } from './diagnosticMessage';
 export type {
   McpDescDocument,
   McpDescInfo,
@@ -26,4 +30,5 @@ export type {
   McpDescIcon,
   ValidationResult,
   ValidationIssue,
+  ValidationRelatedLocation,
 } from './types';

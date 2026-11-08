@@ -39,7 +39,7 @@ export default function Toolbar({
   titleUrlTarget = '_self',
   titleLinkAppearance = 'plain',
 }: ToolbarProps) {
-  const { state, loadExample, setText, resolvedDoc, requestConversion } = useDoc();
+  const { state, loadExample, setText, resolvedDoc } = useDoc();
   const linkUrl = safeTitleUrl(titleUrl);
 
   const handleExampleChange = useCallback(
@@ -134,9 +134,6 @@ export default function Toolbar({
       </button>
 
       {/* Spacer */}
-      {state.doc?.mcpdesc === '0.8.0' && (
-        <button className={btnClass} onClick={requestConversion}>Migrate to 0.9 RC.2</button>
-      )}
       <div className="flex-1" />
 
       {/* Export */}

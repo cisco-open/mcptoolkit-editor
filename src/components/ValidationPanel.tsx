@@ -8,6 +8,7 @@ import type { McpDescriptionRuleResultStatus } from '@mcpdesc/validator/browser'
 import { useDoc } from '../hooks/useDoc';
 import editorPackage from '../../package.json';
 import ruleMetadata from '../core/rule-titles.generated.json';
+import { diagnosticMessage } from '../core/diagnosticMessage';
 import { validationRows } from './validationRows';
 
 const DEFAULT_FONT_SIZE = 12;
@@ -82,7 +83,7 @@ export default function ValidationPanel() {
     const matchesProtocol = effectiveProtocolFilter === 'all'
       || (effectiveProtocolFilter === 'unscoped' ? !row.protocolVersion : row.protocolVersion === effectiveProtocolFilter);
     const text = [row.rule, row.rule && ruleTitle(row.rule), row.reason, row.protocolVersion,
-      ...row.diagnostics.flatMap((issue) => [issue.path, issue.message, issue.keyword, issue.severity])].filter(Boolean).join(' ').toLowerCase();
+      ...row.diagnostics.flatMap((issue) => [issue.path, diagnosticMessage(issue), issue.message, issue.keyword, issue.detail?.member, issue.severity])].filter(Boolean).join(' ').toLowerCase();
     return selectedStatuses.has(row.status) && matchesProtocol && text.includes(search.trim().toLowerCase());
   }).sort((left, right) => {
     if (sort.key === 'status') {
@@ -236,12 +237,26 @@ export default function ValidationPanel() {
                   {detailsExpanded && result.diagnostics.length > 0 && <tr id={detailsId}><td colSpan={4} className="bg-zinc-950 px-3 py-2">
                     <ul className="space-y-2">{result.diagnostics.map((issue, index) => {
                       const location = `${issue.path}${issue.line ? ` (line ${issue.line}${issue.column ? `, column ${issue.column}` : ''})` : ''}`;
+                      const message = diagnosticMessage(issue);
                       return <li key={index} className="flex flex-wrap items-baseline gap-x-2">
                         <span className={issue.severity === 'error' ? 'text-red-400' : 'text-yellow-400'}>{issue.severity === 'error' ? 'Error' : 'Warning'}</span>
                         <button type="button" title={location} className="max-w-full break-all text-left text-sky-300 underline" onClick={() => revealPathRef.current?.(issue.path)}>{location}</button>
-                        <span className="min-w-0 break-words text-zinc-200 [overflow-wrap:anywhere]" title={`${issue.message}${issue.keyword ? ` (${issue.keyword})` : ''}`}>{issue.message}</span>
+                        <span className="min-w-0 break-words text-zinc-200 [overflow-wrap:anywhere]">{message}</span>
                         {issue.keyword && <span className="break-all text-zinc-500">{issue.keyword}</span>}
                         {issue.protocolVersions?.length ? <span className="text-zinc-500">{issue.protocolVersions.join(', ')}</span> : null}
+                        {issue.relatedLocations?.map((related) => (
+                          <span key={`${related.relation}:${related.path}`} className="text-zinc-400">
+                            {related.relation === 'component-definition' ? 'Defined at ' : `${related.relation}: `}
+                            <button type="button" className="break-all text-left text-sky-300 underline" onClick={() => revealPathRef.current?.(related.path)}>{related.path}</button>
+                          </span>
+                        ))}
+                        {(issue.detail || message !== issue.message) && <details className="w-full text-zinc-500">
+                          <summary className="cursor-pointer select-none hover:text-zinc-300">Validator details</summary>
+                          <dl className="mt-1 grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 pl-4">
+                            <dt>Message</dt><dd className="break-words [overflow-wrap:anywhere]">{issue.message}</dd>
+                            {issue.detail && <><dt>Detail</dt><dd><code className="break-all">{JSON.stringify(issue.detail)}</code></dd></>}
+                          </dl>
+                        </details>}
                       </li>;
                     })}</ul>
                   </td></tr>}
