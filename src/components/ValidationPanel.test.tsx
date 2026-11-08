@@ -1,6 +1,9 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { parse } from 'yaml';
+import miroExample from '../../examples/vendors/miro.mcpdesc.yaml?raw';
 import type { ValidationResult } from '../core/types';
+import { MCPDESC_SCHEMA_URI, McpDescValidator } from '../core/validator';
 import ValidationPanel from './ValidationPanel';
 
 const context = vi.hoisted(() => ({
@@ -139,6 +142,43 @@ describe('ValidationPanel', () => {
     expect(screen.getByText('Native projection mismatch')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Collapse findings for mcp.resource.uri (2025-03-26)' }));
     expect(screen.queryByText('A resource URI needs a scheme')).toBeNull();
+  });
+
+  it('displays the RC3 Miro extension warning even when the document is valid', () => {
+    const document = { ...parse(miroExample), mcpdesc: '0.9.0', $schema: MCPDESC_SCHEMA_URI };
+    context.state.validation = new McpDescValidator().validateDocument(document);
+    const original = JSON.stringify(context.state.validation);
+    expect(context.state.validation.valid).toBe(true);
+    expect(context.state.validation.errors).toEqual([]);
+    expect(context.state.validation.warnings).toHaveLength(1);
+    const warning = context.state.validation.warnings[0];
+    expect(warning).toMatchObject({
+      path: '/capabilities/0/extensions',
+      rule: 'mcp.capabilities.extensions.protocol-version',
+      protocolVersions: ['2025-11-25'],
+    });
+
+    render(<ValidationPanel />);
+    expect(screen.getByTestId('validation-status').textContent).toContain('1 warning');
+    const filter = screen.getByRole('checkbox', { name: 'Warning' });
+    expect(filter).toHaveProperty('checked', true);
+    expect(filter.parentElement?.textContent).toContain('(1)');
+    const rule = screen.getByText('mcp.capabilities.extensions.protocol-version').closest('tr')!;
+    expect(within(rule).getAllByRole('cell').map((cell) => cell.textContent).slice(2)).toEqual([
+      '2025-11-25', 'Warning (1)',
+    ]);
+    fireEvent.click(screen.getByRole('button', {
+      name: 'Expand findings for mcp.capabilities.extensions.protocol-version (2025-11-25)',
+    }));
+    expect(screen.getByText(warning.message)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '/capabilities/0/extensions' }));
+    expect(context.revealPathRef.current).toHaveBeenCalledWith('/capabilities/0/extensions');
+    fireEvent.click(filter);
+    expect(screen.queryByText('mcp.capabilities.extensions.protocol-version')).toBeNull();
+    expect(screen.getByTestId('validation-status').textContent).toContain('1 warning');
+    fireEvent.click(filter);
+    expect(screen.getByText(warning.message)).toBeTruthy();
+    expect(JSON.stringify(context.state.validation)).toBe(original);
   });
 
   it('keeps the same filters and disclosure when validation findings change', () => {
