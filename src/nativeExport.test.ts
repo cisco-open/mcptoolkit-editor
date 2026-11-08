@@ -1,6 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import * as core from '@mcpdesc/core';
 import { nativeExportFilename, projectNativeExport } from './nativeExport';
 import type { McpDescDocument } from './core/types';
+
+vi.mock('@mcpdesc/core', { spy: true });
 
 const doc: McpDescDocument = {
   mcpdesc: '0.9.0',
@@ -32,6 +35,49 @@ describe('native exports', () => {
     }] }, { kind: 'tool' }, '2025-11-25');
     expect(result.ok).toBe(false);
     expect(result).not.toHaveProperty('value');
+  });
+
+  it.each([undefined, 'analyze_game'])('reports the extensions warning once for selection %s', (identifier) => {
+    const result = projectNativeExport({
+      ...doc,
+      capabilities: [{ tools: { listChanged: true }, extensions: { 'io.modelcontextprotocol/ui': {} } }],
+    }, { kind: 'tool', identifier }, '2025-11-25');
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).toHaveLength(1);
+    expect(result.diagnostics[0]).toMatchObject({
+      severity: 'warning',
+      rule: 'mcp.capabilities.extensions.protocol-version',
+      path: ['capabilities', 0, 'extensions'],
+    });
+    expect(result.ok && result.value).toEqual(identifier
+      ? { name: 'analyze_game', inputSchema: { type: 'object' } }
+      : [{ name: 'analyze_game', inputSchema: { type: 'object' } }]);
+  });
+
+  it('preserves distinct findings and failed results when deduplicating protocol context', () => {
+    const diagnostic: core.CoreDiagnostic = {
+      code: 'finding', severity: 'warning', message: 'Finding', path: ['tools', 0],
+      rule: 'rule', phase: 'source', protocolVersions: ['2025-11-25'],
+    };
+    const distinct: core.CoreDiagnostic[] = [
+      diagnostic,
+      { ...diagnostic, code: 'another-code' },
+      { ...diagnostic, severity: 'error' },
+      { ...diagnostic, message: 'Another finding' },
+      { ...diagnostic, path: ['tools', 1] },
+      { ...diagnostic, rule: 'another-rule' },
+      { ...diagnostic, protocolVersion: '2026-07-28' },
+      { ...diagnostic, protocolVersions: ['2026-07-28'] },
+      { ...diagnostic, relatedLocations: [{ path: ['components'], relation: 'component-definition' }] },
+    ];
+    vi.mocked(core.projectMcpNativeValue).mockReturnValueOnce({
+      ok: false,
+      diagnostics: [...distinct, { ...diagnostic, protocolVersion: '2025-11-25', phase: 'result' }],
+    });
+    const result = projectNativeExport(doc, { kind: 'tool' }, '2025-11-25');
+    expect(result.ok).toBe(false);
+    expect(result).not.toHaveProperty('value');
+    expect(result.diagnostics).toEqual(distinct);
   });
 
   it.each([

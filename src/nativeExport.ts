@@ -27,9 +27,22 @@ export function nativeExportFilename(server: string, request: NativeExportReques
 }
 
 export function projectNativeExport(doc: McpDescDocument, request: NativeExportRequest, protocolVersion: McpProtocolVersion) {
-  return projectMcpNativeValue(doc, {
+  const result = projectMcpNativeValue(doc, {
     protocolVersion, kind: request.kind, identifier: request.identifier, keyOrder: 'document',
   });
+  const seen = new Set<string>();
+  const diagnostics = result.diagnostics.filter((diagnostic) => {
+    // Core may repeat a finding with and without the projection's protocol context.
+    const identity = JSON.stringify([
+      diagnostic.code, diagnostic.severity, diagnostic.message, diagnostic.path,
+      diagnostic.protocolVersion ?? protocolVersion, diagnostic.rule,
+      diagnostic.protocolVersions, diagnostic.detail, diagnostic.relatedLocations,
+    ]);
+    if (seen.has(identity)) return false;
+    seen.add(identity);
+    return true;
+  });
+  return { ...result, diagnostics };
 }
 
 export function downloadFile(content: string, filename: string, mime = 'application/json'): void {

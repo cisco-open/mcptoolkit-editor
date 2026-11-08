@@ -452,6 +452,25 @@ transports:
     expect(exported).toBe(preview);
   });
 
+  it('shows the native extensions warning once and keeps download and navigation available', () => {
+    localStorage.setItem('mcptoolkit-editor-content', JSON.stringify({
+      mcpdesc: '0.9.0', info: { name: 'Miro MCP', version: '3.4.6' }, protocolVersions: ['2025-11-25'],
+      capabilities: [{ tools: { listChanged: true }, extensions: { 'io.modelcontextprotocol/ui': {} } }],
+      tools: [{ name: 'preview_resource_poll', inputSchema: { type: 'object' } }],
+    }));
+    render(<DocProvider><Toolbar onImport={() => {}} /><NativeExportDialog /></DocProvider>);
+    fireEvent.click(screen.getByRole('button', { name: 'Export' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Native MCP' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Tools' }));
+    expect(screen.getAllByText('mcp.capabilities.extensions.protocol-version')).toHaveLength(1);
+    expect(screen.getAllByText(/preserves a deployed pre-standard extension negotiation convention/)).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Download JSON' })).toHaveProperty('disabled', false);
+    expect(JSON.parse(screen.getByLabelText('Native MCP JSON').textContent!))
+      .toEqual([{ name: 'preview_resource_poll', inputSchema: { type: 'object' } }]);
+    fireEvent.click(screen.getByRole('button', { name: '/capabilities/0/extensions' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
   it('keeps document exports behind one keyboard-accessible menu', () => {
     const { filenames, blobs } = captureDownloads();
     render(<DocProvider><Toolbar onImport={() => {}} /></DocProvider>);

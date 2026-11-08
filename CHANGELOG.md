@@ -45,6 +45,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ### Fixed
 
+- Show equivalent native MCP export diagnostics only once when core repeats a
+  finding with and without the selected protocol revision.
 - Anchor validation markers and finding navigation to property keys instead of
   the following block value in YAML and multiline JSON documents.
 - Report one focused finding for each schema-union mistake (for example a
