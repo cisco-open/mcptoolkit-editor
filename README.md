@@ -106,7 +106,7 @@ http://localhost:5173/?url=https%3A%2F%2Fexample.com%2Fserver.mcpdesc.yaml
 ### Validate and preview
 
 - The **Validation panel** combines rule results, errors, and warnings in one
-  table, with shared search and protocol filters. Expand a rule's findings to
+  table, with status filters and sortable columns. Expand a rule's findings to
   read diagnostic messages, severity, paths, and producer codes; paths navigate
   to the source. Parsing errors and findings without a matching rule result
   appear as standalone rows with details visible, including parser line and

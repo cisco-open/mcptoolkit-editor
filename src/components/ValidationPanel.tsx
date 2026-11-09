@@ -59,8 +59,6 @@ export default function ValidationPanel() {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(() => new Set());
   const [selectedStatuses, setSelectedStatuses] = useState<Set<McpDescriptionRuleResultStatus>>(() => new Set(['passed', 'failed', 'warning']));
   const [sort, setSort] = useState<SortState>({ key: 'status', direction: 'ascending' });
-  const [search, setSearch] = useState('');
-  const [protocolFilter, setProtocolFilter] = useState('all');
   const [fontSize, setFontSize] = useState(DEFAULT_FONT_SIZE);
   const [resizedHeight, setResizedHeight] = useState<number | null>(null);
   const resizing = useRef<{ startY: number; height: number } | null>(null);
@@ -76,16 +74,7 @@ export default function ValidationPanel() {
   const errorCount = validation.errors.length;
   const warnCount = validation.warnings.length;
   const hasDiagnostics = errorCount + warnCount > 0;
-  const protocols = [...new Set(rows.flatMap((row) => row.protocolVersion ? [row.protocolVersion] : []))].sort();
-  const effectiveProtocolFilter = (protocolFilter === 'unscoped' && rows.some((row) => !row.protocolVersion))
-    || protocols.includes(protocolFilter) ? protocolFilter : 'all';
-  const filteredRows = rows.filter((row) => {
-    const matchesProtocol = effectiveProtocolFilter === 'all'
-      || (effectiveProtocolFilter === 'unscoped' ? !row.protocolVersion : row.protocolVersion === effectiveProtocolFilter);
-    const text = [row.rule, row.rule && ruleTitle(row.rule), row.reason, row.protocolVersion,
-      ...row.diagnostics.flatMap((issue) => [issue.path, diagnosticMessage(issue), issue.message, issue.keyword, issue.detail?.member, issue.severity])].filter(Boolean).join(' ').toLowerCase();
-    return selectedStatuses.has(row.status) && matchesProtocol && text.includes(search.trim().toLowerCase());
-  }).sort((left, right) => {
+  const filteredRows = rows.filter((row) => selectedStatuses.has(row.status)).sort((left, right) => {
     if (sort.key === 'status') {
       const compared = statuses.findIndex(({ value }) => value === left.status) - statuses.findIndex(({ value }) => value === right.status);
       if (compared) return sort.direction === 'ascending' ? compared : -compared;
@@ -172,20 +161,7 @@ export default function ValidationPanel() {
       </div>
       {panelExpanded && (
         <section id={rulesId} aria-label="Validation rules" className="border-t border-zinc-800 px-3 pb-2">
-          <div className="flex flex-wrap items-center gap-2 py-2">
-            <label className="flex min-w-0 flex-1 items-center gap-2"><span className="text-zinc-400">Search:</span>
-              <input aria-label="Search validation" type="search" value={search} onChange={(event) => setSearch(event.target.value)}
-                className="min-w-0 flex-1 rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-zinc-200" />
-            </label>
-            <label className="flex items-center gap-2 text-zinc-400">Protocol:
-              <select aria-label="Filter validation protocol" value={effectiveProtocolFilter} onChange={(event) => setProtocolFilter(event.target.value)} className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-zinc-200">
-                <option value="all">All</option>
-                <option value="unscoped" disabled={!rows.some((row) => !row.protocolVersion)}>Unscoped</option>
-                {protocols.map((version) => <option key={version} value={version}>{version}</option>)}
-              </select>
-            </label>
-          </div>
-          <fieldset className="flex flex-wrap items-center gap-x-4 gap-y-2 pb-2">
+          <fieldset className="flex flex-wrap items-center gap-x-4 gap-y-2 py-2">
             <legend className="sr-only">Filter by status</legend>
             <span className="font-medium text-zinc-400">Filter:</span>
             {statuses.map(({ value, label }) => {

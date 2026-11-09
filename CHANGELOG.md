@@ -42,6 +42,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 - **Breaking:** 0.7 to 0.8 migration and the committed 0.7 validator. Documents
   declaring 0.7 or earlier point to editor v2.2.2.
 - The vendored 0.8 completion schema and the unused legacy validator generator.
+- Search and protocol filters from the validation panel; status filters and
+  sortable protocol information remain available.
 
 ### Fixed
 
@@ -78,7 +80,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ### Changed
 
-- Unify validation rules, errors, and warnings in one searchable, protocol-filtered
+- Resolve document selectors from recognized `$schema` identities when the
+  snapshot is available, falling back to the configured selector otherwise.
+- Unify validation rules, errors, and warnings in one status-filtered, sortable
   panel with expandable rule findings and standalone parsing diagnostics. Hide
   delegated and operation-only checks while retaining genuinely unevaluated rules.
 - Migrate the bundled feature examples to 0.9.0 RC.3. The Official Servers
@@ -99,8 +103,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 - Separate diagnostics from the rule table: show errors first and show warnings
   only when no errors remain, with source navigation retained.
 - Show only one bottom-panel body at a time. Render diagnostics as sortable
-  tables with search and protocol filters, and add authoritative short rule
-  titles from the hash-verified RC.3 catalog to the rule table.
+  tables and add authoritative short rule titles from the hash-verified RC.3
+  catalog to the rule table.
 - Reserve a five-row table viewport by default, with a draggable and keyboard-
   accessible resize separator and bounded decrease/reset/increase text controls.
 

@@ -252,7 +252,7 @@ describe('ValidationPanel', () => {
     expect(screen.getByRole('columnheader', { name: 'Rule Title' }).getAttribute('aria-sort')).toBe('descending');
   });
 
-  it('searches rules and diagnostic details and filters both by protocol', () => {
+  it('shows findings across protocols and unscoped findings without search or protocol filters', () => {
     context.state.validation.errors = [
       { path: '/resources/0/uri', message: 'A resource URI needs a scheme', rule: 'mcp.resource.uri', protocolVersions: ['2025-11-25'] },
       { path: '/tools/0', message: 'Tool declaration mismatch', rule: 'mcpdesc.tool.members', protocolVersions: ['2025-03-26'] },
@@ -261,17 +261,15 @@ describe('ValidationPanel', () => {
     render(<ValidationPanel />);
     const table = screen.getByRole('table', { name: 'Validation rule results' });
     expect(screen.getByRole('checkbox', { name: 'Passed' })).toBeTruthy();
+    expect(screen.queryByRole('searchbox', { name: 'Search validation' })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: 'Filter validation protocol' })).toBeNull();
     expect(screen.queryByText('Validator details')).toBeNull();
     expect(screen.getByRole('button', { name: '/ (line 2, column 3)' })).toBeTruthy();
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Search validation' }), { target: { value: 'SCHEME' } });
-    expect(within(table).getAllByRole('row')).toHaveLength(3);
-    fireEvent.change(screen.getByRole('combobox', { name: 'Filter validation protocol' }), { target: { value: '2025-03-26' } });
-    expect(screen.getByText('No validation results match the selected filters.')).toBeTruthy();
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Search validation' }), { target: { value: '' } });
+    expect(screen.getAllByText('mcp.resource.uri')).toHaveLength(2);
     expect(screen.getByText('Tool declaration mismatch')).toBeTruthy();
-    fireEvent.change(screen.getByRole('combobox', { name: 'Filter validation protocol' }), { target: { value: 'unscoped' } });
     expect(screen.getByText('Invalid source')).toBeTruthy();
-    expect(within(table).getAllByRole('row')).toHaveLength(3);
+    expect(within(table).getAllByText('2025-11-25').length).toBeGreaterThan(0);
+    expect(within(table).getAllByText('2025-03-26').length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole('button', { name: 'Collapse validation rules' }));
     expect(screen.queryByRole('table')).toBeNull();
     expect(screen.queryByRole('separator')).toBeNull();
@@ -301,8 +299,6 @@ describe('ValidationPanel', () => {
     expect(details.open).toBe(false);
     expect(within(details).getByText(/must NOT have additional properties/)).toBeTruthy();
     expect(within(details).getByText(/"kind":"unexpected-member"/)).toBeTruthy();
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Search validation' }), { target: { value: 'additional properties' } });
-    expect(screen.getByText(/Unexpected member "arg"/)).toBeTruthy();
   });
 
   it('handles parse errors without rule results and empty documents without stale diagnostics', () => {

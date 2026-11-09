@@ -84,7 +84,12 @@ export class McpDescValidator {
       }
     }
 
-    const result = validateMcpDescription(data);
+    const result = validateMcpDescription(
+      data,
+      isObject(data) && data.mcpdesc === MCPDESC_FORMAT_VERSION
+        ? { schemaPolicyIfPresent: true, fallbackIfSelectorIsUnknown: true }
+        : {},
+    );
     if (result.selector && !result.selector.startsWith(MCPDESC_FORMAT_VERSION)) {
       // A retired `$schema` identity selected the format; mcpdesc itself was absent.
       return {

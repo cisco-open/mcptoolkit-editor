@@ -29,6 +29,25 @@ describe('0.9.0 validation', () => {
     expect(result.results).toContainEqual(expect.objectContaining({ rule: 'mcpdesc.transport.members', status: 'passed' }));
   });
 
+  it.each(['0.9.0-rc.1', '0.9.0-draft.4'])(
+    'falls back to the configured default for unavailable selector %s',
+    (selector) => {
+      const result = new McpDescValidator().validateDocument({
+        ...document,
+        $schema: `https://mcpdesc.org/schema/mcp-description/${selector}.json`,
+      });
+      expect(result.selector).toBe('0.9.0-rc.3');
+    },
+  );
+
+  it('continues to reject retired-format schema identities without mcpdesc', () => {
+    const result = new McpDescValidator().validateDocument({
+      info: document.info,
+      $schema: 'https://mcpdesc.org/schema/mcp-description/0.8.0.json',
+    });
+    expect(result.errors).toEqual([expect.objectContaining({ keyword: 'unsupported-format-version' })]);
+  });
+
   it('reports one focused finding for a misspelled stdio member with structured detail', () => {
     const result = new McpDescValidator().validateDocument({
       ...document, transports: [{ type: 'stdio', command: 'chess-rating', arg: ['serve'] }],
