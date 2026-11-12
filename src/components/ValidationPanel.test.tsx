@@ -79,6 +79,35 @@ describe('ValidationPanel', () => {
     expect(screen.getByRole('checkbox', { name: 'Passed' })).toHaveProperty('checked', false);
   });
 
+  it('uses the same white text for enabled filter labels and counts, keeping empty filters muted', () => {
+    context.state.validation.results = [{ rule: 'mcp.resource.uri', status: 'passed' }];
+    render(<ValidationPanel />);
+    expandRules();
+    const passed = screen.getByRole('checkbox', { name: 'Passed' });
+    const label = passed.parentElement!;
+    expect(label.classList.contains('text-white')).toBe(true);
+    expect(within(label).getByText('(1)').className).toBe('tabular-nums');
+    fireEvent.click(passed);
+    expect(label.classList.contains('text-white')).toBe(true);
+    for (const name of ['Failed', 'Warning', 'Not applicable', 'Not evaluated']) {
+      const checkbox = screen.getByRole('checkbox', { name });
+      expect(checkbox).toHaveProperty('disabled', true);
+      expect(checkbox.parentElement!.classList.contains('text-zinc-600')).toBe(true);
+      expect(within(checkbox.parentElement!).getByText('(0)').className).toBe('tabular-nums');
+    }
+  });
+
+  it('keeps every filter label and count together without a space or flex gap', () => {
+    render(<ValidationPanel />);
+    expandRules();
+    for (const [name, count] of [['Passed', 2], ['Failed', 1], ['Warning', 1], ['Not applicable', 1], ['Not evaluated', 1]] as const) {
+      const label = screen.getByRole('checkbox', { name }).parentElement!;
+      const countElement = within(label).getByText(`(${count})`);
+      expect(countElement.parentElement!.textContent).toBe(`${name}(${count})`);
+      expect(countElement.parentElement!.parentElement).toBe(label);
+    }
+  });
+
   it('shows a clear empty filter state without treating unevaluated rules as passed', () => {
     render(<ValidationPanel />);
     expandRules();

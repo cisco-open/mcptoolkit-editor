@@ -163,9 +163,9 @@ mcpdesc: 0.9.0
 ```
 
 RC.3 is not the final 0.9 release. Schema-declaration removal will only be
-considered when final 0.9 support is added. The bundled feature examples are
-0.9.0; the **Official Servers** examples intentionally remain 0.8 so you can
-try the migration.
+considered when final 0.9 support is added. The bundled feature and **Official
+Servers** examples are 0.9.0. The **Migrations** examples include 0.8 documents
+to try the migration and a 0.7 document to demonstrate the older-version guidance.
 
 Documents declaring 0.7 or earlier are not migrated; the preview points to
 editor v2.2.2, which migrates them to 0.8.

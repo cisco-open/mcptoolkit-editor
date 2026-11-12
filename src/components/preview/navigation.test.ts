@@ -48,7 +48,7 @@ describe('sourcePathToLine', () => {
   });
 
   it('locates a nested capability member in a vendor document', () => {
-    expect(sourcePathToLine(miroExample, '/capabilities/0/extensions')).toBe(23);
+    expect(sourcePathToLine(miroExample, '/capabilities/0/extensions')).toBe(22);
   });
 
   it('locates YAML property keys rather than their block values', () => {

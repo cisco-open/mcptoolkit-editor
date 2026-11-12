@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-import miroExample from '../../examples/vendors/miro.mcpdesc.yaml?raw';
+import miroExample from '../../examples/migration/miro.mcpdesc-v0.8.yaml?raw';
 import reusableComponents from '../../examples/features/reusable-components.yaml?raw';
+import stdioServerExample from '../../examples/features/stdio-server.yaml?raw';
+import type { McpDescDocument } from './types';
 import {
   LAST_0_8_EDITOR_RELEASE,
   MCPDESC_SCHEMA_URI,
@@ -18,6 +20,21 @@ const document = {
 };
 
 describe('0.9.0 validation', () => {
+  it('documents the result returned by the stdio chess rating tool', () => {
+    const doc: McpDescDocument = parse(stdioServerExample);
+    const ratingTool = doc.tools?.find(({ name }) => name === 'get_player_rating');
+
+    expect(ratingTool?.outputSchema).toEqual({
+      type: 'object',
+      properties: {
+        rating: { type: 'integer', description: 'Current FIDE standard rating' },
+      },
+      required: ['rating'],
+      additionalProperties: false,
+    });
+    expect(new McpDescValidator().validateDocument(doc).valid).toBe(true);
+  });
+
   it('uses the RC.3 default selector and its explicit schema identity', () => {
     expect(MCPDESC_SPECIFICATION).toBe('0.9.0-rc.3');
     expect(MCPDESC_SCHEMA_URI).toBe('https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json');

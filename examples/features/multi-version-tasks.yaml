@@ -54,10 +54,12 @@ capabilities:
     io.modelcontextprotocol/tasks: {}
 
 tools:
-# This synchronous tool has identical MCP semantics in both revisions, so it
-# inherits the root protocolVersions and needs only one declaration.
+# The result payload is the same in both revisions, but the result discriminator
+# is protocol-specific, so the examples use separate protocol-scoped variants.
 - name: get_position_evaluation
   title: Get Position Evaluation
+  protocolVersions:
+  - '2025-11-25'
   description: Return a quick static evaluation of a chess position.
   inputSchema:
     type: object
@@ -77,6 +79,51 @@ tools:
     required:
     - evaluation_cp
     additionalProperties: false
+  examples:
+    starting-position:
+      input:
+        fen: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+      result:
+        content:
+        - type: text
+          text: Position evaluated.
+        structuredContent:
+          evaluation_cp: 20
+
+- name: get_position_evaluation
+  title: Get Position Evaluation
+  protocolVersions:
+  - '2026-07-28'
+  description: Return a quick static evaluation of a chess position.
+  inputSchema:
+    type: object
+    properties:
+      fen:
+        type: string
+        description: Position in Forsyth-Edwards Notation.
+    required:
+    - fen
+    additionalProperties: false
+  outputSchema:
+    type: object
+    properties:
+      evaluation_cp:
+        type: integer
+        description: Evaluation in centipawns from White's perspective.
+    required:
+    - evaluation_cp
+    additionalProperties: false
+  examples:
+    starting-position:
+      input:
+        fen: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+      result:
+        resultType: complete
+        content:
+        - type: text
+          text: Position evaluated.
+        structuredContent:
+          evaluation_cp: 20
 
 # 2025-11-25 variant:
 # Tool.execution is defined by MCP Description only for this MCP revision.
@@ -118,6 +165,19 @@ tools:
     - evaluation_cp
     - best_move
     additionalProperties: false
+  examples:
+    analyzed-game:
+      input:
+        pgn: 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6
+        depth: 30
+      result:
+        content:
+        - type: text
+          text: Deep analysis completed.
+        structuredContent:
+          evaluation_cp: 24
+          best_move: Ba4
+          critical_positions: []
   execution:
     taskSupport: required
 
@@ -167,3 +227,17 @@ tools:
     - evaluation_cp
     - best_move
     additionalProperties: false
+  examples:
+    analyzed-game:
+      input:
+        pgn: 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6
+        depth: 30
+      result:
+        resultType: complete
+        content:
+        - type: text
+          text: Deep analysis completed.
+        structuredContent:
+          evaluation_cp: 24
+          best_move: Ba4
+          critical_positions: []

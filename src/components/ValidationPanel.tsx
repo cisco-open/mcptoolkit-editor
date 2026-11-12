@@ -166,14 +166,14 @@ export default function ValidationPanel() {
             <span className="font-medium text-zinc-400">Filter:</span>
             {statuses.map(({ value, label }) => {
               const count = statusCounts.get(value) ?? 0;
-              return <label key={value} className={`flex items-center gap-1.5 ${count === 0 ? 'text-zinc-600' : 'text-zinc-300'}`}>
+              return <label key={value} className={`flex items-center gap-1.5 ${count === 0 ? 'text-zinc-600' : 'text-white'}`}>
                 <input type="checkbox" aria-label={label} checked={selectedStatuses.has(value)} disabled={count === 0}
                   className="accent-sky-500" onChange={() => setSelectedStatuses((previous) => {
                     const next = new Set(previous);
                     if (next.has(value)) next.delete(value); else next.add(value);
                     return next;
                   })} />
-                {label} <span className="tabular-nums text-zinc-500">({count})</span>
+                <span>{label}<span className="tabular-nums">({count})</span></span>
               </label>;
             })}
           </fieldset>

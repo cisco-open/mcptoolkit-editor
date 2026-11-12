@@ -407,7 +407,10 @@ export function DocProvider({ children }: { children: ReactNode }) {
   const applyConversion = () => {
     if (!conversion?.result.ok) return;
     // Preserve authored member order; the conversion keeps it and only inserts new members.
-    const text = serializeMcpDescription(conversion.result.value as JsonValue, { format: conversion.format });
+    const value = conversion.result.value as JsonValue;
+    const text = conversion.format === 'yaml'
+      ? serializeMcpDescription(value, { format: 'yaml', keyOrder: 'preserve', presentation: 'normalized' })
+      : serializeMcpDescription(value, { format: 'json', keyOrder: 'preserve' });
     dispatch({
       type: 'MIGRATION_SUCCEEDED',
       text,

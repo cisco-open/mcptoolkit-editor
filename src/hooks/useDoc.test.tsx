@@ -5,7 +5,9 @@ import MigrationStatus from '../components/MigrationStatus';
 import ConversionDialog from '../components/ConversionDialog';
 import NativeExportDialog from '../components/NativeExportDialog';
 import { parse } from 'yaml';
-import devnetExample from '../../examples/vendors/devnet.mcpdesc.yaml?raw';
+import { parseMcpDescriptionSource } from '@mcpdesc/core/documents';
+import devnetExample from '../../examples/migration/devnet.mcpdesc-v0.8.yaml?raw';
+import stdioLegacyExample from '../../examples/migration/stdio.mcpdesc-v0.7.yaml?raw';
 import httpExample from '../../examples/features/http-server.yaml?raw';
 import ValidationPanel from '../components/ValidationPanel';
 import PreviewPanel from '../components/preview/PreviewPanel';
@@ -326,6 +328,25 @@ transports:
     expect(screen.getByRole('dialog', { name: /^Migrate to MCP Description 0\.9\.0/ })).toBeTruthy();
   });
 
+  it.each(['devnet-v0-8', 'miro-v0-8'])('offers migration when selecting %s from the toolbar', async (id) => {
+    vi.useFakeTimers();
+    render(<DocProvider><Toolbar onImport={() => {}} /><ConversionDialog /><CurrentText /></DocProvider>);
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: id } });
+    await act(async () => vi.advanceTimersByTime(300));
+    expect(screen.getByTestId('current-text').textContent).toBe(examples.find((example) => example.id === id)?.content);
+    expect(screen.getByRole('dialog', { name: /^Migrate to MCP Description 0\.9\.0/ })).toBeTruthy();
+  });
+
+  it('shows older-version guidance when selecting the 0.7 stdio example', async () => {
+    vi.useFakeTimers();
+    render(<DocProvider><Toolbar onImport={() => {}} /><PreviewPanel /><ConversionDialog /><CurrentText /></DocProvider>);
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'stdio-v0-7' } });
+    await act(async () => vi.advanceTimersByTime(300));
+    expect(screen.getByTestId('current-text').textContent).toBe(stdioLegacyExample);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByText(/Use mcptoolkit-editor 2\.2\.2/)).toBeTruthy();
+  });
+
   it.each(['yaml', 'json'] as const)('preserves vendor example field ordering when migrating %s', (format) => {
     const original = parse(devnetExample);
     const source = format === 'yaml' ? devnetExample : JSON.stringify(original, null, 2);
@@ -337,11 +358,34 @@ transports:
     const text = screen.getByTestId('current-text').textContent!;
     const converted = format === 'yaml' ? parse(text) : JSON.parse(text);
     const expected = {
-      ...original,
       $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json',
+      ...original,
       mcpdesc: '0.9.0',
     };
     expect(JSON.stringify(converted)).toBe(JSON.stringify(expected));
+  });
+
+  it('normalizes migrated YAML and preserves JSON-style scalar typing', () => {
+    localStorage.setItem('mcptoolkit-editor-content', `mcpdesc: 0.8.0
+info:
+  name: TRUE
+  version: 012
+protocolVersions:
+  - '2025-11-25'
+`);
+    render(<DocProvider><ConversionDialog /><CurrentText /></DocProvider>);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Apply migration' }));
+
+    const text = screen.getByTestId('current-text').textContent!;
+    const parsed = parseMcpDescriptionSource(text);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.value).toMatchObject({ info: { name: 'TRUE', version: '012' } });
+    expect(text).toContain('name: "TRUE"');
+    expect(text).toContain('version: "012"');
+    expect(text.endsWith('\n')).toBe(true);
+    expect(text.endsWith('\n\n')).toBe(false);
   });
 
   it('requires an author-selected fix before applying a blocked conversion', () => {
@@ -386,7 +430,7 @@ transports:
   });
 
   it('points 0.7.0 documents to the last 0.8 editor release without prompting', () => {
-    localStorage.setItem('mcptoolkit-editor-content', 'mcpdesc: 0.7.0\ninfo:\n  name: legacy\n  version: 1.0.0\n');
+    localStorage.setItem('mcptoolkit-editor-content', stdioLegacyExample);
     render(<DocProvider><PreviewPanel /><ConversionDialog /></DocProvider>);
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.getByText(/Use mcptoolkit-editor 2\.2\.2/)).toBeTruthy();

@@ -47,6 +47,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ### Fixed
 
+- Add output schemas and successful tool-result examples to every feature
+  example tool that returns data.
+- Add the missing output schema for the stdio chess example's player-rating tool,
+  returning only the FIDE standard rating.
+- Show enabled validation filter labels and counts together in white, while
+  keeping filters with no results muted; remove the gap between each label and
+  its count (for example, `Passed(11)`).
 - Show equivalent native MCP export diagnostics only once when core repeats a
   finding with and without the selected protocol revision.
 - Anchor validation markers and finding navigation to property keys instead of
@@ -61,8 +68,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ### Added
 
-- MCP Description `0.9.0` support at RC.3, pinned to `@mcpdesc/core@0.13.0-rc.7`
-  and `@mcpdesc/validator@0.14.0-rc.8`.
+- An Output Schema example comparing the same FIDE-rating tool's object output
+  in MCP `2025-11-25` with direct integer output in MCP `2026-07-28`, including
+  sample tool results. The minimal (Basic) example also includes a sample rating.
+- MCP Description `0.9.0` support at RC.3, pinned to
+  `@mcpdesc/core@0.13.0-rc.10` and `@mcpdesc/validator@0.14.0-rc.9`.
 - Migration review for 0.8 documents. Loading, pasting, or importing a 0.8
   document opens a review listing 0.8 problems to fix first, blocker fixes the
   author can select, a JSON Patch, and a downloadable report. Migrated documents
@@ -80,13 +90,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ### Changed
 
+- Use MCP `2026-07-28` and a direct integer FIDE-rating output in the minimal
+  (Basic) example.
 - Resolve document selectors from recognized `$schema` identities when the
   snapshot is available, falling back to the configured selector otherwise.
+- Normalize migrated YAML with core's RC.4 candidate presentation profile while
+  preserving authored property order. Core YAML parsing now uses JSON scalar
+  spellings with a string fallback; write `true`, `false`, and `null` for those
+  types, while unquoted `TRUE`, `~`, and non-JSON numeric forms remain strings.
 - Unify validation rules, errors, and warnings in one status-filtered, sortable
   panel with expandable rule findings and standalone parsing diagnostics. Hide
   delegated and operation-only checks while retaining genuinely unevaluated rules.
-- Migrate the bundled feature examples to 0.9.0 RC.3. The Official Servers
-  examples intentionally remain 0.8 to demonstrate migration.
+- Migrate the bundled feature and Official Servers examples to 0.9.0 RC.3.
+  A separate Migrations category retains 0.8 DevNet and Miro examples and a
+  0.7 stdio example for older-version guidance.
 - Order native MCP JSON using core's document-oriented presentation profile,
   without reordering arrays, embedded schemas, or metadata.
 - Use the RC.3 schema for offline completion and the core validator as the
