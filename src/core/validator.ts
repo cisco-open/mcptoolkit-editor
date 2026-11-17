@@ -6,14 +6,14 @@ import {
   validateMcpDescription,
   type McpDescriptionDiagnostic,
 } from '@mcpdesc/validator/browser';
-import { V0_9_RC_3_SCHEMA_URI, V0_9_RC_3_SPECIFICATION } from '@mcpdesc/core';
+import { V0_9_SCHEMA_URI, V0_9_SPECIFICATION } from '@mcpdesc/core';
 import type { ValidationIssue, ValidationResult } from './types';
 
 /** The only MCP Description format version this editor validates and edits. */
 export const MCPDESC_FORMAT_VERSION = '0.9.0';
-/** Selector the validator applies to `mcpdesc: 0.9.0` (an approved RC until 0.9.0 is final). */
-export const MCPDESC_SPECIFICATION = V0_9_RC_3_SPECIFICATION;
-export const MCPDESC_SCHEMA_URI = V0_9_RC_3_SCHEMA_URI;
+/** Stable selector the validator applies to `mcpdesc: 0.9.0`. */
+export const MCPDESC_SPECIFICATION = V0_9_SPECIFICATION;
+export const MCPDESC_SCHEMA_URI = V0_9_SCHEMA_URI;
 /** Last published editor release that edits and validates MCP Description 0.8. */
 export const LAST_0_8_EDITOR_RELEASE = {
   version: '2.2.2',
@@ -84,17 +84,18 @@ export class McpDescValidator {
       }
     }
 
-    const result = validateMcpDescription(
-      data,
-      isObject(data) && data.mcpdesc === MCPDESC_FORMAT_VERSION
-        ? { schemaPolicyIfPresent: true, fallbackIfSelectorIsUnknown: true }
-        : {},
-    );
-    if (result.selector && !result.selector.startsWith(MCPDESC_FORMAT_VERSION)) {
-      // A retired `$schema` identity selected the format; mcpdesc itself was absent.
+    const result = validateMcpDescription(data, isObject(data)
+      ? { schemaPolicyIfPresent: true, fallbackIfSelectorIsUnknown: true }
+      : {});
+    if (result.selector && result.selector.split('-')[0] !== MCPDESC_FORMAT_VERSION) {
+      const version = result.selector.replace(/-.*$/, '');
       return {
         valid: false,
-        errors: [{ path: '/', message: unsupportedFormatMessage(result.selector.replace(/-.*$/, '')) ?? '', keyword: 'unsupported-format-version' }],
+        errors: [{
+          path: '/',
+          message: unsupportedFormatMessage(version) ?? `Unsupported selector ${result.selector}. This editor supports MCP Description ${MCPDESC_FORMAT_VERSION}.`,
+          keyword: 'unsupported-format-version',
+        }],
         warnings: [],
         selector: null,
       };

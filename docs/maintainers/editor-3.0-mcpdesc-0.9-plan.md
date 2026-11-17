@@ -1,4 +1,9 @@
-# Editor 3.0.0: 0.9.0-only editing with RC.3 diagnostics
+# Editor 3.0.0: 0.9.0-only editing with RC.3 diagnostics (historical)
+
+> **Historical plan:** This records the RC.3 implementation decisions. The
+> current editor uses stable MCP Description 0.9.0 with
+> `@mcpdesc/core@0.13.0` and `@mcpdesc/validator@0.14.0`; consult `AGENTS.md`
+> and the current changelog for active implementation guidance.
 
 > **Status:** decisions D1–D3 approved (recommended options) and implemented on
 > the working branch. Version bumps (editor 3.0.0, viewer 3.0.0) remain for the

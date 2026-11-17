@@ -1,7 +1,7 @@
 {
-  "selector": "0.9.0-rc.3",
-  "manifestUrl": "https://mcpdesc.org/validation/catalogs/0.9.0-rc.3/manifest.json",
-  "catalogSha256": "4a83979b71f969be3d628c326dbf3e80b4a9890c7ac49e6681de70c51f25301a",
+  "selector": "0.9.0",
+  "manifestUrl": "https://mcpdesc.org/validation/catalogs/0.9.0/manifest.json",
+  "catalogSha256": "dcf50daba118b579857e466a368f76fd50dd14b067fe98cd43d38039074641f9",
   "titles": {
     "json-schema.tool-schema.valid": "Validate embedded Tool schemas in their dialect",
     "mcp.annotations.last-modified.protocol-version": "Use lastModified only where MCP defines it",
@@ -60,7 +60,7 @@
     "mcpdesc.example.completed-result-form": "Show completed results without message envelopes",
     "mcpdesc.example.members": "Shape named example maps and example objects",
     "mcpdesc.example.result.protocol-fidelity": "Match example results to every applicable version",
-    "mcpdesc.extensions.catalogue-maturity": "Review reserved extension identifiers",
+    "mcpdesc.extensions.catalog-maturity": "Review reserved extension identifiers",
     "mcpdesc.info.members": "Describe the server in a valid Info Object",
     "mcpdesc.legacy-protocol.validation-scope": "Limited validation for early MCP protocol versions",
     "mcpdesc.projection.declaration-applicable": "Select an applicable declaration for projection",

@@ -5,7 +5,7 @@ import { diagnosticMessage } from '../core/diagnosticMessage';
 import { MCPDESC_SPECIFICATION, toPointer } from '../core/validator';
 import { useDoc } from '../hooks/useDoc';
 
-const SPECIFICATION_LABEL = MCPDESC_SPECIFICATION.replace(/^0\.9\.0-rc\.(\d+)$/, '0.9.0 (RC.$1)');
+const SPECIFICATION_LABEL = MCPDESC_SPECIFICATION;
 
 export default function ConversionDialog() {
   const { conversion, reviewConversionFixes, applyConversion, cancelConversion, revealPathRef } = useDoc();

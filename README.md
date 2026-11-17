@@ -3,13 +3,13 @@
 A web-based editor for [MCP Description](#the-mcp-description-mcpdesc-format) documents.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Status: release](https://img.shields.io/badge/status-2.3.0-brightgreen.svg)](CHANGELOG.md)
+[![Status: release](https://img.shields.io/badge/status-3.0.0-brightgreen.svg)](CHANGELOG.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
-[![mcpdesc: 0.9](https://img.shields.io/badge/mcpdesc-0.9.0--RC.3-orange.svg)](https://mcpdesc.org)
+[![mcpdesc: 0.9](https://img.shields.io/badge/mcpdesc-0.9.0-brightgreen.svg)](https://mcpdesc.org)
 
 ## Version Support
 
-> **Current: `main` / MCP Description 0.9.0 (RC.3)**
+> **Current: `main` / MCP Description 0.9.0**
 >
 > The editor and viewer edit, validate, and render only `mcpdesc: 0.9.0`.
 > Loading, pasting, or importing a 0.8 document opens a review that migrates it
@@ -21,8 +21,8 @@ A web-based editor for [MCP Description](#the-mcp-description-mcpdesc-format) do
 > [`v1/main` branch](https://github.com/cisco-open/mcptoolkit-editor/tree/v1/main).
 
 - **Monaco Editor** — JSON Schema-driven autocomplete, inline squiggles, folding, and syntax highlighting for JSON and YAML
-- **Real-time validation** — CSP-safe structural and semantic validation using the `0.9.0-rc.3` default, with rule-linked diagnostics, per-rule results, and plain-language messages built from structured diagnostic details
-- **Reviewed 0.8 migration** — 0.8 documents open a migration review with source problems, explicit blocker fixes, and a JSON Patch report; the RC schema declaration is always emitted
+- **Real-time validation** — CSP-safe structural and semantic validation using the stable `0.9.0` selector, with rule-linked diagnostics, per-rule results, and plain-language messages built from structured diagnostic details
+- **Reviewed 0.8 migration** — 0.8 documents open a migration review with source problems, explicit blocker fixes, and a JSON Patch report; the final schema identity is always emitted
 - **Native MCP projection** — inspect and export tools, resources, resource templates, or prompts for one protocol revision
 - **Cards preview** — collapsible server, transport, security, capability, and named example views, including protocol-scoped Effective Protocol Views
 - **Click-to-navigate** — click any type bubble in the preview to jump to its source in the editor
@@ -117,7 +117,7 @@ http://localhost:5173/?url=https%3A%2F%2Fexample.com%2Fserver.mcpdesc.yaml
 - Expand the disclosure beside the validation status to inspect rule results.
   Status checkboxes default to **Passed**, **Failed**, and **Warning**, support multiple selections, and
   disable statuses with no results. Click **Rule Identifier**, **Rule Title**,
-  **Protocol**, or **Status** to toggle ascending/descending sorting. RC.3 rule
+  **Protocol**, or **Status** to toggle ascending/descending sorting. Stable 0.9.0 rule
   titles come from the pinned published catalog, and rows link to their versioned
   documentation on mcpdesc.org. `not-applicable` and `not-evaluated` remain
   distinct statuses, never passes. Delegated checks and checks marked
@@ -129,19 +129,17 @@ http://localhost:5173/?url=https%3A%2F%2Fexample.com%2Fserver.mcpdesc.yaml
   reset, or increase the panel font. Long cells truncate with full-text tooltips.
 
 Diagnostics follow the common fields in the
-[MCP Description validation result schema](https://mcpdesc.org/schema/validation-result/1.3.0.json):
+[MCP Description validation result schema](https://mcpdesc.org/schema/validation-result/1.4.0.json):
 rule identity, severity, and path, plus optional messages, producer codes, and
 protocol versions. The editor normalizes paths into clickable JSON pointers;
 parser diagnostics need not identify a rule.
-The installed validator selects RC.3 for `mcpdesc: 0.9.0`, including documents
-that declare an earlier RC schema URI; validation does not rewrite the
-authored declaration. Each finding is reported once at the member that exists
-in the source. When a schema union is involved, the message names the selected
-variant (for example, a `stdio` transport) and lists the allowed members or
-values; when the source lacks the reported member, the marker falls back to the
-nearest enclosing declaration. Findings inside resolved component references
-add a **Defined at** link to the component definition, and **Validator details**
-expands the raw validator message and structured detail.
+The installed validator selects stable `0.9.0` by default. A recognized `$schema`
+for a supported 0.9.0 selector selects that snapshot; a recognized but
+unavailable 0.9.0 selector falls back to stable. Unknown, contradictory, or
+ambiguous schema identities remain errors. Validation does not rewrite the
+authored declaration. Findings include source-aware paths, structured details,
+rule identity, and related component locations. **Validator details** expands
+the raw message and structured detail.
 
 ### Migrate from 0.8
 
@@ -158,13 +156,12 @@ Metadata is never moved into `_meta` or `x-*` automatically.
 Migration preserves JSON or YAML format and field ordering, and always emits:
 
 ```yaml
-$schema: https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json
+$schema: https://mcpdesc.org/schema/mcp-description/0.9.0.json
 mcpdesc: 0.9.0
 ```
 
-RC.3 is not the final 0.9 release. Schema-declaration removal will only be
-considered when final 0.9 support is added. The bundled feature and **Official
-Servers** examples are 0.9.0. The **Migrations** examples include 0.8 documents
+The bundled feature and **Official Servers** examples are 0.9.0. The
+**Migrations** examples include 0.8 documents
 to try the migration and a 0.7 document to demonstrate the older-version guidance.
 
 Documents declaring 0.7 or earlier are not migrated; the preview points to

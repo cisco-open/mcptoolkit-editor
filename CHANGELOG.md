@@ -13,6 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[3.0.0] — 2026-11-17](#300--2026-11-17)
 - [[2.3.0] — 2026-09-10](#230--2026-09-10)
 - [[2.2.2] — 2026-09-09](#222--2026-09-09)
 - [[2.2.1] — 2026-09-09](#221--2026-09-09)
@@ -33,6 +34,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+## [3.0.0] — 2026-11-17
 
 ### Removed
 
@@ -71,14 +74,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 - An Output Schema example comparing the same FIDE-rating tool's object output
   in MCP `2025-11-25` with direct integer output in MCP `2026-07-28`, including
   sample tool results. The minimal (Basic) example also includes a sample rating.
-- MCP Description `0.9.0` support at RC.3, pinned to
-  `@mcpdesc/core@0.13.0-rc.10` and `@mcpdesc/validator@0.14.0-rc.9`.
+- Adopt stable MCP Description `0.9.0` using
+  `@mcpdesc/core@0.13.0` and `@mcpdesc/validator@0.14.0`.
+- Update production dependencies to patched releases and upgrade the build and
+  test tooling for compatible security fixes.
 - Migration review for 0.8 documents. Loading, pasting, or importing a 0.8
   document opens a review listing 0.8 problems to fix first, blocker fixes the
   author can select, a JSON Patch, and a downloadable report. Migrated documents
-  use `mcpdesc: 0.9.0` and always declare
-  `$schema: https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json`;
-  dropping the schema awaits final-release support.
+  use `mcpdesc: 0.9.0` and always declare the final schema identity
+  `$schema: https://mcpdesc.org/schema/mcp-description/0.9.0.json`.
 - Plain-language validation messages built from the validator's structured
   diagnostic detail, naming the selected union variant and allowed members or
   values. Findings inside component references link to their definition, and
@@ -94,19 +98,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   (Basic) example.
 - Resolve document selectors from recognized `$schema` identities when the
   snapshot is available, falling back to the configured selector otherwise.
-- Normalize migrated YAML with core's RC.4 candidate presentation profile while
+- Normalize migrated YAML with core's stable normalized presentation profile while
   preserving authored property order. Core YAML parsing now uses JSON scalar
   spellings with a string fallback; write `true`, `false`, and `null` for those
   types, while unquoted `TRUE`, `~`, and non-JSON numeric forms remain strings.
 - Unify validation rules, errors, and warnings in one status-filtered, sortable
   panel with expandable rule findings and standalone parsing diagnostics. Hide
   delegated and operation-only checks while retaining genuinely unevaluated rules.
-- Migrate the bundled feature and Official Servers examples to 0.9.0 RC.3.
+- Migrate the bundled feature and Official Servers examples to stable 0.9.0.
   A separate Migrations category retains 0.8 DevNet and Miro examples and a
   0.7 stdio example for older-version guidance.
 - Order native MCP JSON using core's document-oriented presentation profile,
   without reordering arrays, embedded schemas, or metadata.
-- Use the RC.3 schema for offline completion and the core validator as the
+- Use the stable 0.9.0 schema for offline completion and the core validator as the
   authority for document validation markers.
 - Consolidate document exports into one keyboard-accessible Export menu with a
   Native MCP submenu. Replace the Cards/Native MCP preview tabs with a permanent
@@ -116,11 +120,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   capabilities export disabled until core supports it.
 - Condense validation into a status-line disclosure with an explicit Selector
   label. Add multi-select status filters (Passed only by default), sortable
-  rule/protocol/status columns, and versioned RC.3 rule documentation links.
+  rule/protocol/status columns, and versioned 0.9.0 rule documentation links.
 - Separate diagnostics from the rule table: show errors first and show warnings
   only when no errors remain, with source navigation retained.
 - Show only one bottom-panel body at a time. Render diagnostics as sortable
-  tables and add authoritative short rule titles from the hash-verified RC.3
+  tables and add authoritative short rule titles from the hash-verified 0.9.0
   catalog to the rule table.
 - Reserve a five-row table viewport by default, with a draggable and keyboard-
   accessible resize separator and bounded decrease/reset/increase text controls.

@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
 import { defaultSpecifications } from '@mcpdesc/validator';
 
-// Follow the validator's maintained 0.9.0 default (an approved RC until 0.9.0 is final).
+// Follow the validator's maintained stable 0.9.0 default.
 const selector = defaultSpecifications['0.9.0'].selector;
 const manifestUrl = `https://mcpdesc.org/validation/catalogs/${selector}/manifest.json`;
 async function fetchBytes(url) {

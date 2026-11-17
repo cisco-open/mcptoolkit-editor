@@ -7,6 +7,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[3.0.0] — 2026-11-17](#300--2026-11-17)
 - [[2.2.0] — 2026-09-09](#220--2026-09-09)
 - [[2.1.1] — 2026-09-08](#211--2026-09-08)
 - [[2.1.0] — 2026-09-08](#210--2026-09-08)
@@ -22,9 +23,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
+## [3.0.0] — 2026-11-17
+
 ### Added
 
-- MCP Description 0.9.0 (RC.3) validation through the shared browser-safe
+- Stable MCP Description 0.9.0 validation through the shared browser-safe
   validator adapter, including rule identities, protocol-scoped diagnostics, and
   plain-language messages built from structured diagnostic detail.
 - Optional `renderAction` callback for host-provided collection and declaration
@@ -34,7 +37,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 ### Changed
 
 - **Breaking:** render and validate only `mcpdesc: 0.9.0` documents, following
-  the validator's default selector (currently RC.3). Other versions show an
+  the validator's stable default selector. Other versions show an
   unsupported-version message instead of cards. Use viewer 2.2.0 for 0.8.
 
 ### Removed

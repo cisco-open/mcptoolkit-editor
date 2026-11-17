@@ -35,12 +35,12 @@ extend its nearby tests rather than introducing a second implementation.
   local schemas supply completion; its schema validation is disabled to avoid
   contradictory errors. Do not add a competing AJV validator to the UI.
 - The editor and viewer edit, validate, and render only `mcpdesc: 0.9.0`, which
-  follows the validator's default selector (currently RC.3). Every other version
+  follows the validator's stable default selector. Every other version
   is reported once at `/mcpdesc` and never passed to the validator, which still
   accepts 0.8. 0.8 documents are offered migration; 0.7 and earlier point to the
   last 2.x editor release. Never silently migrate documents during load or export.
-- Migration must emit `mcpdesc: 0.9.0` and an explicit RC.3 `$schema` (added
-  when absent) until final-release support is deliberately introduced. Apply
+- Migration must emit `mcpdesc: 0.9.0` and the final `$schema` identity (added
+  when absent). Apply
   blocker fixes only with author consent; never guess moves into `_meta` or `x-*`.
 - Convert the latest raw source, not a stale debounced parse. Conversion must
   preserve field order; use explicit serialization policies and regression tests
@@ -64,8 +64,8 @@ extend its nearby tests rather than introducing a second implementation.
 
 | Asset | Purpose and update path |
 | --- | --- |
-| [src/core/mcpdesc-schema.json](src/core/mcpdesc-schema.json) | 0.9.0 RC.3 schema for Monaco completion and allowed-value hints; not the active validation implementation. Refresh with `npm run sync:schema` from the exact installed validator snapshot; the script checks its hash and schema identity. |
-| [src/core/rule-titles.generated.json](src/core/rule-titles.generated.json) | Refresh with `npm run sync:rule-titles`; the pinned RC.3 manifest supplies the catalog digest and rule count. Keep catalog-derived titles out of handwritten UI maps. |
+| [src/core/mcpdesc-schema.json](src/core/mcpdesc-schema.json) | Stable 0.9.0 schema for Monaco completion and allowed-value hints; not the active validation implementation. Refresh with `npm run sync:schema` from the exact installed validator snapshot; the script checks its hash and schema identity. |
+| [src/core/rule-titles.generated.json](src/core/rule-titles.generated.json) | Refresh with `npm run sync:rule-titles`; the stable 0.9.0 manifest supplies the catalog digest and rule count. Keep catalog-derived titles out of handwritten UI maps. |
 
 The sync commands are explicit maintenance steps, not dev/build hooks. Commit
 their generated outputs with dependency or snapshot updates, and keep selectors,

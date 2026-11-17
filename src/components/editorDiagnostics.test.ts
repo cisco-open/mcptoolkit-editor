@@ -39,7 +39,7 @@ describe('editor diagnostics', () => {
   });
 
   it('maps a misspelled top-level key to its own line', () => {
-    const source = `$schema: https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json
+    const source = `$schema: https://mcpdesc.org/schema/mcp-description/0.9.0.json
 mcpdesc: 0.9.0
 info:
   name: chess-rating-server

@@ -8,9 +8,8 @@ import {
 import { MCPDESC_SCHEMA_URI, MCPDESC_SPECIFICATION } from './validator';
 
 /**
- * Convert a 0.8 document to the 0.9.0 snapshot the editor validates. The result
- * always declares the snapshot's `$schema` so it keeps its meaning after 0.9.0
- * becomes final; core only rewrites a `$schema` the source already declares.
+ * Convert a 0.8 document to stable 0.9.0. The result always declares the final
+ * `$schema` identity; core only rewrites a `$schema` the source already declares.
  */
 export function convertTo09(
   document: unknown,
@@ -25,7 +24,7 @@ export function convertTo09(
   if (!result.ok || result.value.$schema === MCPDESC_SCHEMA_URI) return result;
   return {
     ...result,
-    value: { $schema: MCPDESC_SCHEMA_URI, ...result.value },
+    value: { ...result.value, $schema: MCPDESC_SCHEMA_URI },
     patch: [...result.patch, { op: 'add', path: '/$schema', value: MCPDESC_SCHEMA_URI }],
   };
 }

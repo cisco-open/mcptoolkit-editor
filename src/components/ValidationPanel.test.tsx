@@ -26,7 +26,7 @@ describe('ValidationPanel', () => {
   beforeEach(() => {
     context.state.text = 'mcpdesc: 0.9.0';
     context.state.validation = {
-      valid: true, errors: [], warnings: [], selector: '0.9.0-rc.3',
+      valid: true, errors: [], warnings: [], selector: '0.9.0',
       results: [
         { rule: 'mcp.tool-annotations.members', protocolVersion: '2024-11-05', status: 'passed' },
         { rule: 'mcp.annotations.last-modified.protocol-version', protocolVersion: '2025-11-25', status: 'passed' },
@@ -43,7 +43,7 @@ describe('ValidationPanel', () => {
   it('uses one compact disclosure beside the status and labels the selector', () => {
     render(<ValidationPanel />);
     expect(screen.getByTestId('validation-status').textContent).toBe('✓ Valid');
-    expect(screen.getByText('Selector: 0.9.0-rc.3')).toBeTruthy();
+    expect(screen.getByText('Selector: 0.9.0')).toBeTruthy();
     expect(screen.queryByText('Validation details')).toBeNull();
     expect(screen.queryByRole('table')).toBeNull();
     expandRules();
@@ -142,7 +142,7 @@ describe('ValidationPanel', () => {
     const view = render(<ValidationPanel />);
     expandRules();
     const link = screen.getByRole('link', { name: 'Open documentation for mcp.annotations.last-modified.protocol-version' });
-    expect(link.getAttribute('href')).toBe('https://mcpdesc.org/docs/rules/0.9.0-rc.3/mcp/annotations-last-modified-protocol-version/');
+    expect(link.getAttribute('href')).toBe('https://mcpdesc.org/docs/rules/0.9.0/mcp/annotations-last-modified-protocol-version/');
     expect(link.getAttribute('target')).toBe('_blank');
     expect(link.getAttribute('rel')).toBe('noopener noreferrer');
     context.state.validation = { ...context.state.validation, selector: null };
@@ -306,7 +306,7 @@ describe('ValidationPanel', () => {
 
   it('renders structured detail as a readable message with validator details and component links', () => {
     context.state.validation = {
-      valid: false, selector: '0.9.0-rc.3', warnings: [],
+      valid: false, selector: '0.9.0', warnings: [],
       errors: [{
         path: '/transports/0/arg', rule: 'mcpdesc.transport.members', keyword: 'schema-validation',
         message: 'does not validate against 0.9.0: /transports/0 must NOT have additional properties',

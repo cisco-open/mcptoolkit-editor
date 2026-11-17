@@ -11,7 +11,7 @@ const source = {
 
 describe('0.8.0 to 0.9.0 conversion', () => {
   it.each([undefined, 'https://mcpdesc.org/schema/mcp-description/0.8.0.json'])(
-    'always declares the RC.3 schema (source schema: %s)', ($schema) => {
+    'always declares the final 0.9.0 schema (source schema: %s)', ($schema) => {
       const document = { ...source, ...($schema ? { $schema } : {}) };
       const before = structuredClone(document);
       const result = convertTo09(document);

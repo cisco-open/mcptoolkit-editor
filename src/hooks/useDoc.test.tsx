@@ -263,7 +263,7 @@ transports:
 `);
     render(<DocProvider><RegisterReveal /><ValidationPanel /></DocProvider>);
     expect(screen.getByTestId('validation-status').textContent).toContain('1 error');
-    expect(screen.getByText('Selector: 0.9.0-rc.3')).toBeTruthy();
+    expect(screen.getByText('Selector: 0.9.0')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Expand findings for mcpdesc.transport.members' }));
     expect(screen.getByText(/^Unexpected member "arg" for type "stdio"\./)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '/transports/0/arg' }));
@@ -295,7 +295,7 @@ transports:
     vi.useFakeTimers();
     localStorage.setItem('mcptoolkit-editor-content', legacyV08Example);
     render(<DocProvider><PreviewPanel /><ConversionDialog /><MigrationStatus /><ValidationPanel /><CurrentText /></DocProvider>);
-    expect(screen.getByRole('dialog', { name: 'Migrate to MCP Description 0.9.0 (RC.3)' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Migrate to MCP Description 0.9.0' })).toBeTruthy();
     expect(screen.getByText('Unsupported version')).toBeTruthy();
     expect(screen.getByTestId('validation-status').textContent).toContain('1 error');
     expect(screen.getByLabelText('Conversion patch').textContent).toContain('/$schema');
@@ -309,7 +309,7 @@ transports:
     fireEvent.click(screen.getByRole('button', { name: 'Apply migration' }));
     await act(async () => vi.advanceTimersByTime(300));
     const migrated = parse(screen.getByTestId('current-text').textContent!);
-    expect(migrated).toMatchObject({ mcpdesc: '0.9.0', $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json' });
+    expect(migrated).toMatchObject({ mcpdesc: '0.9.0', $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0.json' });
     expect(screen.queryByText('Unsupported version')).toBeNull();
     expect(screen.getByText('Migrated from 0.8.0 to 0.9.0 successfully')).toBeTruthy();
     expect(screen.queryByRole('dialog')).toBeNull();
@@ -359,7 +359,7 @@ transports:
     const converted = format === 'yaml' ? parse(text) : JSON.parse(text);
     const expected = {
       ...original,
-      $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json',
+      $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0.json',
       mcpdesc: '0.9.0',
     };
     expect(JSON.stringify(converted)).toBe(JSON.stringify(expected));
@@ -460,7 +460,7 @@ transports:
   it('previews and exports native MCP values with protocol scoping and without description-only fields', async () => {
     const { blobs, filenames } = captureDownloads();
     localStorage.setItem('mcptoolkit-editor-content', JSON.stringify({
-      mcpdesc: '0.9.0', $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json',
+      mcpdesc: '0.9.0', $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0.json',
       info: { name: 'inspect', version: '1' }, protocolVersions: ['2025-11-25', '2026-07-28'],
       tools: [
         { _meta: { tier: 'gold' }, inputSchema: { type: 'object' }, name: 'inspect', 'x-tier': 'gold' },

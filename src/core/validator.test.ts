@@ -35,34 +35,80 @@ describe('0.9.0 validation', () => {
     expect(new McpDescValidator().validateDocument(doc).valid).toBe(true);
   });
 
-  it('uses the RC.3 default selector and its explicit schema identity', () => {
-    expect(MCPDESC_SPECIFICATION).toBe('0.9.0-rc.3');
-    expect(MCPDESC_SCHEMA_URI).toBe('https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json');
+  it('uses the stable default selector and its explicit schema identity', () => {
+    expect(MCPDESC_SPECIFICATION).toBe('0.9.0');
+    expect(MCPDESC_SCHEMA_URI).toBe('https://mcpdesc.org/schema/mcp-description/0.9.0.json');
+    expect(new McpDescValidator().validateDocument({
+      ...document,
+      transports: [{ type: 'stdio', command: 'chess-rating', args: ['serve'] }],
+    }).selector).toBe('0.9.0');
     const result = new McpDescValidator().validateDocument({
       ...document, $schema: MCPDESC_SCHEMA_URI,
       transports: [{ type: 'stdio', command: 'chess-rating', args: ['serve'] }],
     });
-    expect(result).toMatchObject({ valid: true, errors: [], selector: '0.9.0-rc.3' });
+    expect(result).toMatchObject({ valid: true, errors: [], selector: '0.9.0' });
     expect(result.results).toContainEqual(expect.objectContaining({ rule: 'mcpdesc.transport.members', status: 'passed' }));
   });
 
-  it.each(['0.9.0-rc.1', '0.9.0-draft.4'])(
+  it('uses a supported selector pinned by the schema identity', () => {
+    const result = new McpDescValidator().validateDocument({
+      ...document,
+      $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json',
+    });
+
+    expect(result.selector).toBe('0.9.0-rc.3');
+  });
+
+  it('rejects unknown members in elicitation interaction response examples', () => {
+    const result = new McpDescValidator().validateDocument({
+      ...document,
+      $schema: MCPDESC_SCHEMA_URI,
+      tools: [{
+        name: 'request_approval',
+        inputSchema: { type: 'object', properties: {} },
+        interactionExamples: {
+          accepted: {
+            input: {},
+            steps: [{
+              type: 'elicitation',
+              request: {
+                mode: 'form', message: 'Confirm?',
+                requestedSchema: { type: 'object', properties: {} },
+              },
+              response: { action: 'accept', unexpected: true },
+            }],
+            result: { content: [] },
+          },
+        },
+      }],
+    });
+
+    expect(result.selector).toBe('0.9.0');
+    expect(result.errors).toContainEqual(expect.objectContaining({
+      path: '/tools/0/interactionExamples/accepted/steps/0/response/unexpected',
+      detail: expect.objectContaining({ kind: 'unexpected-member', member: 'unexpected' }),
+    }));
+  });
+
+  it.each(['0.9.0-rc.2', '0.9.0-draft.4'])(
     'falls back to the configured default for unavailable selector %s',
     (selector) => {
       const result = new McpDescValidator().validateDocument({
         ...document,
         $schema: `https://mcpdesc.org/schema/mcp-description/${selector}.json`,
       });
-      expect(result.selector).toBe('0.9.0-rc.3');
+      expect(result.selector).toBe('0.9.0');
     },
   );
 
-  it('continues to reject retired-format schema identities without mcpdesc', () => {
+  it('reports ambiguous legacy schema identities without mcpdesc', () => {
     const result = new McpDescValidator().validateDocument({
       info: document.info,
       $schema: 'https://mcpdesc.org/schema/mcp-description/0.8.0.json',
     });
-    expect(result.errors).toEqual([expect.objectContaining({ keyword: 'unsupported-format-version' })]);
+    expect(result.errors).toEqual([expect.objectContaining({
+      path: '/$schema', keyword: 'ambiguous-schema-identity',
+    })]);
   });
 
   it('reports one focused finding for a misspelled stdio member with structured detail', () => {
@@ -114,11 +160,13 @@ describe('unsupported format versions', () => {
     expect(result.results).toBeUndefined();
   });
 
-  it('rejects a 0.8 schema identity when mcpdesc is absent', () => {
+  it('reports an ambiguous 0.8 schema identity when mcpdesc is absent', () => {
     const result = new McpDescValidator().validateDocument({
       info: document.info, $schema: 'https://mcpdesc.org/schema/mcp-description/0.8.0.json',
     });
-    expect(result.errors).toEqual([expect.objectContaining({ path: '/', keyword: 'unsupported-format-version' })]);
+    expect(result.errors).toEqual([expect.objectContaining({
+      path: '/$schema', keyword: 'ambiguous-schema-identity',
+    })]);
   });
 
   it('points 0.7 and earlier documents to the last 0.8 editor release', () => {
