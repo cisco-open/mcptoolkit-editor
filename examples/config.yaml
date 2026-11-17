@@ -64,19 +64,16 @@ sections:
         id: miro
         file: vendors/miro.mcpdesc.yaml
 
+  # SECTION
   # 0.8 examples migrate to 0.9; 0.7 requires editor v2.2.2 first.
   - label: "Migrations"
     entries:
-      - label: Cisco DevNet (0.8.0)
-        id: devnet-v0-8
-        file: migration/devnet.mcpdesc-v0.8.yaml
+      - label: Basic (0.8.0)
+        id: basic-v0-8
+        file: migration/minimal.mcpdesc-v0.8.yaml
 
-      - label: Miro (0.8.0)
-        id: miro-v0-8
-        file: migration/miro.mcpdesc-v0.8.yaml
-
-      - label: Stdio (0.7.0)
-        id: stdio-v0-7
-        file: migration/stdio.mcpdesc-v0.7.yaml
+      - label: Basic (0.7.0)
+        id: basic-v0-7
+        file: migration/minimal.mcpdesc-v0.7.yaml
 
 # End of examples menu configuration.

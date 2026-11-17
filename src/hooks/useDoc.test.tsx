@@ -6,8 +6,8 @@ import ConversionDialog from '../components/ConversionDialog';
 import NativeExportDialog from '../components/NativeExportDialog';
 import { parse } from 'yaml';
 import { parseMcpDescriptionSource } from '@mcpdesc/core/documents';
-import devnetExample from '../../examples/migration/devnet.mcpdesc-v0.8.yaml?raw';
-import stdioLegacyExample from '../../examples/migration/stdio.mcpdesc-v0.7.yaml?raw';
+import legacyV08Example from '../../examples/migration/minimal.mcpdesc-v0.8.yaml?raw';
+import legacyV07Example from '../../examples/migration/minimal.mcpdesc-v0.7.yaml?raw';
 import httpExample from '../../examples/features/http-server.yaml?raw';
 import ValidationPanel from '../components/ValidationPanel';
 import PreviewPanel from '../components/preview/PreviewPanel';
@@ -293,7 +293,7 @@ transports:
 
   it('prompts to migrate a saved 0.8.0 document and keeps it unchanged until Apply', async () => {
     vi.useFakeTimers();
-    localStorage.setItem('mcptoolkit-editor-content', devnetExample);
+    localStorage.setItem('mcptoolkit-editor-content', legacyV08Example);
     render(<DocProvider><PreviewPanel /><ConversionDialog /><MigrationStatus /><ValidationPanel /><CurrentText /></DocProvider>);
     expect(screen.getByRole('dialog', { name: 'Migrate to MCP Description 0.9.0 (RC.3)' })).toBeTruthy();
     expect(screen.getByText('Unsupported version')).toBeTruthy();
@@ -303,7 +303,7 @@ transports:
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     await act(async () => vi.advanceTimersByTime(300));
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(screen.getByTestId('current-text').textContent).toBe(devnetExample);
+    expect(screen.getByTestId('current-text').textContent).toBe(legacyV08Example);
 
     fireEvent.click(screen.getByRole('button', { name: 'Migrate to 0.9.0' }));
     fireEvent.click(screen.getByRole('button', { name: 'Apply migration' }));
@@ -319,7 +319,7 @@ transports:
     vi.useFakeTimers();
     function ImportLegacy() {
       const { importText } = useDoc();
-      return <button onClick={() => importText(devnetExample)}>Import legacy</button>;
+      return <button onClick={() => importText(legacyV08Example)}>Import legacy</button>;
     }
     render(<DocProvider><ImportLegacy /><ConversionDialog /></DocProvider>);
     expect(screen.queryByRole('dialog')).toBeNull();
@@ -328,28 +328,28 @@ transports:
     expect(screen.getByRole('dialog', { name: /^Migrate to MCP Description 0\.9\.0/ })).toBeTruthy();
   });
 
-  it.each(['devnet-v0-8', 'miro-v0-8'])('offers migration when selecting %s from the toolbar', async (id) => {
+  it('offers migration when selecting the 0.8 example from the toolbar', async () => {
     vi.useFakeTimers();
     render(<DocProvider><Toolbar onImport={() => {}} /><ConversionDialog /><CurrentText /></DocProvider>);
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: id } });
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'basic-v0-8' } });
     await act(async () => vi.advanceTimersByTime(300));
-    expect(screen.getByTestId('current-text').textContent).toBe(examples.find((example) => example.id === id)?.content);
+    expect(screen.getByTestId('current-text').textContent).toBe(examples.find((example) => example.id === 'basic-v0-8')?.content);
     expect(screen.getByRole('dialog', { name: /^Migrate to MCP Description 0\.9\.0/ })).toBeTruthy();
   });
 
   it('shows older-version guidance when selecting the 0.7 stdio example', async () => {
     vi.useFakeTimers();
     render(<DocProvider><Toolbar onImport={() => {}} /><PreviewPanel /><ConversionDialog /><CurrentText /></DocProvider>);
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'stdio-v0-7' } });
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'basic-v0-7' } });
     await act(async () => vi.advanceTimersByTime(300));
-    expect(screen.getByTestId('current-text').textContent).toBe(stdioLegacyExample);
+    expect(screen.getByTestId('current-text').textContent).toBe(legacyV07Example);
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.getByText(/Use mcptoolkit-editor 2\.2\.2/)).toBeTruthy();
   });
 
-  it.each(['yaml', 'json'] as const)('preserves vendor example field ordering when migrating %s', (format) => {
-    const original = parse(devnetExample);
-    const source = format === 'yaml' ? devnetExample : JSON.stringify(original, null, 2);
+  it.each(['yaml', 'json'] as const)('preserves source field ordering when migrating %s', (format) => {
+    const original = parse(legacyV08Example);
+    const source = format === 'yaml' ? legacyV08Example : JSON.stringify(original, null, 2);
     localStorage.setItem('mcptoolkit-editor-content', source);
     render(<DocProvider><ConversionDialog /><CurrentText /></DocProvider>);
 
@@ -358,8 +358,8 @@ transports:
     const text = screen.getByTestId('current-text').textContent!;
     const converted = format === 'yaml' ? parse(text) : JSON.parse(text);
     const expected = {
-      $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json',
       ...original,
+      $schema: 'https://mcpdesc.org/schema/mcp-description/0.9.0-rc.3.json',
       mcpdesc: '0.9.0',
     };
     expect(JSON.stringify(converted)).toBe(JSON.stringify(expected));
@@ -430,7 +430,7 @@ transports:
   });
 
   it('points 0.7.0 documents to the last 0.8 editor release without prompting', () => {
-    localStorage.setItem('mcptoolkit-editor-content', stdioLegacyExample);
+    localStorage.setItem('mcptoolkit-editor-content', legacyV07Example);
     render(<DocProvider><PreviewPanel /><ConversionDialog /></DocProvider>);
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.getByText(/Use mcptoolkit-editor 2\.2\.2/)).toBeTruthy();

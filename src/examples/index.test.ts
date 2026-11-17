@@ -40,11 +40,10 @@ describe('bundled examples', () => {
     expect(vendors?.entries.map(({ id }) => id)).toEqual(['devnet', 'microsoft-learn', 'miro']);
     expect(vendors?.entries.map(({ content }) => parse(content).mcpdesc)).toEqual(['0.9.0', '0.9.0', '0.9.0']);
     expect(migrations?.entries.map(({ id, content }) => [id, parse(content).mcpdesc])).toEqual([
-      ['devnet-v0-8', '0.8.0'],
-      ['miro-v0-8', '0.8.0'],
-      ['stdio-v0-7', '0.7.0'],
+      ['basic-v0-8', '0.8.0'],
+      ['basic-v0-7', '0.7.0'],
     ]);
-    for (const id of ['devnet-v0-8', 'miro-v0-8', 'stdio-v0-7']) {
+    for (const id of ['basic-v0-8', 'basic-v0-7']) {
       expect(getExampleFromSearch(`?example=${id}`)).toBe(migrations?.entries.find((entry) => entry.id === id));
     }
   });

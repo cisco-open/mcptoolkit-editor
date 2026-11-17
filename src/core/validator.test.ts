@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-import miroExample from '../../examples/migration/miro.mcpdesc-v0.8.yaml?raw';
+import legacyV08Example from '../../examples/migration/minimal.mcpdesc-v0.8.yaml?raw';
 import reusableComponents from '../../examples/features/reusable-components.yaml?raw';
 import stdioServerExample from '../../examples/features/stdio-server.yaml?raw';
 import type { McpDescDocument } from './types';
@@ -105,7 +105,7 @@ describe('0.9.0 validation', () => {
 
 describe('unsupported format versions', () => {
   it('reports a 0.8.0 document once at /mcpdesc instead of validating it', () => {
-    const result = new McpDescValidator().validateDocument(parse(miroExample));
+    const result = new McpDescValidator().validateDocument(parse(legacyV08Example));
     expect(result).toMatchObject({ valid: false, warnings: [], selector: null });
     expect(result.errors).toEqual([expect.objectContaining({
       path: '/mcpdesc', keyword: 'unsupported-format-version',
@@ -131,7 +131,7 @@ describe('unsupported format versions', () => {
   });
 
   it('lists 0.8 source problems that block migration', () => {
-    const doc = parse(miroExample);
+    const doc = parse(legacyV08Example);
     expect(legacySourceFindings(doc)).toEqual([]);
     doc.transports = [{ type: 'stdio', arg: ['serve'] }];
     expect(legacySourceFindings(doc).length).toBeGreaterThan(0);
