@@ -17,11 +17,11 @@ import { getImportUrlFromSearch } from './importDocument';
 
 export class PreviewErrorBoundary extends Component<{
   children: ReactNode;
-  resetKey: string;
+  resetKey: unknown;
 }, { error: Error | null }> {
   state: { error: Error | null } = { error: null };
   static getDerivedStateFromError(error: Error) { return { error }; }
-  componentDidUpdate(prevProps: { children: ReactNode; resetKey: string }) {
+  componentDidUpdate(prevProps: { children: ReactNode; resetKey: unknown }) {
     if (prevProps.resetKey !== this.props.resetKey && this.state.error) {
       this.setState({ error: null });
     }
@@ -44,7 +44,7 @@ export class PreviewErrorBoundary extends Component<{
 function Preview() {
   const { state } = useDoc();
   return (
-    <PreviewErrorBoundary resetKey={state.text}>
+    <PreviewErrorBoundary resetKey={state.doc}>
       <PreviewPanel />
     </PreviewErrorBoundary>
   );

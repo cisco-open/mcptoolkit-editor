@@ -68,6 +68,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   unrelated line found by text search.
 - Preserve original field ordering, including nested fields, when migrating
   YAML or JSON documents instead of alphabetically sorting keys.
+- Recover the card preview after correcting an invalid document once debounced parsing finishes.
 
 ### Added
 
