@@ -23,6 +23,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
+### Fixed
+
+- Align the MCP version badge with its header label and hide per-tool version rows when one protocol version is selected.
+- Align transport text baselines, group transport details without dividers, and increase the capabilities text size for readability.
+- Hide the Security panel when no document-level schemes or requirements are defined.
+- Reduce the monospace stdio command size to better match HTTP transport URLs.
+
 ## [3.0.0] — 2026-11-18
 
 ### Added

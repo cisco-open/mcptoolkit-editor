@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { projectEffectiveProtocolView } from '@mcpdesc/core';
 import { parse } from 'yaml';
+import resultTypeExample from '../../examples/features/multi-version-resultType.yaml?raw';
 import { isComponentReference, type McpDescDocument } from '../core/types';
 import { MCPDESC_SPECIFICATION, McpDescValidator } from '../core/validator';
 import { defaultExample, exampleGroups, examples, getExampleFromSearch } from '.';
@@ -48,7 +49,7 @@ describe('bundled examples', () => {
     }
   });
 
-  it('documents output schemas and successful results for every feature tool', () => {
+  it('documents output schemas and successful results for feature tools, except the shared Tasks evaluator', () => {
     const featureGroup = exampleGroups.find(({ label }) => label === 'Features Demonstration');
     expect(featureGroup).toBeDefined();
 
@@ -60,6 +61,7 @@ describe('bundled examples', () => {
       });
       for (const tool of doc.tools ?? []) {
         expect(tool.outputSchema, `${example.id}/${tool.name} outputSchema`).toBeDefined();
+        if (example.id === 'multi-version' && tool.name === 'get_position_evaluation') continue;
 
         const toolExamples = Object.values(tool.examples ?? {}).map((toolExample) => {
           if (!isComponentReference(toolExample)) return toolExample;
@@ -75,6 +77,25 @@ describe('bundled examples', () => {
         ).toBe(true);
       }
     }
+  });
+
+  it('keeps the Tasks evaluator shared and demonstrates resultType separately', () => {
+    const tasks: McpDescDocument = parse(getExampleFromSearch('?example=multi-version')!.content);
+    const evaluators = tasks.tools?.filter(tool => tool.name === 'get_position_evaluation');
+    expect(evaluators).toHaveLength(1);
+    expect(evaluators?.[0]?.protocolVersions).toBeUndefined();
+    expect(evaluators?.[0]?.examples).toBeUndefined();
+
+    expect(getExampleFromSearch('?example=multi-version-result-type')).toBeUndefined();
+    const resultTypeDoc = parse(resultTypeExample);
+    expect(new McpDescValidator().validateDocument(resultTypeDoc)).toMatchObject({ valid: true, errors: [] });
+    const { tools } = resultTypeDoc;
+    expect(tools).toHaveLength(2);
+    expect(tools[0].protocolVersions).toEqual(['2025-11-25']);
+    expect(tools[1].protocolVersions).toEqual(['2026-07-28']);
+    const olderResult = tools[0].examples['starting-position'].result;
+    expect(olderResult).not.toHaveProperty('resultType');
+    expect(tools[1].examples['starting-position'].result).toEqual({ ...olderResult, resultType: 'complete' });
   });
 
   it('uses MCP 2026 with a direct integer FIDE rating in the minimal example', () => {

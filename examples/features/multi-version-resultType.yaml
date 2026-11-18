@@ -1,0 +1,74 @@
+mcpdesc: 0.9.0
+info:
+  name: chess-position-evaluator
+  title: Chess Position Evaluator
+  version: 1.0.0
+  description: >
+    Both MCP versions return the same position evaluation. MCP 2026-07-28
+    requires resultType: complete for this successful result; MCP 2025-11-25
+    has no resultType field.
+protocolVersions:
+  - '2025-11-25'
+  - '2026-07-28'
+transports:
+  - type: stdio
+    command: chess-analysis
+    args:
+      - serve
+tools:
+  - name: get_position_evaluation
+    title: Get Position Evaluation
+    protocolVersions:
+      - '2025-11-25'
+    description: Return a quick static evaluation of a chess position.
+    inputSchema:
+      type: object
+      properties:
+        fen:
+          type: string
+      required: [fen]
+    outputSchema:
+      type: object
+      properties:
+        evaluation_cp:
+          type: integer
+      required: [evaluation_cp]
+    examples:
+      starting-position:
+        input:
+          fen: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+        result:
+          content:
+            - type: text
+              text: Position evaluated.
+          structuredContent:
+            evaluation_cp: 20
+  - name: get_position_evaluation
+    title: Get Position Evaluation
+    protocolVersions:
+      - '2026-07-28'
+    description: Return a quick static evaluation of a chess position.
+    inputSchema:
+      type: object
+      properties:
+        fen:
+          type: string
+      required: [fen]
+    outputSchema:
+      type: object
+      properties:
+        evaluation_cp:
+          type: integer
+      required: [evaluation_cp]
+    examples:
+      starting-position:
+        input:
+          fen: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+        result:
+          # This result is for MCP version 2026-07-28 and includes the resultType field.
+          resultType: complete
+          content:
+            - type: text
+              text: Position evaluated.
+          structuredContent:
+            evaluation_cp: 20

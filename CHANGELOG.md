@@ -72,6 +72,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 - Wrap the Capabilities card to the preview width, list only enabled capability
   flags (a `false` flag such as `subscribe: false` is no longer shown), and omit
   the protocol version badge when a single capability entry is displayed.
+- Align the MCP version badge with its header label and hide per-tool version rows when one protocol version is selected.
+- Align transport text baselines, group transport details without dividers, and increase the capabilities text size for readability.
+- Hide the Security panel when no document-level schemes or requirements are defined.
+- Reduce the monospace stdio command size to better match HTTP transport URLs.
 
 ### Added
 
@@ -95,6 +99,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   and prompts, scoped to a selected protocol revision and declaration.
 - Rule identities, protocol context, and per-rule validation results in editor
   diagnostics. Unevaluated and inapplicable rules retain their own statuses.
+- Add a standalone Multi-Version Result Type example comparing otherwise identical tool results across two MCP versions.
 
 ### Changed
 
@@ -132,6 +137,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
   catalog to the rule table.
 - Reserve a five-row table viewport by default, with a draggable and keyboard-
   accessible resize separator and bounded decrease/reset/increase text controls.
+- Make `get_position_evaluation` a single shared tool in the Multi-Version Tasks example.
+
 
 ## [2.3.0] — 2026-09-10
 

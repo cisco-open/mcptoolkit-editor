@@ -53,12 +53,8 @@ capabilities:
     io.modelcontextprotocol/tasks: {}
 
 tools:
-# The result payload is the same in both revisions, but the result discriminator
-# is protocol-specific, so the examples use separate protocol-scoped variants.
 - name: get_position_evaluation
   title: Get Position Evaluation
-  protocolVersions:
-  - '2025-11-25'
   description: Return a quick static evaluation of a chess position.
   inputSchema:
     type: object
@@ -78,51 +74,6 @@ tools:
     required:
     - evaluation_cp
     additionalProperties: false
-  examples:
-    starting-position:
-      input:
-        fen: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
-      result:
-        content:
-        - type: text
-          text: Position evaluated.
-        structuredContent:
-          evaluation_cp: 20
-
-- name: get_position_evaluation
-  title: Get Position Evaluation
-  protocolVersions:
-  - '2026-07-28'
-  description: Return a quick static evaluation of a chess position.
-  inputSchema:
-    type: object
-    properties:
-      fen:
-        type: string
-        description: Position in Forsyth-Edwards Notation.
-    required:
-    - fen
-    additionalProperties: false
-  outputSchema:
-    type: object
-    properties:
-      evaluation_cp:
-        type: integer
-        description: Evaluation in centipawns from White's perspective.
-    required:
-    - evaluation_cp
-    additionalProperties: false
-  examples:
-    starting-position:
-      input:
-        fen: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
-      result:
-        resultType: complete
-        content:
-        - type: text
-          text: Position evaluated.
-        structuredContent:
-          evaluation_cp: 20
 
 # 2025-11-25 variant:
 # Tool.execution is defined by MCP Description only for this MCP revision.
