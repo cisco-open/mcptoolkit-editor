@@ -3,11 +3,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState } from 'react';
-import type { ValidationResult } from '@core/types';
+import { diagnosticMessage } from '@core/diagnosticMessage';
+import type { ValidationIssue, ValidationResult } from '@core/types';
 
 export interface ValidationPanelProps {
   validation: ValidationResult;
   visible: boolean;
+}
+
+function definedAt(issue: ValidationIssue): string {
+  const definition = issue.relatedLocations?.find(({ relation }) => relation === 'component-definition');
+  return definition ? ` (defined at ${definition.path})` : '';
 }
 
 export function ValidationPanel({ validation, visible }: ValidationPanelProps) {
@@ -52,13 +58,13 @@ export function ValidationPanel({ validation, visible }: ValidationPanelProps) {
           {validation.errors.map((e, i) => (
             <div key={`e-${i}`} className="flex gap-2 text-red-700">
               <span className="shrink-0 font-mono text-red-400">{e.path}</span>
-              <span>{e.message}</span>
+              <span title={e.message}>{diagnosticMessage(e)}{definedAt(e)}</span>
             </div>
           ))}
           {validation.warnings.map((w, i) => (
             <div key={`w-${i}`} className="flex gap-2 text-amber-700">
               <span className="shrink-0 font-mono text-amber-400">{w.path}</span>
-              <span>{w.message}</span>
+              <span title={w.message}>{diagnosticMessage(w)}{definedAt(w)}</span>
             </div>
           ))}
         </div>

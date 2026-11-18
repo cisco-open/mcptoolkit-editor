@@ -6,10 +6,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { McpDescCardView } from './McpDescCardView';
-import type { McpDescDocument } from '@core/types';
+import type { McpDescDocument, McpProtocolVersion } from '@core/types';
 
 const baseDoc = {
-  mcpdesc: '0.8.0',
+  mcpdesc: '0.9.0',
   info: { name: 'chess', version: '2.0.0' },
   protocolVersions: ['2026-07-28'],
   capabilities: [{
@@ -66,7 +66,7 @@ const sourceDoc = {
 describe('McpDescCardView protocol projections', () => {
   it('renders compact custom protocol version controls', () => {
     const onProtocolVersionSelect = vi.fn();
-    const protocolVersionOptions = ['2025-11-25', '2026-07-28'];
+    const protocolVersionOptions: McpProtocolVersion[] = ['2025-11-25', '2026-07-28'];
     const { getByRole } = render(
       <McpDescCardView
         doc={{ ...baseDoc, protocolVersions: protocolVersionOptions }}
@@ -132,10 +132,104 @@ describe('McpDescCardView protocol projections', () => {
     expect(markup).toContain('confirm_access');
     expect(markup).toContain('form');
     expect(markup).toContain('url');
-    expect(markup).toContain('MCP Version');
-    expect(markup.match(/border border-gray-300 bg-gray-50 text-\[11px\] font-medium text-gray-900/g)).toHaveLength(4);
+    expect(markup).not.toContain('>MCP Version<');
+    expect(markup.match(/border border-gray-300 bg-gray-50 text-\[11px\] font-medium text-gray-900/g)).toHaveLength(2);
     expect(markup).not.toContain('border border-black bg-white text-black');
     expect(markup).toContain('Execution');
     expect(markup).toContain('task support: required');
+  });
+
+  it('shows a scoped tool version in All versions but hides it in a single-version view', () => {
+    const doc = { ...sourceDoc, protocolVersions: ['2025-11-25', '2026-07-28'] } satisfies McpDescDocument;
+    const { getByText, queryByText, rerender } = render(<McpDescCardView doc={doc} />);
+
+    expect(getByText('MCP Version', { exact: true }).parentElement?.textContent).toContain('2026-07-28');
+
+    rerender(<McpDescCardView doc={doc} selectedProtocolVersion="2026-07-28" />);
+
+    expect(queryByText('MCP Version', { exact: true })).toBeNull();
+  });
+
+  it('hides empty document security but still reports missing transports', () => {
+    const { getByText, queryByText, rerender } = render(<McpDescCardView doc={baseDoc} />);
+
+    expect(queryByText('Security', { exact: true })).toBeNull();
+    expect(getByText('No transport defined')).toBeTruthy();
+
+    rerender(<McpDescCardView doc={{ ...baseDoc, security: [], securitySchemes: {} }} />);
+    expect(queryByText('Security', { exact: true })).toBeNull();
+
+    rerender(<McpDescCardView doc={{ ...baseDoc, security: [{}] }} />);
+    expect(getByText('Security', { exact: true })).toBeTruthy();
+    expect(getByText('anonymous')).toBeTruthy();
+
+    rerender(<McpDescCardView doc={{ ...baseDoc, securitySchemes: { bearer: { type: 'http', scheme: 'bearer' } } }} />);
+    expect(getByText('Security', { exact: true })).toBeTruthy();
+  });
+
+  it('groups transport security and client requirements below the transport summary', () => {
+    const doc = {
+      ...baseDoc,
+      transports: [
+        {
+          type: 'streamable-http',
+          url: 'https://example.com/mcp',
+          security: [{ bearer: [] }],
+          clientRequirements: { extensions: { 'io.modelcontextprotocol/tasks': {} } },
+        },
+        { type: 'stdio', command: 'chess', args: ['serve'], security: [] },
+      ],
+    } satisfies McpDescDocument;
+    const { getByText, getAllByText } = render(<McpDescCardView doc={doc} />);
+
+    const summary = getByText('https://example.com/mcp').parentElement;
+    const details = summary?.nextElementSibling;
+    expect(details?.textContent).toContain('Default Securitybearer');
+    expect(details?.textContent).toContain('Client requirementsextensions/io.modelcontextprotocol/tasks');
+    expect(details?.querySelector('.border-t')).toBeNull();
+    expect(getByText('chess serve').parentElement?.nextElementSibling?.textContent).toBe('Default Securitynone');
+    expect(getAllByText('Default Security')).toHaveLength(2);
+  });
+
+  it('lists only enabled capability flags in a wrapping row', () => {
+    const doc = {
+      mcpdesc: '0.9.0',
+      info: baseDoc.info,
+      protocolVersions: ['2025-11-25'],
+      capabilities: [{
+        logging: {},
+        resources: { subscribe: false, listChanged: true },
+        prompts: { listChanged: false },
+        extensions: { 'io.modelcontextprotocol/ui': {} },
+      }],
+    } satisfies McpDescDocument;
+    const { getByText } = render(<McpDescCardView doc={doc} />);
+    const row = getByText('Resources').closest('div');
+
+    expect(row?.className).toContain('flex-wrap');
+    expect(row?.textContent).toContain('Logging');
+    expect(row?.textContent).toContain('Resources (listChanged)');
+    expect(row?.textContent).not.toContain('subscribe');
+    expect(row?.textContent).toContain('Prompts');
+    expect(row?.textContent).not.toContain('Prompts (');
+    expect(row?.textContent).not.toContain('2025-11-25');
+    expect(getByText('io.modelcontextprotocol/ui').className).toContain('bg-amber-100');
+  });
+
+  it('labels capability entries with their protocol versions when several are shown', () => {
+    const doc = {
+      mcpdesc: '0.9.0',
+      info: baseDoc.info,
+      protocolVersions: ['2025-11-25', '2026-07-28'],
+      capabilities: [
+        { protocolVersions: ['2025-11-25'], tools: { listChanged: true } },
+        { protocolVersions: ['2026-07-28'], tools: { listChanged: true } },
+      ],
+    } satisfies McpDescDocument;
+    const { getAllByText } = render(<McpDescCardView doc={doc} />);
+    const rows = getAllByText('Tools').map(label => label.closest('div'));
+
+    expect(rows[0]?.textContent).toContain('2025-11-25');
+    expect(rows[1]?.textContent).toContain('2026-07-28');
   });
 });

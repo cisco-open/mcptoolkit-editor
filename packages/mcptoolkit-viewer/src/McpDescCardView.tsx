@@ -23,6 +23,14 @@ export type BadgeRenderer = (
 export type ExampleDisplayMode = 'hidden' | 'names' | 'details';
 export type ProtocolVersionProjectionMode = 'enabled' | 'disabled';
 
+export interface CardActionTarget {
+  section: 'tools' | 'resources' | 'resourceTemplates' | 'prompts';
+  identifier?: string;
+  index?: number;
+}
+
+export type CardActionRenderer = (target: CardActionTarget) => React.ReactNode;
+
 export interface ExampleSelection {
   path: string;
   section: string;
@@ -112,13 +120,14 @@ function Tag({ value }: { value: string }) {
   return <Badge color="bg-indigo-100 text-indigo-700">{value}</Badge>;
 }
 
-function Section({ title, count, children, defaultOpen = true }: {
-  title: string; count?: number; children: React.ReactNode; defaultOpen?: boolean;
+function Section({ title, count, children, defaultOpen = true, action }: {
+  title: string; count?: number; children: React.ReactNode; defaultOpen?: boolean; action?: React.ReactNode;
 }) {
   return (
     <details open={defaultOpen} className="mb-4">
       <summary className="cursor-pointer select-none font-semibold text-sm text-gray-700 hover:text-gray-900 py-1">
         {title}{count !== undefined && <span className="ml-1 text-gray-400">({count})</span>}
+        {action && <span className="ml-2 inline-flex items-center gap-1 align-middle">{action}</span>}
       </summary>
       <div className="pl-2 pt-1">{children}</div>
     </details>
@@ -464,7 +473,7 @@ function InfoCard({ doc, protocolVersionProjectionMode, protocolVersionOptions, 
 
       {info.description && <div className="mb-3"><Desc text={info.description} /></div>}
       <div className="space-y-0.5">
-        <InfoRow responsiveWrap label="MCP Versions" value={showProtocolVersionSelector ? (
+        <InfoRow responsiveWrap alignCenter label="MCP Versions" value={showProtocolVersionSelector ? (
           <fieldset className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <legend className="sr-only">Effective protocol version</legend>
             {protocolVersionOptions.map((version) => (
@@ -492,7 +501,11 @@ function InfoCard({ doc, protocolVersionProjectionMode, protocolVersionOptions, 
               All versions
             </label>
           </fieldset>
-        ) : <ProtocolVersionBadge>{doc.protocolVersions.join(', ')}</ProtocolVersionBadge>} />
+        ) : (
+          <div className="flex">
+            <ProtocolVersionBadge>{doc.protocolVersions.join(', ')}</ProtocolVersionBadge>
+          </div>
+        )} />
         {info.id && <InfoRow label="ID" value={<code className="text-xs bg-gray-100 text-gray-800 px-1 rounded">{info.id}</code>} />}
         {info.websiteUrl && <InfoRow label="Website" value={safeExternalUrl(info.websiteUrl)
           ? <a className="text-blue-600 underline" href={safeExternalUrl(info.websiteUrl)} target="_blank" rel="noopener noreferrer">{info.websiteUrl}</a>
@@ -523,24 +536,26 @@ function TransportsCard({ doc, defaultOpen, badge }: { doc: McpDescDocument; def
     <Section title="Transports" count={doc.transports?.length ?? 0} defaultOpen={defaultOpen}>
       {doc.transports?.length ? doc.transports.map((t, i) => (
         <div key={i} className="mb-2 p-2 rounded bg-gray-50 border border-gray-200 text-sm">
-        {badge(t.type, 'transports', t.type, 'bg-gray-200 text-gray-500', { index: i })}
-            {t.url && <span className="ml-2 text-black">{t.url}</span>}
-            {t.command && (
-              <code className="ml-2 text-black">
-                {t.command}{t.args ? ` ${t.args.join(' ')}` : ''}
-              </code>
-            )}
-            {t.security !== undefined && (
-              <div className="mt-2 border-t border-gray-200 pt-2">
-                <InfoRow
-                  compact
-                  alignCenter
-                  label="Default Security"
-                  value={<SecurityRequirements requirements={t.security} />}
-                />
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              {badge(t.type, 'transports', t.type, 'bg-gray-200 text-gray-500', { index: i })}
+              {t.url && <span className="min-w-0 break-words text-black">{t.url}</span>}
+              {t.command && (
+                <code className="min-w-0 break-words text-[13px] text-black">
+                  {t.command}{t.args ? ` ${t.args.join(' ')}` : ''}
+                </code>
+              )}
+            </div>
+            {(t.security !== undefined || t.clientRequirements) && (
+              <div className="mt-1 space-y-1 pl-2 text-xs">
+                {t.security !== undefined && (
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <span className="font-medium text-gray-500">Default Security</span>
+                    <SecurityRequirements requirements={t.security} />
+                  </div>
+                )}
+                <ClientRequirements requirements={t.clientRequirements} inline />
               </div>
             )}
-            <ClientRequirements requirements={t.clientRequirements} />
         </div>
       )) : (
         <p className="text-sm text-gray-400 italic">No transport defined</p>
@@ -551,6 +566,8 @@ function TransportsCard({ doc, defaultOpen, badge }: { doc: McpDescDocument; def
 
 function SecurityCard({ doc, defaultOpen, badge }: { doc: McpDescDocument; defaultOpen: boolean; badge: BadgeRenderer }) {
   const schemes = Object.entries(doc.securitySchemes ?? {});
+  if (!doc.security?.length && schemes.length === 0) return null;
+
   return (
     <Section title="Security" defaultOpen={defaultOpen}>
       <InfoRow
@@ -595,14 +612,14 @@ function SecurityCard({ doc, defaultOpen, badge }: { doc: McpDescDocument; defau
 }
 
 function capabilityPaths(value: unknown, prefix = ''): string[] {
+  if (value === false) return [];
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return prefix ? [prefix] : [];
   }
-  const entries = Object.entries(value);
-  if (entries.length === 0) return prefix ? [prefix] : [];
-  return entries.flatMap(([name, nestedValue]) => (
+  const paths = Object.entries(value).flatMap(([name, nestedValue]) => (
     capabilityPaths(nestedValue, prefix ? `${prefix}/${name}` : name)
   ));
+  return paths.length === 0 && prefix ? [prefix] : paths;
 }
 
 function capabilityLabel(name: string): string {
@@ -616,6 +633,8 @@ function CapabilitiesCard({ doc, defaultOpen, selectedProtocolVersion }: {
 }) {
   if (!doc.capabilities?.length) return null;
   const omittedKeys = new Set(['protocolVersions', 'security', 'clientRequirements', '_meta']);
+  // A single entry is the whole effective view, so its version repeats the document header.
+  const showProtocolVersions = doc.capabilities.length > 1;
 
   return (
     <Section title="Capabilities" defaultOpen={defaultOpen}>
@@ -624,8 +643,8 @@ function CapabilitiesCard({ doc, defaultOpen, selectedProtocolVersion }: {
           const protocolVersions = capabilities.protocolVersions
             ?? (selectedProtocolVersion ? [selectedProtocolVersion] : doc.protocolVersions);
           return (
-            <div key={capabilityIndex} className="p-1.5 rounded bg-gray-50 border border-gray-200 text-[11px] flex items-center gap-1.5 whitespace-nowrap">
-              <ProtocolVersionBadge>{protocolVersions.join(', ')}</ProtocolVersionBadge>
+            <div key={capabilityIndex} className="p-1.5 rounded bg-gray-50 border border-gray-200 text-xs flex flex-wrap items-center gap-x-2 gap-y-1">
+              {showProtocolVersions && <ProtocolVersionBadge>{protocolVersions.join(', ')}</ProtocolVersionBadge>}
               {Object.entries(capabilities)
                 .filter(([name]) => !omittedKeys.has(name) && name !== 'extensions')
                 .map(([name, value]) => {
@@ -638,14 +657,14 @@ function CapabilitiesCard({ doc, defaultOpen, selectedProtocolVersion }: {
                   );
                 })}
               {capabilities.extensions && (
-                <>
+                <span className="inline-flex flex-wrap items-center gap-1.5 min-w-0">
                   <span className="inline-flex items-center leading-4 font-semibold text-gray-700">Extensions</span>
                   {Object.keys(capabilities.extensions).map(extension => (
-                    <span key={extension} className="inline-flex items-center leading-4 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 shrink-0">
+                    <span key={extension} className="inline-flex items-center leading-4 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 min-w-0 break-all">
                       {extension}
                     </span>
                   ))}
-                </>
+                </span>
               )}
             </div>
           );
@@ -655,10 +674,11 @@ function CapabilitiesCard({ doc, defaultOpen, selectedProtocolVersion }: {
   );
 }
 
-function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect }: {
+function ToolsCard({ doc, selectedProtocolVersion, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect, renderAction }: {
   doc: McpDescDocument; errorPaths: Set<string>; defaultOpen: boolean; badge: BadgeRenderer; disabledTags: Set<string>;
-  sourceDoc?: McpDescDocument; selectedProtocolVersion?: McpDescDocument['protocolVersions'][number] | null;
+  selectedProtocolVersion?: McpDescDocument['protocolVersions'][number] | null;
   exampleDisplay: ExampleDisplayMode; onExampleSelect?: (selection: ExampleSelection) => void;
+  renderAction?: CardActionRenderer;
 }) {
   if (!doc.tools?.length) return null;
   const visible = doc.tools.filter((t, i) => {
@@ -668,15 +688,10 @@ function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaul
   });
   if (!visible.length) return null;
   return (
-    <Section title="Tools" count={visible.length} defaultOpen={defaultOpen}>
+    <Section title="Tools" count={visible.length} defaultOpen={defaultOpen} action={renderAction?.({ section: 'tools' })}>
       {visible.map((tool) => {
         const toolIndex = doc.tools?.indexOf(tool) ?? -1;
-        const sourceTool = selectedProtocolVersion
-          ? sourceDoc?.tools?.find(candidate => (
-            candidate.name === tool.name && candidate.protocolVersions?.includes(selectedProtocolVersion)
-          )) ?? sourceDoc?.tools?.find(candidate => candidate.name === tool.name && !candidate.protocolVersions)
-          : tool;
-        const toolProtocolVersions = sourceTool?.protocolVersions;
+        const toolProtocolVersions = selectedProtocolVersion == null ? tool.protocolVersions : undefined;
         const inputRef = isComponentReference(tool.inputSchema) ? tool.inputSchema : null;
         const outputRef = isComponentReference(tool.outputSchema) ? tool.outputSchema : null;
         const props = inputRef ? undefined : (tool.inputSchema as McpDescSchema | undefined)?.properties as Record<string, unknown> | undefined;
@@ -686,6 +701,7 @@ function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaul
             <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
               {badge('tool', 'tools', tool.name, undefined, { index: toolIndex })}
               <span className="font-mono text-amber-600">{tool.name}</span>
+              {renderAction?.({ section: 'tools', identifier: tool.name, index: toolIndex })}
               {tool.title && <span className="text-gray-500">{tool.title}</span>}
               {tool.deprecated && <Badge color="bg-red-100 text-red-700">deprecated</Badge>}
               <span className="flex-1" />
@@ -758,9 +774,10 @@ function ToolsCard({ doc, sourceDoc, selectedProtocolVersion, errorPaths, defaul
   );
 }
 
-function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect }: {
+function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect, renderAction }: {
   doc: McpDescDocument; errorPaths: Set<string>; defaultOpen: boolean; badge: BadgeRenderer; disabledTags: Set<string>;
   exampleDisplay: ExampleDisplayMode; onExampleSelect?: (selection: ExampleSelection) => void;
+  renderAction?: CardActionRenderer;
 }) {
   const resources = (doc.resources ?? []).filter((r, i) => {
     if (errorPaths.has(`/resources/${i}`)) return false;
@@ -775,13 +792,17 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exam
   const total = resources.length + templates.length;
   if (!total) return null;
   return (
-    <Section title="Resources" count={total} defaultOpen={defaultOpen}>
+    <Section title="Resources" count={total} defaultOpen={defaultOpen} action={renderAction && <>
+      {resources.length > 0 && renderAction({ section: 'resources' })}
+      {templates.length > 0 && <span className="inline-flex items-center gap-1 text-xs font-normal text-gray-500">Templates {renderAction({ section: 'resourceTemplates' })}</span>}
+    </>}>
       {resources.map((r) => {
         const resourceIndex = doc.resources?.indexOf(r) ?? -1;
         return <details key={r.uri} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
           <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
             {badge('resource', 'resources', r.uri, undefined, { index: resourceIndex })}
             <span className="font-mono text-teal-600">{r.uri}</span>
+            {renderAction?.({ section: 'resources', identifier: r.uri, index: resourceIndex })}
             <span className="flex-1" />
             {r.tags?.map((t) => <Tag key={t} value={t} />)}
           </summary>
@@ -808,6 +829,7 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exam
           <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
             {badge('resource', 'resourceTemplates', rt.uriTemplate, undefined, { index: templateIndex })}
             <span className="font-mono text-teal-600">{rt.uriTemplate}</span>
+            {renderAction?.({ section: 'resourceTemplates', identifier: rt.uriTemplate, index: templateIndex })}
             <span className="flex-1" />
             {rt.tags?.map((t) => <Tag key={t} value={t} />)}
           </summary>
@@ -833,9 +855,10 @@ function ResourcesCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exam
   );
 }
 
-function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect }: {
+function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampleDisplay, onExampleSelect, renderAction }: {
   doc: McpDescDocument; errorPaths: Set<string>; defaultOpen: boolean; badge: BadgeRenderer; disabledTags: Set<string>;
   exampleDisplay: ExampleDisplayMode; onExampleSelect?: (selection: ExampleSelection) => void;
+  renderAction?: CardActionRenderer;
 }) {
   if (!doc.prompts?.length) return null;
   const visible = doc.prompts.filter((p, i) => {
@@ -845,13 +868,14 @@ function PromptsCard({ doc, errorPaths, defaultOpen, badge, disabledTags, exampl
   });
   if (!visible.length) return null;
   return (
-    <Section title="Prompts" count={visible.length} defaultOpen={defaultOpen}>
+    <Section title="Prompts" count={visible.length} defaultOpen={defaultOpen} action={renderAction?.({ section: 'prompts' })}>
       {visible.map((p) => {
         const promptIndex = doc.prompts?.indexOf(p) ?? -1;
         return <details key={p.name} open={defaultOpen} className="mb-2 bg-gray-50 border border-gray-200 rounded">
           <summary className="cursor-pointer select-none p-2 hover:bg-gray-100 rounded text-sm flex items-center gap-2">
             {badge('prompt', 'prompts', p.name, undefined, { index: promptIndex })}
             <span className="font-mono text-fuchsia-600">{p.name}</span>
+            {renderAction?.({ section: 'prompts', identifier: p.name, index: promptIndex })}
             {p.title && <span className="text-gray-500">{p.title}</span>}
             <span className="flex-1" />
             {p.tags?.map((t) => <Tag key={t} value={t} />)}
@@ -968,13 +992,14 @@ function TagFilterBar({ tags, disabledTags, onToggle }: {
 
 export interface McpDescCardViewProps {
   doc: McpDescDocument;
-  /** Original unprojected document, used to retain declaration scope in effective views. */
+  /** @deprecated No longer needed for rendering tool version scopes. */
   sourceDoc?: McpDescDocument;
   validation?: ValidationResult;
   /** Whether <details> sections start expanded (default: true) */
   defaultOpen?: boolean;
   /** Custom badge renderer — receives (children, section, value, color). Defaults to a static TypeBadge. */
   renderBadge?: BadgeRenderer;
+  renderAction?: CardActionRenderer;
   /** How operation examples are rendered (default: hidden). */
   exampleDisplay?: ExampleDisplayMode;
   /** Receives the exact JSON pointer when a named example is selected. */
@@ -989,7 +1014,7 @@ export interface McpDescCardViewProps {
   onProtocolVersionSelect?: (protocolVersion: McpDescDocument['protocolVersions'][number] | null) => void;
 }
 
-export function McpDescCardView({ doc, sourceDoc, validation, defaultOpen = true, renderBadge, exampleDisplay = 'hidden', onExampleSelect, protocolVersionProjectionMode = 'disabled', protocolVersionOptions, selectedProtocolVersion, onProtocolVersionSelect }: McpDescCardViewProps) {
+export function McpDescCardView({ doc, validation, defaultOpen = true, renderBadge, renderAction, exampleDisplay = 'hidden', onExampleSelect, protocolVersionProjectionMode = 'disabled', protocolVersionOptions, selectedProtocolVersion, onProtocolVersionSelect }: McpDescCardViewProps) {
   const [disabledTags, setDisabledTags] = useState<Set<string>>(new Set());
   const protocolVersionGroupName = useId();
 
@@ -1032,9 +1057,9 @@ export function McpDescCardView({ doc, sourceDoc, validation, defaultOpen = true
       <TransportsCard doc={doc} defaultOpen={defaultOpen} badge={badge} />
       <SecurityCard doc={doc} defaultOpen={defaultOpen} badge={badge} />
       <TagFilterBar tags={doc.tags} disabledTags={disabledTags} onToggle={toggleTag} />
-      <ToolsCard doc={doc} sourceDoc={sourceDoc} selectedProtocolVersion={selectedProtocolVersion} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
-      <ResourcesCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
-      <PromptsCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} />
+      <ToolsCard doc={doc} selectedProtocolVersion={selectedProtocolVersion} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} renderAction={renderAction} />
+      <ResourcesCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} renderAction={renderAction} />
+      <PromptsCard doc={doc} errorPaths={errorPaths} defaultOpen={defaultOpen} badge={badge} disabledTags={disabledTags} exampleDisplay={exampleDisplay} onExampleSelect={onExampleSelect} renderAction={renderAction} />
       <TagsCard doc={doc} defaultOpen={defaultOpen} />
     </div>
   );

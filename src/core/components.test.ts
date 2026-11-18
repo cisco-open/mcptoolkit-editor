@@ -32,7 +32,7 @@ import siblingOverride from './__fixtures__/components/invalid/sibling-override.
 import unknownNamespace from './__fixtures__/components/invalid/unknown-namespace.yaml?raw';
 import wrongNamespace from './__fixtures__/components/invalid/wrong-namespace.yaml?raw';
 
-const SPECIFICATION = '0.8.0' as const;
+const SPECIFICATION = '0.9.0' as const;
 
 function parse(source: string) {
   const parsed = parseMcpDescriptionSource(source);
@@ -49,7 +49,7 @@ function asDoc(value: unknown) {
 }
 
 /** Set of `code@path` pairs, which is how a diagnostic is identified in these tests. */
-function anchors(diagnostics: readonly { code: string; path?: readonly (number | string)[] }[]) {
+function anchors(diagnostics: readonly { code?: string; path?: readonly (number | string)[] }[]) {
   return new Set(diagnostics.map((d) => `${d.code}@${(d.path ?? []).join('/')}`));
 }
 
@@ -180,12 +180,17 @@ describe('invalid documents', () => {
     ['sibling override', siblingOverride, 'tools/0/inputSchema/description'],
     ['empty components', emptyComponents, 'components'],
     ['reference in interaction example', refInInteractionExample, 'tools/0/interactionExamples/flow/$componentRef'],
-    ['invalid resolved value', invalidResolvedValue, 'tools/0/inputSchema/type'],
   ])('%s is reported structurally', (_label, source, anchor) => {
     const result = resolve(source);
     expect(result.ok).toBe(false);
     expect(result.diagnostics.every((d) => d.code === 'schema-validation')).toBe(true);
     expect(anchors(result.diagnostics)).toContain(`schema-validation@${anchor}`);
+  });
+
+  it('reports a resolved non-object input schema semantically at the referencing slot', () => {
+    const result = resolve(invalidResolvedValue);
+    expect(result.ok).toBe(false);
+    expect(anchors(result.diagnostics)).toEqual(new Set(['tool-input-schema-not-object@tools/0/inputSchema']));
   });
 
   it.each([

@@ -7,9 +7,10 @@ import MonacoEditor, { type OnMount, type OnChange } from '@monaco-editor/react'
 import { type editor } from 'monaco-editor';
 import { useDoc } from '../hooks/useDoc';
 import { MCPDESC_SCHEMA_URI } from '../core';
+import { diagnosticMessage } from '../core/diagnosticMessage';
 import mcpdescSchema from '../core/mcpdesc-schema.json';
 import { sourcePathToLine } from './preview/navigation';
-import { findComponentDefinitionLine, pathToLine as componentPathToLine } from './componentNavigation';
+import { findComponentDefinitionLine } from './componentNavigation';
 import { groupEditorIssues, type EditorIssue } from './editorDiagnostics';
 
 const DEFAULT_FONT_SIZE = 15;
@@ -17,10 +18,9 @@ const MIN_FONT_SIZE = 10;
 const MAX_FONT_SIZE = 28;
 const FONT_STEP = 1;
 
-function pathToLine(text: string, path: string, params?: Record<string, unknown>): number {
-  const exactLine = sourcePathToLine(text, path);
-  if (exactLine > 0) return exactLine;
-  return componentPathToLine(text, path, params);
+// Findings point at authored values; an absent path anchors to its closest existing ancestor.
+function pathToLine(text: string, path: string): number {
+  return sourcePathToLine(text, path, { nearestAncestor: true });
 }
 
 /**
@@ -123,19 +123,6 @@ export default function Editor() {
     if (!monacoConfigured.current) {
       monacoConfigured.current = true;
 
-      monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
-        validate: true,
-        schemas: [
-          {
-            uri: MCPDESC_SCHEMA_URI,
-            fileMatch: ['*'],
-            schema: mcpdescSchema as Record<string, unknown>,
-          },
-        ],
-        allowComments: false,
-        schemaValidation: 'error',
-      });
-
       const definitionProvider: import('monaco-editor').languages.DefinitionProvider = {
         provideDefinition(model, position) {
           const line = findComponentDefinitionLine(model.getValue(), position.lineNumber, position.column);
@@ -156,6 +143,18 @@ export default function Editor() {
     setEditorReady(true);
   }, []);
 
+  useEffect(() => {
+    const monaco = monacoRef.current;
+    if (!editorReady || !monaco) return;
+    monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+      validate: true,
+      schemas: [{ uri: MCPDESC_SCHEMA_URI, fileMatch: ['*'], schema: mcpdescSchema }],
+      allowComments: false,
+      enableSchemaRequest: false,
+      schemaValidation: 'ignore',
+    });
+  }, [editorReady]);
+
   useEffect(() => () => {
     definitionProvidersRef.current.forEach((provider) => provider.dispose());
   }, []);
@@ -173,11 +172,13 @@ export default function Editor() {
 
     const parserMarkers: editor.IMarkerData[] = [];
     for (const issue of allIssues) {
-      const line = issue.line ?? pathToLine(state.text, issue.path, issue.params);
-      if (issue.line && ed.getModel()) {
+      const line = issue.line ?? pathToLine(state.text, issue.path);
+      if (line > 0 && ed.getModel()) {
         parserMarkers.push({
           severity: issue.severity === 'error' ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning,
-          message: issue.message,
+          message: diagnosticMessage(issue),
+          code: issue.rule ?? issue.keyword,
+          source: issue.protocolVersions?.join(', ') ?? 'mcpdesc',
           startLineNumber: line,
           startColumn: issue.column ?? 1,
           endLineNumber: line,
@@ -187,7 +188,7 @@ export default function Editor() {
     }
     const { byLine, unmapped } = groupEditorIssues(
       allIssues,
-      issue => issue.line ?? pathToLine(state.text, issue.path, issue.params),
+      issue => issue.line ?? pathToLine(state.text, issue.path),
     );
     setUnmappedIssues(unmapped);
 

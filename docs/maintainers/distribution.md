@@ -111,10 +111,9 @@ The two published packages track **different** version lines:
 - **`@cisco_open/mcptoolkit-editor-dist` mirrors the root editor app version.**
   It is literally the built root app, so `packages/mcptoolkit-editor-dist/package.json`
   must always equal the root `package.json` version (root is the source of
-  truth). `npm run verify:versions` — the first step of `npm run prerelease` —
-  fails on drift; `npm run sync:version` copies the root version into the
-  editor-dist manifest. So bump the **root** version and let the editor-dist
-  follow; do not bump the editor-dist manifest by hand.
+  truth). `npm run release:prepare -- X.Y.Z` aligns the root, editor-dist, and
+  lockfile versions; `npm run release:check` verifies them without mutation.
+  Do not bump the editor-dist manifest by hand.
 - **`@cisco_open/mcptoolkit-viewer` versions independently** of the editor and
   is never touched by the alignment scripts.
 

@@ -1,4 +1,5 @@
 import type { ValidationIssue } from '../core';
+import { diagnosticMessage } from '../core/diagnosticMessage';
 
 export type EditorIssue = ValidationIssue & { severity: 'error' | 'warning' };
 
@@ -16,7 +17,8 @@ export function groupEditorIssues(
 
   for (const issue of issues) {
     const line = resolveLine(issue);
-    const label = `${issue.severity === 'error' ? '✕' : '⚠'} ${issue.path}: ${issue.message}`;
+    const context = [issue.rule, issue.protocolVersions?.join(', ')].filter(Boolean).join(' | ');
+    const label = `${issue.severity === 'error' ? '✕' : '⚠'} ${issue.path}: ${diagnosticMessage(issue)}${context ? ` [${context}]` : ''}`;
     if (line === 0) {
       unmapped.push(label);
       continue;

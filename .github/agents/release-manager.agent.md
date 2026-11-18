@@ -57,18 +57,21 @@ and error), and the single next action requiring the user's confirmation.
   oss-scaffold.
 -->
 
-This repo is a monorepo with two packages:
+This repo is a monorepo with two independently released artifacts:
 
-- **`mcptoolkit-editor`** (root `package.json`, `"private": true`) — the web editor app. Not published to npm; it is hosted as a static site.
-- **`@cisco_open/mcptoolkit-viewer`** (`packages/mcptoolkit-viewer/`) — the standalone card-viewer library. **This is the package to release.**
+- **`@cisco_open/mcptoolkit-editor-dist`** mirrors the private root editor app
+  version and publishes from bare `vX.Y.Z` tags.
+- **`@cisco_open/mcptoolkit-viewer`** versions independently and publishes from
+  `viewer-vX.Y.Z` tags.
 
 When cutting a release:
 
-1. Bump `version` in `packages/mcptoolkit-viewer/package.json` (the published package). For suite alignment, also bump the root `package.json` to the same version.
-2. Also update the `version` constant in `packages/mcptoolkit-viewer/src/index.tsx`.
-3. Update **both** changelogs: root `CHANGELOG.md` and `packages/mcptoolkit-viewer/CHANGELOG.md` (see `AGENTS.md` for scope rules).
-4. Regenerate the lockfile so it reflects the new versions: run `npm install`, then commit `package-lock.json` alongside the manifest bumps. This is essential — `ci.yml` and `publish.yml` both run `npm ci`, which fails if the lockfile is out of sync.
-5. Run `npm run prerelease` and confirm it is green before proposing the PR. This gate runs `npm run sync:badge` (syncs the README status badge to the new version), `npm ci --dry-run` (verifies lockfile sync), lints, then builds the editor and the viewer library.
-6. The publish workflow reads the version from `packages/mcptoolkit-viewer/package.json` and publishes that workspace package — the git tag must match that version.
-
-> Note: this repo's `npm run prerelease` does not run `npm test` (no test framework is configured). It mirrors the `npm ci` + lint + build path that CI and `publish.yml` use.
+1. Create `release/X.Y.Z` and roll up the changelog(s) for the affected package.
+2. Run `npm run release:prepare -- X.Y.Z` to align editor metadata, lockfile,
+   and badge. For viewer releases, update the viewer manifest, version constant,
+   and changelog first.
+3. Run `npm run release:check`. It verifies metadata, runs lint and all tests,
+   builds/packages editor-dist, smoke-tests the built entry point, and builds
+   viewer only when affected. `npm run prerelease` remains an alias.
+4. Commit with DCO sign-off and open the release PR. After merge, use `vX.Y.Z`
+   for editor-dist or `viewer-vX.Y.Z` for viewer.

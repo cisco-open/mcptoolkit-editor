@@ -4,6 +4,10 @@ Interactive card view for [MCP Description](https://github.com/anthropics/model-
 
 ![alt text](screenshot.png)
 
+Renders and validates stable `mcpdesc: 0.9.0` documents. Other
+versions show an unsupported-version message; migrate 0.8 documents with the
+editor, or use viewer 2.2.0 to render them.
+
 ## Quick Start — Script Tag
 
 ```html
@@ -48,6 +52,18 @@ and provide the source versions, current selection, and selection callback:
 ```
 
 ## API
+
+### React card actions
+
+`McpDescCardView` accepts an optional `renderAction(target)` callback for
+host-provided controls beside collection headings and individual declarations.
+`target.section` is `tools`, `resources`, `resourceTemplates`, or `prompts`.
+Individual targets also include `identifier` (name, URI, or URI template) and
+`index` in the displayed document. Collection targets omit those fields.
+The host owns the action behavior; buttons inside a summary should prevent
+default and stop propagation so they do not toggle the enclosing section.
+`CardActionTarget` and `CardActionRenderer` are exported from the React entry
+point. Omitting the callback preserves the default card view.
 
 ### `McpToolkitViewer(options)`
 

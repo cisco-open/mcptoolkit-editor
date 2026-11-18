@@ -1,3 +1,5 @@
+import { sourcePathToLine } from './preview/navigation';
+
 function referenceAtColumn(line: string, column: number): string | null {
   const match = /["']?\$componentRef["']?\s*:\s*(["'])(#\/components\/[^"']+)\1/.exec(line)
     ?? /["']?\$componentRef["']?\s*:\s*(#\/components\/[^\s,}\]]+)/.exec(line);
@@ -9,11 +11,13 @@ function referenceAtColumn(line: string, column: number): string | null {
   return column >= valueStart && column <= valueEnd ? value : null;
 }
 
-/** Locate a JSON-pointer path in JSON or YAML source. */
+/**
+ * Text-based lookup of a JSON-pointer path, used only to follow `$componentRef`
+ * values while the source does not parse. Validation findings use the AST lookup.
+ */
 export function pathToLine(
   text: string,
   path: string,
-  params?: Record<string, unknown>,
   requireCompleteMatch = false,
 ): number {
   const segments = (path || '/').split('/').filter(Boolean)
@@ -69,18 +73,12 @@ export function pathToLine(
     }
   }
 
-  if (params?.additionalProperty) {
-    const property = String(params.additionalProperty).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const pattern = new RegExp(`["']?${property}["']?\\s*:`);
-    for (let index = lineIdx; index < lines.length; index++) {
-      if (pattern.test(lines[index])) return index + 1;
-    }
-  }
-
   return matched ? lineIdx + 1 : 0;
 }
 
 export function findComponentDefinitionLine(text: string, sourceLine: number, column: number): number {
   const reference = referenceAtColumn(text.split('\n')[sourceLine - 1] ?? '', column);
-  return reference ? pathToLine(text, reference.slice(1), undefined, true) : 0;
+  if (!reference) return 0;
+  const pointer = reference.slice(1);
+  return sourcePathToLine(text, pointer) || pathToLine(text, pointer, true);
 }

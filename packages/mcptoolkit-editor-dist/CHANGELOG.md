@@ -10,6 +10,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pa
 
 ## Unreleased
 
+## [3.0.0] — 2026-11-18
+
+### Changed
+
+- **Breaking:** ship the stable MCP Description 0.9.0-only editor and final
+  schema identity in the prebuilt bundle.
+- Ship patched production dependencies and updated release tooling.
+
+## [2.3.0] — 2026-09-10
+
+### Changed
+
+- Verify the prebuilt package with an artifact smoke test and npm package dry
+  run before release.
+
 ## [2.2.2] — 2026-09-09
 
 ### Added

@@ -3,19 +3,45 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { McpDescDocument } from '../../core/types';
-import { isNode, LineCounter, parseDocument } from 'yaml';
+import { isMap, isNode, isScalar, isSeq, LineCounter, parseDocument } from 'yaml';
 
-export function sourcePathToLine(text: string, path: string): number {
+export interface SourcePathOptions {
+  /** Resolve a path that is absent from the source to its closest existing ancestor. */
+  nearestAncestor?: boolean;
+}
+
+/**
+ * Locate a JSON pointer in parsed YAML or JSON source. Returns a 1-based line,
+ * or 0 when the source does not parse or the path is absent (unless
+ * `nearestAncestor` is set). Never matches text outside the path's own scope.
+ */
+export function sourcePathToLine(text: string, path: string, options: SourcePathOptions = {}): number {
   const lineCounter = new LineCounter();
   const document = parseDocument(text, { lineCounter });
   if (document.errors.length > 0) return 0;
 
-  const segments = path.split('/').filter(Boolean).map(segment => (
-    /^\d+$/.test(segment) ? Number(segment) : segment
-  ));
-  const node = document.getIn(segments, true);
-  if (!isNode(node) || !node.range) return 0;
-  return lineCounter.linePos(node.range[0]).line;
+  const lineOf = (node: unknown) => (isNode(node) && node.range ? lineCounter.linePos(node.range[0]).line : 0);
+  const segments = path.split('/').filter(Boolean)
+    .map(segment => segment.replace(/~1/g, '/').replace(/~0/g, '~'));
+  let node: unknown = document.contents;
+  // Property paths identify the authored key, not the start of its block value.
+  let anchor: unknown = node;
+  for (const segment of segments) {
+    let next: unknown;
+    let nextAnchor: unknown;
+    if (isMap(node)) {
+      const pair = node.items.find(item => isScalar(item.key) && String(item.key.value) === segment);
+      next = pair?.value;
+      nextAnchor = pair?.key;
+    } else if (isSeq(node) && /^\d+$/.test(segment)) {
+      next = node.get(Number(segment), true);
+      nextAnchor = next;
+    }
+    if (!isNode(nextAnchor)) return options.nearestAncestor ? lineOf(anchor) : 0;
+    node = next;
+    anchor = nextAnchor;
+  }
+  return lineOf(anchor);
 }
 
 export function sourceItemPath(

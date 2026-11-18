@@ -9,18 +9,19 @@ import Editor from './components/Editor';
 import PreviewPanel from './components/preview/PreviewPanel';
 import ValidationPanel from './components/ValidationPanel';
 import SplitPane from './components/SplitPane';
-import MigrationDialog from './components/MigrationDialog';
+import ConversionDialog from './components/ConversionDialog';
+import NativeExportDialog from './components/NativeExportDialog';
 import MigrationStatus from './components/MigrationStatus';
 import ImportDialog from './components/ImportDialog';
 import { getImportUrlFromSearch } from './importDocument';
 
 export class PreviewErrorBoundary extends Component<{
   children: ReactNode;
-  resetKey: string;
+  resetKey: unknown;
 }, { error: Error | null }> {
   state: { error: Error | null } = { error: null };
   static getDerivedStateFromError(error: Error) { return { error }; }
-  componentDidUpdate(prevProps: { children: ReactNode; resetKey: string }) {
+  componentDidUpdate(prevProps: { children: ReactNode; resetKey: unknown }) {
     if (prevProps.resetKey !== this.props.resetKey && this.state.error) {
       this.setState({ error: null });
     }
@@ -43,7 +44,7 @@ export class PreviewErrorBoundary extends Component<{
 function Preview() {
   const { state } = useDoc();
   return (
-    <PreviewErrorBoundary resetKey={state.text}>
+    <PreviewErrorBoundary resetKey={state.doc}>
       <PreviewPanel />
     </PreviewErrorBoundary>
   );
@@ -87,7 +88,8 @@ export default function App({ options = {} }: AppProps) {
           defaultSplit={50}
         />
         <ValidationPanel />
-        <MigrationDialog />
+        <ConversionDialog />
+        <NativeExportDialog />
         <ImportDialog
           open={importOpen}
           initialUrl={initialImportUrl}

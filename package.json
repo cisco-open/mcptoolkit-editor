@@ -1,7 +1,7 @@
 {
   "name": "mcptoolkit-editor",
   "private": true,
-  "version": "2.2.2",
+  "version": "3.0.0",
   "description": "A web-based editor for MCP Description documents — validate, visualize, and export.",
   "license": "Apache-2.0",
   "repository": {
@@ -16,6 +16,7 @@
   ],
   "scripts": {
     "dev": "vite",
+    "demo:editor": "vite --host 127.0.0.1 --open /demo/editor.html",
     "build": "tsc -b && vite build",
     "build:viewer": "npm run build --workspace=packages/mcptoolkit-viewer",
     "preview": "vite preview",
@@ -23,19 +24,23 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "sync:badge": "node scripts/sync-badge.mjs",
+    "sync:schema": "node scripts/sync-schema.mjs",
+    "sync:rule-titles": "node scripts/sync-rule-titles.mjs",
     "sync:version": "node scripts/align-editor-dist-version.mjs",
     "verify:versions": "node scripts/align-editor-dist-version.mjs --check",
-    "verify:lockfile": "npm ci --dry-run",
-    "prerelease": "npm run verify:versions && npm run sync:badge && npm run verify:lockfile && npm run lint && npm run test && npm run build && npm run build:viewer",
+    "release:prepare": "node scripts/prepare-release.mjs",
+    "release:check": "node scripts/check-release.mjs",
+    "prerelease": "npm run release:check",
     "viewer": "npm run build --workspace=packages/mcptoolkit-viewer && echo '\n🚀 MCP Toolkit Viewer available at:\n   http://localhost:8888/demo/viewer.html?style=light\n' && python3 -m http.server 8888 -b 127.0.0.1"
   },
   "dependencies": {
-    "@mcpdesc/core": "0.11.0",
-    "@mcpdesc/validator": "0.12.0",
+    "@mcpdesc/core": "0.13.0",
+    "@mcpdesc/validator": "0.14.0",
     "@monaco-editor/react": "^4.7.0",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "handlebars": "^4.7.8",
+    "lucide-react": "^1.69.0",
     "marked": "^17.0.4",
     "monaco-editor": "^0.52.2",
     "react": "^18.3.1",
@@ -45,6 +50,7 @@
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "@tailwindcss/vite": "^4.0.0",
+    "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
@@ -57,8 +63,8 @@
     "jsdom": "^30.0.1",
     "tailwindcss": "^4.0.0",
     "typescript": "~5.6.2",
-    "typescript-eslint": "^8.18.2",
-    "vite": "^6.0.5",
-    "vitest": "^4.1.11"
+    "typescript-eslint": "^8.73.0",
+    "vite": "^6.4.6",
+    "vitest": "^4.1.12"
   }
 }

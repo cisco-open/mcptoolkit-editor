@@ -7,6 +7,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[3.0.0] — 2026-11-18](#300--2026-11-18)
 - [[2.2.0] — 2026-09-09](#220--2026-09-09)
 - [[2.1.1] — 2026-09-08](#211--2026-09-08)
 - [[2.1.0] — 2026-09-08](#210--2026-09-08)
@@ -21,6 +22,41 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+### Fixed
+
+- Align the MCP version badge with its header label and hide per-tool version rows when one protocol version is selected.
+- Align transport text baselines, group transport details without dividers, and increase the capabilities text size for readability.
+- Hide the Security panel when no document-level schemes or requirements are defined.
+- Reduce the monospace stdio command size to better match HTTP transport URLs.
+
+## [3.0.0] — 2026-11-18
+
+### Added
+
+- Stable MCP Description 0.9.0 validation through the shared browser-safe
+  validator adapter, including rule identities, protocol-scoped diagnostics, and
+  plain-language messages built from structured diagnostic detail.
+- Optional `renderAction` callback for host-provided collection and declaration
+  actions in the React card view, with exported `CardActionTarget` and
+  `CardActionRenderer` types. No actions appear unless supplied by the host.
+
+### Changed
+
+- **Breaking:** render and validate only `mcpdesc: 0.9.0` documents, following
+  the validator's stable default selector. Other versions show an
+  unsupported-version message instead of cards. Use viewer 2.2.0 for 0.8.
+
+### Removed
+
+- **Breaking:** the bundled 0.8 schema and its internal loader.
+
+### Fixed
+
+- Wrap the Capabilities card to the available width, list only enabled
+  capability and client-requirement flags (`false` flags are no longer shown),
+  and show protocol version badges only when several capability entries are
+  displayed.
 
 ## [2.2.0] — 2026-09-09
 

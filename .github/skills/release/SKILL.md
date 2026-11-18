@@ -126,37 +126,31 @@ version and repeat the flow.
   oss-scaffold.
 -->
 
-This is a **monorepo** (npm workspaces). The published artifact is the
-`@cisco_open/mcptoolkit-viewer` workspace in [`packages/mcptoolkit-viewer/`](../../../packages/mcptoolkit-viewer/);
-the root `mcptoolkit-editor` package is `"private": true` and hosted as a static
-site, not published. Adjust the core procedure above as follows:
+This is a **monorepo** (npm workspaces). The primary published artifact is
+`@cisco_open/mcptoolkit-editor-dist`, which mirrors the private root editor app.
+The viewer is versioned and published independently. Adjust the core procedure
+above as follows:
 
-1. **Version source of truth is the viewer package.** Bump `version` in
-   [`packages/mcptoolkit-viewer/package.json`](../../../packages/mcptoolkit-viewer/package.json)
-   — `publish.yml` reads the tag against *this* file, not the root
-   `package.json`. Bump the root `package.json` to the same version for suite
-   alignment.
-2. Update the `version` constant in
-   [`packages/mcptoolkit-viewer/src/index.tsx`](../../../packages/mcptoolkit-viewer/src/index.tsx).
-3. Roll up **both** changelogs: [`CHANGELOG.md`](../../../CHANGELOG.md) (editor
-   app) and
-   [`packages/mcptoolkit-viewer/CHANGELOG.md`](../../../packages/mcptoolkit-viewer/CHANGELOG.md)
-   (viewer library). See [`AGENTS.md`](../../../AGENTS.md) for scope rules.
-4. Run `npm install` so [`package-lock.json`](../../../package-lock.json)
-   reflects the new versions, and **commit it** — `ci.yml` and `publish.yml` run
-   `npm ci`, which fails on a stale lockfile.
-5. `npm run prerelease` here runs `npm run sync:badge` (syncs the README status
-   badge to the new version), `npm ci --dry-run` (lockfile-sync check), lints,
-   then builds the editor and the viewer library. It does **not** run `npm test`
-   (no test framework configured).
-6. Release tags: the **primary editor-dist bundle uses the default bare `vX.Y.Z`**
+1. Create `release/X.Y.Z` and roll up the changelog(s) matching the affected
+   package scope. Editor changes update the root and editor-dist changelogs;
+   viewer changes update the viewer changelog.
+2. Run `npm run release:prepare -- X.Y.Z`. This requires the matching release
+   branch and changelog sections, aligns the root/editor-dist manifests and
+   lockfile, and syncs the README badge.
+3. Run `npm run release:check`. This non-mutating gate verifies metadata, runs
+   lint and all tests, builds/packages editor-dist, smoke-tests its generated
+   entry point, and builds the viewer only when viewer or shared-core files
+   changed. `npm run prerelease` is a compatibility alias.
+4. For a viewer release, separately update
+   [`packages/mcptoolkit-viewer/package.json`](../../../packages/mcptoolkit-viewer/package.json),
+   its `version` constant, and viewer changelog before preparation.
+5. Release tags: the **primary editor-dist bundle uses the default bare `vX.Y.Z`**
    tag (matched against `packages/mcptoolkit-editor-dist/package.json`); the
    viewer uses `viewer-vX.Y.Z` (matched against
    `packages/mcptoolkit-viewer/package.json`). The editor-dist trigger is globbed
    as `v[0-9]*` so a bare version tag never catches the viewer's `viewer-v*`
    tags. See
    [`docs/maintainers/distribution.md`](../../../docs/maintainers/distribution.md#tag--version-convention).
-7. **`@cisco_open/mcptoolkit-editor-dist` mirrors the root app version.** Bump the
-   **root** `package.json` and run `npm run sync:version` (or let `npm install`
-   + `npm run prerelease` catch it — `verify:versions` fails on drift) so the
-   editor-dist manifest matches. Do not bump the editor-dist version by hand.
+6. **`@cisco_open/mcptoolkit-editor-dist` mirrors the root app version.** The
+   root is the source of truth; let `release:prepare` update editor-dist rather
+   than editing its manifest by hand.

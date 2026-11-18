@@ -13,6 +13,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[3.0.0] — 2026-11-18](#300--2026-11-18)
+- [[2.3.0] — 2026-09-10](#230--2026-09-10)
 - [[2.2.2] — 2026-09-09](#222--2026-09-09)
 - [[2.2.1] — 2026-09-09](#221--2026-09-09)
 - [[2.2.0] — 2026-09-09](#220--2026-09-09)
@@ -32,6 +34,121 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+## [3.0.0] — 2026-11-18
+
+### Removed
+
+- **Breaking:** editing, validating, and rendering MCP Description 0.8 documents.
+  Use [editor v2.2.2](https://github.com/cisco-open/mcptoolkit-editor/releases/tag/v2.2.2)
+  for native 0.8 support.
+- **Breaking:** 0.7 to 0.8 migration and the committed 0.7 validator. Documents
+  declaring 0.7 or earlier point to editor v2.2.2.
+- The vendored 0.8 completion schema and the unused legacy validator generator.
+- Search and protocol filters from the validation panel; status filters and
+  sortable protocol information remain available.
+
+### Fixed
+
+- Add output schemas and successful tool-result examples to every feature
+  example tool that returns data.
+- Add the missing output schema for the stdio chess example's player-rating tool,
+  returning only the FIDE standard rating.
+- Show enabled validation filter labels and counts together in white, while
+  keeping filters with no results muted; remove the gap between each label and
+  its count (for example, `Passed(11)`).
+- Show equivalent native MCP export diagnostics only once when core repeats a
+  finding with and without the selected protocol revision.
+- Anchor validation markers and finding navigation to property keys instead of
+  the following block value in YAML and multiline JSON documents.
+- Report one focused finding for each schema-union mistake (for example a
+  misspelled transport field) instead of a finding per failed alternative.
+- Resolve diagnostic locations through the YAML/JSON syntax tree. A finding
+  about a missing member marks the nearest enclosing declaration instead of an
+  unrelated line found by text search.
+- Preserve original field ordering, including nested fields, when migrating
+  YAML or JSON documents instead of alphabetically sorting keys.
+- Recover the card preview after correcting an invalid document once debounced parsing finishes.
+- Wrap the Capabilities card to the preview width, list only enabled capability
+  flags (a `false` flag such as `subscribe: false` is no longer shown), and omit
+  the protocol version badge when a single capability entry is displayed.
+- Align the MCP version badge with its header label and hide per-tool version rows when one protocol version is selected.
+- Align transport text baselines, group transport details without dividers, and increase the capabilities text size for readability.
+- Hide the Security panel when no document-level schemes or requirements are defined.
+- Reduce the monospace stdio command size to better match HTTP transport URLs.
+
+### Added
+
+- An Output Schema example comparing the same FIDE-rating tool's object output
+  in MCP `2025-11-25` with direct integer output in MCP `2026-07-28`, including
+  sample tool results. The minimal (Basic) example also includes a sample rating.
+- Adopt stable MCP Description `0.9.0` using
+  `@mcpdesc/core@0.13.0` and `@mcpdesc/validator@0.14.0`.
+- Update production dependencies to patched releases and upgrade the build and
+  test tooling for compatible security fixes.
+- Migration review for 0.8 documents. Loading, pasting, or importing a 0.8
+  document opens a review listing 0.8 problems to fix first, blocker fixes the
+  author can select, a JSON Patch, and a downloadable report. Migrated documents
+  use `mcpdesc: 0.9.0` and always declare the final schema identity
+  `$schema: https://mcpdesc.org/schema/mcp-description/0.9.0.json`.
+- Plain-language validation messages built from the validator's structured
+  diagnostic detail, naming the selected union variant and allowed members or
+  values. Findings inside component references link to their definition, and
+  the panel expands the raw validator message and detail on request.
+- Native MCP preview and JSON export for tools, resources, resource templates,
+  and prompts, scoped to a selected protocol revision and declaration.
+- Rule identities, protocol context, and per-rule validation results in editor
+  diagnostics. Unevaluated and inapplicable rules retain their own statuses.
+- Add a standalone Multi-Version Result Type example comparing otherwise identical tool results across two MCP versions.
+
+### Changed
+
+- Use MCP `2026-07-28` and a direct integer FIDE-rating output in the minimal
+  (Basic) example.
+- Resolve document selectors from recognized `$schema` identities when the
+  snapshot is available, falling back to the configured selector otherwise.
+- Normalize migrated YAML with core's stable normalized presentation profile while
+  preserving authored property order. Core YAML parsing now uses JSON scalar
+  spellings with a string fallback; write `true`, `false`, and `null` for those
+  types, while unquoted `TRUE`, `~`, and non-JSON numeric forms remain strings.
+- Unify validation rules, errors, and warnings in one status-filtered, sortable
+  panel with expandable rule findings and standalone parsing diagnostics. Hide
+  delegated and operation-only checks while retaining genuinely unevaluated rules.
+- Migrate the bundled feature and Official Servers examples to stable 0.9.0.
+  A separate Migrations category retains 0.8 DevNet and Miro examples and a
+  0.7 stdio example for older-version guidance.
+- Order native MCP JSON using core's document-oriented presentation profile,
+  without reordering arrays, embedded schemas, or metadata.
+- Use the stable 0.9.0 schema for offline completion and the core validator as the
+  authority for document validation markers.
+- Consolidate document exports into one keyboard-accessible Export menu with a
+  Native MCP submenu. Replace the Cards/Native MCP preview tabs with a permanent
+  card preview and a protocol-aware native export dialog.
+- Add native export icons to collection headings and individual declarations,
+  using server-, kind-, entry-, and revision-specific filenames. Keep native
+  capabilities export disabled until core supports it.
+- Condense validation into a status-line disclosure with an explicit Selector
+  label. Add multi-select status filters (Passed only by default), sortable
+  rule/protocol/status columns, and versioned 0.9.0 rule documentation links.
+- Separate diagnostics from the rule table: show errors first and show warnings
+  only when no errors remain, with source navigation retained.
+- Show only one bottom-panel body at a time. Render diagnostics as sortable
+  tables and add authoritative short rule titles from the hash-verified 0.9.0
+  catalog to the rule table.
+- Reserve a five-row table viewport by default, with a draggable and keyboard-
+  accessible resize separator and bounded decrease/reset/increase text controls.
+- Make `get_position_evaluation` a single shared tool in the Multi-Version Tasks example.
+
+
+## [2.3.0] — 2026-09-10
+
+### Added
+
+- Add `npm run demo:editor` to launch the configured editor demo directly.
+- Add a two-phase release workflow: `release:prepare` performs version, lockfile,
+  badge, and changelog preparation; `release:check` runs non-mutating metadata
+  checks, lint, tests, editor-dist build/package smoke tests, and an affected-only
+  viewer build. Keep `prerelease` as a compatibility alias for `release:check`.
 
 ## [2.2.2] — 2026-09-09
 

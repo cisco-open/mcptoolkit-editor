@@ -30,15 +30,32 @@ describe('strict CSP', () => {
     try {
       const { parseMcpDescriptionSource } = await import('@mcpdesc/core/documents');
       const { resolveMcpDescriptionComponentReferences } = await import('@mcpdesc/core/components');
+      const { projectMcpNativeValue } = await import('@mcpdesc/core');
+      const { convertTo09 } = await import('./conversion');
+      const { McpDescValidator } = await import('./validator');
 
       const parsed = parseMcpDescriptionSource(fixture);
       expect(parsed.ok).toBe(true);
       if (!parsed.ok) return;
 
-      const result = resolveMcpDescriptionComponentReferences(parsed.value, {
-        specification: '0.8.0',
+      const converted = convertTo09({
+        ...(parsed.value as Record<string, unknown>), mcpdesc: '0.8.0', $schema: 'https://mcpdesc.org/schema/mcp-description/0.8.0.json',
       });
-      expect(result.ok).toBe(true);
+      expect(converted.ok).toBe(true);
+      if (!converted.ok) return;
+      expect(resolveMcpDescriptionComponentReferences(converted.value).ok).toBe(true);
+      expect(new McpDescValidator().validateDocument(converted.value).valid).toBe(true);
+      const invalid = new McpDescValidator().validateDocument({
+        ...converted.value, transports: [{ type: 'stdio', command: 'server', arg: ['serve'] }],
+      });
+      expect(invalid.errors).toHaveLength(1);
+      expect(invalid.errors[0].path).toBe('/transports/0/arg');
+      const native = projectMcpNativeValue(converted.value, {
+        protocolVersion: (converted.value.protocolVersions as ['2025-11-25'])[0],
+        kind: 'tool',
+        keyOrder: 'document',
+      });
+      expect(native.ok).toBe(true);
     } finally {
       globalThis.Function = realFunction;
       globalThis.eval = realEval;
