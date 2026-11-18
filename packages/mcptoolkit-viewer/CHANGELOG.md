@@ -7,6 +7,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[3.0.1] — 2026-11-18](#301--2026-11-18)
 - [[3.0.0] — 2026-11-18](#300--2026-11-18)
 - [[2.2.0] — 2026-09-09](#220--2026-09-09)
 - [[2.1.1] — 2026-09-08](#211--2026-09-08)
@@ -23,8 +24,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
+## [3.0.1] — 2026-11-18
+
 ### Fixed
 
+- Publish the viewer with npm OIDC trusted publishing on Node.js 24.
 - Align the MCP version badge with its header label and hide per-tool version rows when one protocol version is selected.
 - Align transport text baselines, group transport details without dividers, and increase the capabilities text size for readability.
 - Hide the Security panel when no document-level schemes or requirements are defined.

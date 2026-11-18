@@ -13,6 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[3.0.1] — 2026-11-18](#301--2026-11-18)
 - [[3.0.0] — 2026-11-18](#300--2026-11-18)
 - [[2.3.0] — 2026-09-10](#230--2026-09-10)
 - [[2.2.2] — 2026-09-09](#222--2026-09-09)
@@ -34,6 +35,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+## [3.0.1] — 2026-11-18
+
+### Fixed
+
+- Publish editor-dist to npm with OIDC trusted publishing instead of a stored token.
+
+### Changed
+
+- Build and test on Node.js 22 and 24, and use Node.js 24 in both publishing workflows.
 
 ## [3.0.0] — 2026-11-18
 

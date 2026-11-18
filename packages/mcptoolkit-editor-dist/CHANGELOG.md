@@ -10,6 +10,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pa
 
 ## Unreleased
 
+## [3.0.1] — 2026-11-18
+
+### Fixed
+
+- Publish the editor bundle with npm OIDC trusted publishing on Node.js 24.
+
 ## [3.0.0] — 2026-11-18
 
 ### Changed

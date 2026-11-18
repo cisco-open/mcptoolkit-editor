@@ -1,7 +1,7 @@
 {
   "name": "mcptoolkit-editor",
   "private": true,
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "A web-based editor for MCP Description documents — validate, visualize, and export.",
   "license": "Apache-2.0",
   "repository": {
@@ -11,6 +11,9 @@
   "homepage": "https://github.com/cisco-open/mcptoolkit-editor#readme",
   "bugs": "https://github.com/cisco-open/mcptoolkit-editor/issues",
   "type": "module",
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0"
+  },
   "workspaces": [
     "packages/*"
   ],
