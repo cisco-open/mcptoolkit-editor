@@ -10,7 +10,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pa
 
 ## Unreleased
 
-## [3.0.0] — 2026-11-17
+## [3.0.0] — 2026-11-18
 
 ### Changed
 

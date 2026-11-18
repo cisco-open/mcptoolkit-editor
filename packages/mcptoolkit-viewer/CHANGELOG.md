@@ -7,7 +7,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
-- [[3.0.0] — 2026-11-17](#300--2026-11-17)
+- [[3.0.0] — 2026-11-18](#300--2026-11-18)
 - [[2.2.0] — 2026-09-09](#220--2026-09-09)
 - [[2.1.1] — 2026-09-08](#211--2026-09-08)
 - [[2.1.0] — 2026-09-08](#210--2026-09-08)
@@ -23,7 +23,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 ## Unreleased
 
-## [3.0.0] — 2026-11-17
+## [3.0.0] — 2026-11-18
 
 ### Added
 
