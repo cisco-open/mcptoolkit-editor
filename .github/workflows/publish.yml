@@ -2,7 +2,7 @@
 # under "overrides" so local edits do not fail the drift-check job. It is
 # intentionally retargeted from the scaffold default `v*` to the `viewer-v*` tag
 # prefix so the viewer versions independently of the other workspace packages.
-# Profile: node-npm-lib, npmAuth: token.
+# This override uses npm trusted publishing.
 name: Publish to npm
 
 on:
@@ -12,7 +12,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write   # required for npm provenance attestation
+  id-token: write
 
 jobs:
   publish:
@@ -26,9 +26,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20.x'
+          node-version: '24.x'
           registry-url: 'https://registry.npmjs.org'
-          cache: 'npm'
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm ci
@@ -56,6 +56,4 @@ jobs:
           echo "Publishing ${PKG_VERSION} under dist-tag '${DIST_TAG}'"
 
       - name: Publish
-        run: npm publish --workspace=packages/mcptoolkit-viewer --provenance --access public --tag "${{ steps.release.outputs.dist_tag }}"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --workspace=packages/mcptoolkit-viewer --access public --tag "${{ steps.release.outputs.dist_tag }}"

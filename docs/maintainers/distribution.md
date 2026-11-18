@@ -84,7 +84,11 @@ Publishing is tag-driven via [`../../.github/workflows/publish.yml`](../../.gith
    - Pre-release versions (contain `-`, e.g. `1.0.0-rc.2`) → `next`
    - Stable versions → `latest`
 
-The `NPM_TOKEN` repository secret authorizes the publish.
+In the npm settings for `@cisco_open/mcptoolkit-viewer`, configure a GitHub
+Actions [trusted publisher](https://docs.npmjs.com/trusted-publishers/) for
+organization `cisco-open`, repository `mcptoolkit-editor`, and workflow filename
+`publish.yml`. Leave the environment blank and allow direct `npm publish`.
+npm generates provenance automatically; no `NPM_TOKEN` is required.
 
 ## Tag & version convention
 
@@ -170,9 +174,16 @@ primary artifact; see [Tag & version convention](#tag--version-convention)).
    package's `CHANGELOG.md`.
 2. Merge to `main`, then push a `v<version>` tag.
 3. The workflow verifies the tag matches the package version, builds the bundle,
-   and runs `npm publish --workspace=packages/mcptoolkit-editor-dist` with
-   provenance. Dist-tag selection matches the viewer: pre-release (`-rc.N`) →
-   `next`, stable → `latest`. The `NPM_TOKEN` secret authorizes the publish.
+  and runs `npm publish --workspace=packages/mcptoolkit-editor-dist` using
+  npm [trusted publishing](https://docs.npmjs.com/trusted-publishers/). GitHub
+  Actions supplies the OIDC identity, and npm generates provenance automatically.
+  Pre-releases (`-rc.N`) use `next`; stable releases use `latest`.
+
+In the npm settings for `@cisco_open/mcptoolkit-editor-dist`, configure a GitHub
+Actions trusted publisher for organization `cisco-open`, repository
+`mcptoolkit-editor`, and workflow filename `publish-editor-dist.yml`. Leave the
+environment blank and allow direct `npm publish`. This workflow does not use
+`NPM_TOKEN`. The viewer requires its own trusted publisher configuration.
 
 ## Related design notes
 

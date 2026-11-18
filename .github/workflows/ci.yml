@@ -13,12 +13,11 @@ permissions:
 
 jobs:
   build-lint:
-    # This repo produces browser bundles (editor + mcptoolkit-viewer). The
-    # Node.js version only affects the build toolchain (Vite, tsc, npm) — no
-    # Node.js runtime API surface is exercised — so a single LTS version is
-    # sufficient.
-    name: Build & Lint
+    name: Build, Test & Lint (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ['22.x', '24.x']
 
     steps:
       - name: Checkout
@@ -27,7 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22.x'
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
       - name: Install dependencies
@@ -41,6 +40,9 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Test
+        run: npm test
 
   scaffold-drift:
     name: Scaffold Drift Check
