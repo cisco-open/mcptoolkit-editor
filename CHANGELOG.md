@@ -69,6 +69,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 - Preserve original field ordering, including nested fields, when migrating
   YAML or JSON documents instead of alphabetically sorting keys.
 - Recover the card preview after correcting an invalid document once debounced parsing finishes.
+- Wrap the Capabilities card to the preview width, list only enabled capability
+  flags (a `false` flag such as `subscribe: false` is no longer shown), and omit
+  the protocol version badge when a single capability entry is displayed.
 
 ### Added
 

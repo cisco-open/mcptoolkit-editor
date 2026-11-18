@@ -133,9 +133,51 @@ describe('McpDescCardView protocol projections', () => {
     expect(markup).toContain('form');
     expect(markup).toContain('url');
     expect(markup).toContain('MCP Version');
-    expect(markup.match(/border border-gray-300 bg-gray-50 text-\[11px\] font-medium text-gray-900/g)).toHaveLength(4);
+    expect(markup.match(/border border-gray-300 bg-gray-50 text-\[11px\] font-medium text-gray-900/g)).toHaveLength(3);
     expect(markup).not.toContain('border border-black bg-white text-black');
     expect(markup).toContain('Execution');
     expect(markup).toContain('task support: required');
+  });
+
+  it('lists only enabled capability flags in a wrapping row', () => {
+    const doc = {
+      mcpdesc: '0.9.0',
+      info: baseDoc.info,
+      protocolVersions: ['2025-11-25'],
+      capabilities: [{
+        logging: {},
+        resources: { subscribe: false, listChanged: true },
+        prompts: { listChanged: false },
+        extensions: { 'io.modelcontextprotocol/ui': {} },
+      }],
+    } satisfies McpDescDocument;
+    const { getByText } = render(<McpDescCardView doc={doc} />);
+    const row = getByText('Resources').closest('div');
+
+    expect(row?.className).toContain('flex-wrap');
+    expect(row?.textContent).toContain('Logging');
+    expect(row?.textContent).toContain('Resources (listChanged)');
+    expect(row?.textContent).not.toContain('subscribe');
+    expect(row?.textContent).toContain('Prompts');
+    expect(row?.textContent).not.toContain('Prompts (');
+    expect(row?.textContent).not.toContain('2025-11-25');
+    expect(getByText('io.modelcontextprotocol/ui').className).toContain('bg-amber-100');
+  });
+
+  it('labels capability entries with their protocol versions when several are shown', () => {
+    const doc = {
+      mcpdesc: '0.9.0',
+      info: baseDoc.info,
+      protocolVersions: ['2025-11-25', '2026-07-28'],
+      capabilities: [
+        { protocolVersions: ['2025-11-25'], tools: { listChanged: true } },
+        { protocolVersions: ['2026-07-28'], tools: { listChanged: true } },
+      ],
+    } satisfies McpDescDocument;
+    const { getAllByText } = render(<McpDescCardView doc={doc} />);
+    const rows = getAllByText('Tools').map(label => label.closest('div'));
+
+    expect(rows[0]?.textContent).toContain('2025-11-25');
+    expect(rows[1]?.textContent).toContain('2026-07-28');
   });
 });

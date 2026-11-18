@@ -604,14 +604,14 @@ function SecurityCard({ doc, defaultOpen, badge }: { doc: McpDescDocument; defau
 }
 
 function capabilityPaths(value: unknown, prefix = ''): string[] {
+  if (value === false) return [];
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return prefix ? [prefix] : [];
   }
-  const entries = Object.entries(value);
-  if (entries.length === 0) return prefix ? [prefix] : [];
-  return entries.flatMap(([name, nestedValue]) => (
+  const paths = Object.entries(value).flatMap(([name, nestedValue]) => (
     capabilityPaths(nestedValue, prefix ? `${prefix}/${name}` : name)
   ));
+  return paths.length === 0 && prefix ? [prefix] : paths;
 }
 
 function capabilityLabel(name: string): string {
@@ -625,6 +625,8 @@ function CapabilitiesCard({ doc, defaultOpen, selectedProtocolVersion }: {
 }) {
   if (!doc.capabilities?.length) return null;
   const omittedKeys = new Set(['protocolVersions', 'security', 'clientRequirements', '_meta']);
+  // A single entry is the whole effective view, so its version repeats the document header.
+  const showProtocolVersions = doc.capabilities.length > 1;
 
   return (
     <Section title="Capabilities" defaultOpen={defaultOpen}>
@@ -633,8 +635,8 @@ function CapabilitiesCard({ doc, defaultOpen, selectedProtocolVersion }: {
           const protocolVersions = capabilities.protocolVersions
             ?? (selectedProtocolVersion ? [selectedProtocolVersion] : doc.protocolVersions);
           return (
-            <div key={capabilityIndex} className="p-1.5 rounded bg-gray-50 border border-gray-200 text-[11px] flex items-center gap-1.5 whitespace-nowrap">
-              <ProtocolVersionBadge>{protocolVersions.join(', ')}</ProtocolVersionBadge>
+            <div key={capabilityIndex} className="p-1.5 rounded bg-gray-50 border border-gray-200 text-[11px] flex flex-wrap items-center gap-x-2 gap-y-1">
+              {showProtocolVersions && <ProtocolVersionBadge>{protocolVersions.join(', ')}</ProtocolVersionBadge>}
               {Object.entries(capabilities)
                 .filter(([name]) => !omittedKeys.has(name) && name !== 'extensions')
                 .map(([name, value]) => {
@@ -647,14 +649,14 @@ function CapabilitiesCard({ doc, defaultOpen, selectedProtocolVersion }: {
                   );
                 })}
               {capabilities.extensions && (
-                <>
+                <span className="inline-flex flex-wrap items-center gap-1.5 min-w-0">
                   <span className="inline-flex items-center leading-4 font-semibold text-gray-700">Extensions</span>
                   {Object.keys(capabilities.extensions).map(extension => (
-                    <span key={extension} className="inline-flex items-center leading-4 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 shrink-0">
+                    <span key={extension} className="inline-flex items-center leading-4 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 min-w-0 break-all">
                       {extension}
                     </span>
                   ))}
-                </>
+                </span>
               )}
             </div>
           );

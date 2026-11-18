@@ -44,6 +44,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 
 - **Breaking:** the bundled 0.8 schema and its internal loader.
 
+### Fixed
+
+- Wrap the Capabilities card to the available width, list only enabled
+  capability and client-requirement flags (`false` flags are no longer shown),
+  and show protocol version badges only when several capability entries are
+  displayed.
+
 ## [2.2.0] — 2026-09-09
 
 ### Changed
