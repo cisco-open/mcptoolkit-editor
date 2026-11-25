@@ -35,6 +35,9 @@ export interface McpToolkitViewerOptions {
   /** URL to fetch a YAML or JSON mcpdesc file from */
   url?: string;
 
+  /** Public HTTPS source URL; enables Download and Edit actions. Must allow browser CORS requests. */
+  publicUrl?: string;
+
   /** Color theme (default: 'light') */
   theme?: 'light' | 'dark';
 

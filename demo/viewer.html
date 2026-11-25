@@ -112,6 +112,7 @@
       instance = McpToolkitViewer.McpToolkitViewer({
         dom_id: '#mcpdesc',
         url: url,
+        publicUrl: /^https:\/\//i.test(url) ? url : undefined,
         theme: theme || currentTheme(),
         defaultOpen: true,
         showValidation: true,

@@ -10,6 +10,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pa
 
 ## Unreleased
 
+## [3.0.2] — 2026-11-25
+
+### Changed
+
+- Ship the editor with clearer “Protocol Versions” labels in the preview.
+
 ## [3.0.1] — 2026-11-18
 
 ### Fixed

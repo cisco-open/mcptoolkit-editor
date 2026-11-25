@@ -449,8 +449,9 @@ function SchemaView({ schema, level = 0 }: { schema: Record<string, unknown>; le
 // Section cards
 // ============================================================================
 
-function InfoCard({ doc, protocolVersionProjectionMode, protocolVersionOptions, selectedProtocolVersion, onProtocolVersionSelect, protocolVersionGroupName }: {
+function InfoCard({ doc, headerActions, protocolVersionProjectionMode, protocolVersionOptions, selectedProtocolVersion, onProtocolVersionSelect, protocolVersionGroupName }: {
   doc: McpDescDocument;
+  headerActions?: React.ReactNode;
   protocolVersionProjectionMode: ProtocolVersionProjectionMode;
   protocolVersionOptions?: McpDescDocument['protocolVersions'];
   selectedProtocolVersion?: McpDescDocument['protocolVersions'][number] | null;
@@ -464,16 +465,19 @@ function InfoCard({ doc, protocolVersionProjectionMode, protocolVersionOptions, 
     && onProtocolVersionSelect;
   return (
     <div className="mb-6">
-      <div className="flex items-center gap-3 mb-2">
-        <h1 className="text-2xl font-bold text-gray-900">{info.title ?? info.name}</h1>
-        <span className="inline-block text-xs font-medium px-2.5 py-1 rounded-full bg-green-100 text-green-700">
-          {info.version}
-        </span>
+      <div className="flex flex-wrap items-center gap-3 mb-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <h1 className="text-2xl font-bold text-gray-900">{info.title ?? info.name}</h1>
+          <span className="inline-block text-xs font-medium px-2.5 py-1 rounded-full bg-green-100 text-green-700">
+            {info.version}
+          </span>
+        </div>
+        {headerActions && <div className="ml-auto flex shrink-0 items-center gap-2">{headerActions}</div>}
       </div>
 
       {info.description && <div className="mb-3"><Desc text={info.description} /></div>}
       <div className="space-y-0.5">
-        <InfoRow responsiveWrap alignCenter label="MCP Versions" value={showProtocolVersionSelector ? (
+        <InfoRow responsiveWrap alignCenter label="Protocol Versions" value={showProtocolVersionSelector ? (
           <fieldset className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <legend className="sr-only">Effective protocol version</legend>
             {protocolVersionOptions.map((version) => (
@@ -712,7 +716,7 @@ function ToolsCard({ doc, selectedProtocolVersion, errorPaths, defaultOpen, badg
                 {tool.description && <Desc text={tool.description} />}
                 {toolProtocolVersions?.length && (
                   <div className="flex flex-wrap items-center gap-2 text-gray-500">
-                    <span className="font-medium">MCP Version</span>
+                    <span className="font-medium">Protocol Version</span>
                     <ProtocolVersionBadge>{toolProtocolVersions.join(', ')}</ProtocolVersionBadge>
                   </div>
                 )}
@@ -992,6 +996,8 @@ function TagFilterBar({ tags, disabledTags, onToggle }: {
 
 export interface McpDescCardViewProps {
   doc: McpDescDocument;
+  /** Optional host-provided actions displayed beside the document title. */
+  headerActions?: React.ReactNode;
   /** @deprecated No longer needed for rendering tool version scopes. */
   sourceDoc?: McpDescDocument;
   validation?: ValidationResult;
@@ -1014,7 +1020,7 @@ export interface McpDescCardViewProps {
   onProtocolVersionSelect?: (protocolVersion: McpDescDocument['protocolVersions'][number] | null) => void;
 }
 
-export function McpDescCardView({ doc, validation, defaultOpen = true, renderBadge, renderAction, exampleDisplay = 'hidden', onExampleSelect, protocolVersionProjectionMode = 'disabled', protocolVersionOptions, selectedProtocolVersion, onProtocolVersionSelect }: McpDescCardViewProps) {
+export function McpDescCardView({ doc, validation, headerActions, defaultOpen = true, renderBadge, renderAction, exampleDisplay = 'hidden', onExampleSelect, protocolVersionProjectionMode = 'disabled', protocolVersionOptions, selectedProtocolVersion, onProtocolVersionSelect }: McpDescCardViewProps) {
   const [disabledTags, setDisabledTags] = useState<Set<string>>(new Set());
   const protocolVersionGroupName = useId();
 
@@ -1047,6 +1053,7 @@ export function McpDescCardView({ doc, validation, defaultOpen = true, renderBad
     <div className="space-y-1">
       <InfoCard
         doc={doc}
+        headerActions={headerActions}
         protocolVersionProjectionMode={protocolVersionProjectionMode}
         protocolVersionOptions={protocolVersionOptions}
         selectedProtocolVersion={selectedProtocolVersion}
