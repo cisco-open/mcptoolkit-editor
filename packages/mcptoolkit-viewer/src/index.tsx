@@ -40,6 +40,37 @@ async function fetchSpec(url: string): Promise<McpDescDocument> {
   return parseSpec(text);
 }
 
+function getPublicDocumentUrl(value?: string): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+async function downloadPublicDocument(url: string): Promise<void> {
+  const response = await fetch(url, { credentials: 'omit', referrerPolicy: 'no-referrer' });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+  const objectUrl = URL.createObjectURL(await response.blob());
+  const link = document.createElement('a');
+  link.href = objectUrl;
+  const filename = new URL(url).pathname.split('/').filter(Boolean).pop();
+  link.download = filename ? decodeURIComponent(filename) : 'mcpdesc.yaml';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+}
+
+function getEditorUrl(publicUrl: string): string {
+  const url = new URL('https://editor.mcpdesc.org/');
+  url.searchParams.set('url', publicUrl);
+  return url.href;
+}
+
 // ============================================================================
 // Internal React app
 // ============================================================================
@@ -62,6 +93,7 @@ function App({ initialDoc, initialError, options, controlRef }: AppProps) {
   const theme = options.theme ?? 'light';
   const defaultOpen = options.defaultOpen ?? true;
   const showValidation = options.showValidation ?? true;
+  const publicUrl = getPublicDocumentUrl(options.publicUrl);
 
   // Sync props when parent re-renders with new initialDoc/initialError
   useEffect(() => {
@@ -76,6 +108,12 @@ function App({ initialDoc, initialError, options, controlRef }: AppProps) {
       return;
     }
     const result = validator.validateDocument(doc);
+    if (result.errors.length > 0 || result.warnings.length > 0) {
+      console.warn(
+        `mcptoolkit-viewer: MCP Description ${doc.mcpdesc} has validation issues; rendering continues.`,
+        result,
+      );
+    }
     setValidation(result);
   }, [doc]);
 
@@ -111,12 +149,37 @@ function App({ initialDoc, initialError, options, controlRef }: AppProps) {
     );
   }
 
+  const headerActions = publicUrl ? (
+    <>
+      <button
+        type="button"
+        className="inline-flex min-h-9 items-center rounded border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        onClick={() => {
+          void downloadPublicDocument(publicUrl).catch((downloadError: unknown) => {
+            console.error('mcptoolkit-viewer: unable to download the public document.', downloadError);
+          });
+        }}
+      >
+        Download
+      </button>
+      <a
+        className="inline-flex min-h-9 items-center rounded border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        href={getEditorUrl(publicUrl)}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Edit
+      </a>
+    </>
+  ) : undefined;
+
   return (
     <div className={`flex flex-col h-full ${bgClass}`}>
       <div className="flex-1 overflow-y-auto p-4">
         <McpDescCardView
           doc={doc}
           validation={validation ?? undefined}
+          headerActions={headerActions}
           defaultOpen={defaultOpen}
           exampleDisplay={options.exampleDisplay}
           onExampleSelect={options.onExampleSelect}
@@ -137,6 +200,10 @@ function App({ initialDoc, initialError, options, controlRef }: AppProps) {
 // ============================================================================
 
 export function McpToolkitViewer(options: McpToolkitViewerOptions): McpToolkitViewerInstance {
+  if (options.publicUrl && !getPublicDocumentUrl(options.publicUrl)) {
+    console.warn('mcptoolkit-viewer: publicUrl must be an absolute HTTPS URL; Download and Edit actions are disabled.');
+  }
+
   const container = document.querySelector(options.dom_id);
   if (!container) {
     throw new Error(`mcptoolkit-viewer: element not found: ${options.dom_id}`);
@@ -211,7 +278,7 @@ export function McpToolkitViewer(options: McpToolkitViewerOptions): McpToolkitVi
 }
 
 // Package version
-export const version = '3.0.1';
+export const version = '3.1.0';
 
 // Re-export for consumers
 export { McpDescCardView } from './McpDescCardView';

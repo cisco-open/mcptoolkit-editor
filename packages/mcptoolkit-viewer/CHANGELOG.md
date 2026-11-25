@@ -7,6 +7,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[3.1.0] — 2026-11-25](#310--2026-11-25)
 - [[3.0.1] — 2026-11-18](#301--2026-11-18)
 - [[3.0.0] — 2026-11-18](#300--2026-11-18)
 - [[2.2.0] — 2026-09-09](#220--2026-09-09)
@@ -23,6 +24,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+## [3.1.0] — 2026-11-25
+
+### Added
+
+- Optional `publicUrl` actions to download the original remote document and open it in the editor.
+- Log validation issues to the browser console while continuing to render the document.
+
+### Changed
+
+- Rename “MCP Versions” labels to “Protocol Versions” for clarity.
 
 ## [3.0.1] — 2026-11-18
 

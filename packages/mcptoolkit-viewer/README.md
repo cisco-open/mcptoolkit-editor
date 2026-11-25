@@ -72,11 +72,18 @@ point. Omitting the callback preserves the default card view.
 | `dom_id` | `string` | — | **Required.** CSS selector for the container element. |
 | `spec` | `McpDescDocument` | — | Pre-parsed MCP Description document object. |
 | `url` | `string` | — | URL to fetch a YAML or JSON mcpdesc file from. |
+| `publicUrl` | `string` | — | Public HTTPS URL for the source document; enables Download and Edit actions beside the title. Must allow browser CORS requests. |
 | `theme` | `'light' \| 'dark'` | `'light'` | Color theme. |
 | `defaultOpen` | `boolean` | `true` | Whether `<details>` sections start expanded. |
 | `showValidation` | `boolean` | `true` | Show validation panel at the bottom. |
 | `exampleDisplay` | `'hidden' \| 'names' \| 'details'` | `'hidden'` | Hide examples, show their names, or show expandable JSON details. |
 | `onExampleSelect` | `(selection) => void` | — | Called with an example's name, kind, and exact JSON pointer when selected in `names` mode. |
+
+Set `publicUrl` to the same source document URL to show Download and Edit
+actions. The viewer fetches the source directly for download without changing
+its contents; Edit opens `https://editor.mcpdesc.org/?url=...`. The source must
+be publicly accessible over HTTPS and allow browser CORS requests. The viewer
+does not host or proxy the document.
 
 Returns a `McpToolkitViewerInstance` with:
 - `updateSpec(spec)` — Update the displayed document

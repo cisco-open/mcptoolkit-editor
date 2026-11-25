@@ -13,6 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- toc -->
 
 - [Unreleased](#unreleased)
+- [[3.0.2] — 2026-11-25](#302--2026-11-25)
 - [[3.0.1] — 2026-11-18](#301--2026-11-18)
 - [[3.0.0] — 2026-11-18](#300--2026-11-18)
 - [[2.3.0] — 2026-09-10](#230--2026-09-10)
@@ -35,6 +36,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This pr
 <!-- tocstop -->
 
 ## Unreleased
+
+## [3.0.2] — 2026-11-25
+
+### Changed
+
+- Clarify version labels in the editor preview as “Protocol Versions”.
 
 ## [3.0.1] — 2026-11-18
 

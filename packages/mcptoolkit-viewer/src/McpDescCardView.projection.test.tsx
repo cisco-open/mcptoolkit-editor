@@ -132,7 +132,7 @@ describe('McpDescCardView protocol projections', () => {
     expect(markup).toContain('confirm_access');
     expect(markup).toContain('form');
     expect(markup).toContain('url');
-    expect(markup).not.toContain('>MCP Version<');
+    expect(markup).not.toContain('>Protocol Version<');
     expect(markup.match(/border border-gray-300 bg-gray-50 text-\[11px\] font-medium text-gray-900/g)).toHaveLength(2);
     expect(markup).not.toContain('border border-black bg-white text-black');
     expect(markup).toContain('Execution');
@@ -143,11 +143,11 @@ describe('McpDescCardView protocol projections', () => {
     const doc = { ...sourceDoc, protocolVersions: ['2025-11-25', '2026-07-28'] } satisfies McpDescDocument;
     const { getByText, queryByText, rerender } = render(<McpDescCardView doc={doc} />);
 
-    expect(getByText('MCP Version', { exact: true }).parentElement?.textContent).toContain('2026-07-28');
+    expect(getByText('Protocol Version', { exact: true }).parentElement?.textContent).toContain('2026-07-28');
 
     rerender(<McpDescCardView doc={doc} selectedProtocolVersion="2026-07-28" />);
 
-    expect(queryByText('MCP Version', { exact: true })).toBeNull();
+    expect(queryByText('Protocol Version', { exact: true })).toBeNull();
   });
 
   it('hides empty document security but still reports missing transports', () => {

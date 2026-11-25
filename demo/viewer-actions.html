@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mcptoolkit-viewer Actions Demo</title>
+  <link rel="stylesheet" href="../packages/mcptoolkit-viewer/dist/mcptoolkit-viewer.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; transition: background 0.2s, color 0.2s; }
+    body.light { background: #f5f5f5; color: #333; }
+    body.dark  { background: #18181b; color: #e4e4e7; }
+
+    .toolbar {
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 16px; backdrop-filter: blur(8px);
+    }
+    body.light .toolbar { background: rgba(255,255,255,0.9); border-bottom: 1px solid #ddd; }
+    body.dark  .toolbar { background: rgba(24,24,27,0.9); border-bottom: 1px solid #3f3f46; }
+
+    .toolbar h1 { font-size: 16px; font-weight: 600; margin: 0; white-space: nowrap; }
+
+    .toolbar select, .toolbar input, .toolbar button {
+      font-size: 13px; border-radius: 6px; padding: 6px 10px; border: 1px solid; outline: none;
+    }
+    body.light .toolbar select, body.light .toolbar input { background: #fff; border-color: #d4d4d8; color: #333; }
+    body.dark  .toolbar select, body.dark  .toolbar input { background: #27272a; border-color: #3f3f46; color: #e4e4e7; }
+
+    .toolbar input[type="text"] { flex: 1; min-width: 200px; }
+
+    .toolbar button {
+      cursor: pointer; font-weight: 500; white-space: nowrap;
+    }
+    .load-btn { background: #2563eb; color: white; border-color: #2563eb; }
+    .load-btn:hover { background: #1d4ed8; }
+    .theme-btn { background: transparent; }
+    body.light .theme-btn { border-color: #d4d4d8; color: #333; }
+    body.dark  .theme-btn { border-color: #3f3f46; color: #e4e4e7; }
+
+    .separator { width: 1px; height: 24px; flex-shrink: 0; }
+    body.light .separator { background: #d4d4d8; }
+    body.dark  .separator { background: #3f3f46; }
+
+    #mcpdesc { min-height: calc(100vh - 60px); }
+    body.light #mcpdesc { background: white; }
+    body.dark  #mcpdesc { background: #18181b; }
+
+    .status { font-size: 12px; color: #a1a1aa; padding: 8px 16px; }
+  </style>
+</head>
+<body class="light">
+  <div class="toolbar">
+    <h1>mcptoolkit-viewer actions <span id="ui-version" style="font-weight:400;"></span></h1>
+    <div class="separator"></div>
+    <select id="examples">
+      <option value="">— Examples —</option>
+    </select>
+    <div class="separator"></div>
+    <input type="text" id="url-input" placeholder="Enter URL to an mcpdesc YAML/JSON file…">
+    <button class="load-btn" id="load-btn">Load</button>
+    <div class="separator"></div>
+    <button class="theme-btn" id="theme-btn" title="Toggle light/dark theme">☀️ Light</button>
+  </div>
+
+  <div id="mcpdesc"></div>
+  <div class="status" id="status"></div>
+
+  <script src="../packages/mcptoolkit-viewer/dist/mcptoolkit-viewer.js"></script>
+  <script>
+    let instance = null;
+    const params = new URLSearchParams(window.location.search);
+    const defaultPublicUrl = 'https://raw.githubusercontent.com/cisco-open/mcptoolkit-editor/main/examples/features/minimal.yaml';
+
+    function setTheme(theme) {
+      document.body.className = theme;
+      document.getElementById('theme-btn').textContent = theme === 'dark' ? '🌙 Dark' : '☀️ Light';
+      if (instance && instance._lastUrl) loadUrl(instance._lastUrl, theme);
+      else if (instance && instance._lastSpec) loadSpec(instance._lastSpec, theme);
+    }
+
+    function currentTheme() {
+      return document.body.className;
+    }
+
+    function status(message) {
+      document.getElementById('status').textContent = message;
+    }
+
+    function loadSpec(spec, theme) {
+      if (instance) instance.destroy();
+      status('');
+      instance = McpToolkitViewer.McpToolkitViewer({
+        dom_id: '#mcpdesc',
+        spec: spec,
+        theme: theme || currentTheme(),
+        defaultOpen: true,
+        showValidation: true,
+      });
+      instance._lastSpec = spec;
+    }
+
+    function loadUrl(url, theme) {
+      if (instance) instance.destroy();
+      status('Loading ' + url + '…');
+      instance = McpToolkitViewer.McpToolkitViewer({
+        dom_id: '#mcpdesc',
+        url: url,
+        publicUrl: /^https:\/\//i.test(url) ? url : undefined,
+        theme: theme || currentTheme(),
+        defaultOpen: true,
+        showValidation: true,
+      });
+      instance._lastUrl = url;
+      setTimeout(function() { status(''); }, 2000);
+    }
+
+    async function loadExampleMenu() {
+      var response = await fetch('../examples/config.yaml');
+      if (!response.ok) {
+        throw new Error('Failed to load examples/config.yaml: ' + response.status + ' ' + response.statusText);
+      }
+
+      var config = McpToolkitViewer.parseYaml(await response.text());
+      var select = document.getElementById('examples');
+      var defaultUrl = null;
+
+      config.sections.forEach(function(section) {
+        if (!section.entries || section.entries.length === 0) return;
+        var group = document.createElement('optgroup');
+        group.label = section.label;
+
+        section.entries.forEach(function(entry) {
+          var option = document.createElement('option');
+          option.value = '../examples/' + entry.file;
+          option.textContent = entry.label;
+          group.appendChild(option);
+          if (entry.id === config.default) defaultUrl = option.value;
+        });
+
+        select.appendChild(group);
+      });
+
+      if (!defaultUrl) {
+        throw new Error('Default example "' + config.default + '" was not found in examples/config.yaml');
+      }
+      return defaultUrl;
+    }
+
+    document.getElementById('load-btn').addEventListener('click', function() {
+      var url = document.getElementById('url-input').value.trim();
+      if (!url) return;
+      var query = new URLSearchParams(window.location.search);
+      query.set('url', url);
+      query.set('style', currentTheme());
+      history.replaceState(null, '', '?' + query.toString());
+      document.getElementById('examples').value = '';
+      loadUrl(url);
+    });
+
+    document.getElementById('url-input').addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') document.getElementById('load-btn').click();
+    });
+
+    document.getElementById('examples').addEventListener('change', function() {
+      var url = this.value;
+      if (!url) return;
+      document.getElementById('url-input').value = '';
+      var query = new URLSearchParams(window.location.search);
+      query.delete('url');
+      query.set('style', currentTheme());
+      history.replaceState(null, '', '?' + query.toString());
+      loadUrl(url);
+    });
+
+    document.getElementById('theme-btn').addEventListener('click', function() {
+      var next = currentTheme() === 'dark' ? 'light' : 'dark';
+      var query = new URLSearchParams(window.location.search);
+      query.set('style', next);
+      history.replaceState(null, '', '?' + query.toString());
+      setTheme(next);
+    });
+
+    if (McpToolkitViewer.version) {
+      document.getElementById('ui-version').textContent = 'v' + McpToolkitViewer.version;
+    }
+
+    var initTheme = params.get('style') || 'light';
+    setTheme(initTheme);
+
+    async function init() {
+      var initUrl = params.get('url') || defaultPublicUrl;
+      document.getElementById('url-input').value = initUrl;
+      loadUrl(initUrl, initTheme);
+
+      try {
+        await loadExampleMenu();
+      } catch (error) {
+        status(String(error));
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
